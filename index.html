@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EMBER | Ресторан огня и вкуса</title>
+  <meta
+    name="description"
+    content="EMBER — атмосферный ресторан современной кухни с авторским меню, винной картой и вечерними сетами."
+  >
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="EMBER">
+        <span class="brand-mark">E</span>
+        <span class="brand-text">
+          <strong>EMBER</strong>
+          <span>kitchen & wine</span>
+        </span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="site-nav" id="site-nav">
+        <a href="#menu">Меню</a>
+        <a href="#story">О ресторане</a>
+        <a href="#events">События</a>
+        <a href="#booking">Бронирование</a>
+        <a href="#contacts">Контакты</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Открытая кухня. Живой огонь. Поздние ужины.</p>
+          <h1>Ресторан, в котором вечер начинается с аромата углей и заканчивается бокалом хорошего вина.</h1>
+          <p class="hero-text">
+            Современная европейская кухня, сезонные продукты и барная карта, собранная под дымные,
+            яркие и глубокие вкусы.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#booking">Забронировать стол</a>
+            <a class="button button-secondary" href="#menu">Смотреть меню</a>
+          </div>
+          <ul class="hero-notes">
+            <li>Пт-Сб до 02:00</li>
+            <li>DJ-сеты по выходным</li>
+            <li>Chef's table на 8 гостей</li>
+          </ul>
+        </div>
+
+        <div class="hero-panel">
+          <div class="hero-card hero-card-large">
+            <span class="card-label">Signature</span>
+            <h2>Утиная грудка, печёная морковь, вишнёвый демиглас</h2>
+            <p>Баланс дыма, сладости и кислотности. Блюдо, ради которого возвращаются.</p>
+          </div>
+          <div class="hero-card hero-card-small">
+            <span class="card-label">Tonight</span>
+            <p>Сет из 5 подач от шефа + винный пейринг.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="highlights">
+        <article>
+          <span>01</span>
+          <h2>Открытый огонь</h2>
+          <p>Большая часть меню готовится на гриле и в печи, поэтому вкус получается плотным и живым.</p>
+        </article>
+        <article>
+          <span>02</span>
+          <h2>Сезонность</h2>
+          <p>Меню обновляется каждые несколько недель: весенние травы, летние овощи, осенние корнеплоды.</p>
+        </article>
+        <article>
+          <span>03</span>
+          <h2>Винная карта</h2>
+          <p>Около 70 позиций: от минеральных белых до насыщенных красных под мясо и долгие ужины.</p>
+        </article>
+      </section>
+
+      <section class="menu-section" id="menu">
+        <div class="section-heading">
+          <p class="eyebrow">Меню</p>
+          <h2>Небольшое, точное и собранное вокруг огня.</h2>
+        </div>
+
+        <div class="menu-grid">
+          <article class="menu-card">
+            <h3>Стартеры</h3>
+            <ul>
+              <li><span>Тартар из говядины</span><strong>890 ₽</strong></li>
+              <li><span>Печёный перец с лабне</span><strong>640 ₽</strong></li>
+              <li><span>Гребешок, цитрус, фенхель</span><strong>980 ₽</strong></li>
+            </ul>
+          </article>
+          <article class="menu-card accent-card">
+            <h3>Горячее</h3>
+            <ul>
+              <li><span>Стейк мясника, перечный соус</span><strong>1690 ₽</strong></li>
+              <li><span>Лосось на углях, спаржа</span><strong>1480 ₽</strong></li>
+              <li><span>Ризотто с белыми грибами</span><strong>970 ₽</strong></li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Бар</h3>
+            <ul>
+              <li><span>Smoked Negroni</span><strong>690 ₽</strong></li>
+              <li><span>Amber Highball</span><strong>620 ₽</strong></li>
+              <li><span>Вино по бокалам</span><strong>от 540 ₽</strong></li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="story-section" id="story">
+        <div class="story-copy">
+          <p class="eyebrow">О ресторане</p>
+          <h2>EMBER задуман как городской ритуал: немного шума, мягкий свет и кухня, которая держит внимание.</h2>
+          <p>
+            Пространство построено вокруг открытой линии кухни и длинной барной стойки. Днём здесь проходят
+            неспешные обеды, вечером — ужины с вином, поздними десертами и музыкой.
+          </p>
+        </div>
+
+        <div class="story-metrics">
+          <div>
+            <strong>70+</strong>
+            <span>винных позиций</span>
+          </div>
+          <div>
+            <strong>8</strong>
+            <span>мест за chef's table</span>
+          </div>
+          <div>
+            <strong>12</strong>
+            <span>сезонных обновлений в год</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="events-section" id="events">
+        <div class="section-heading">
+          <p class="eyebrow">События</p>
+          <h2>Причины заглянуть не только на ужин.</h2>
+        </div>
+
+        <div class="event-grid">
+          <article class="event-card">
+            <p class="event-date">Каждый четверг</p>
+            <h3>Винные ужины</h3>
+            <p>Сомелье собирает тематический сет, а кухня подстраивает к нему специальные подачи.</p>
+          </article>
+          <article class="event-card">
+            <p class="event-date">Пятница, 21:00</p>
+            <h3>Late Night Set</h3>
+            <p>DJ, коктейли и укороченное ночное меню для тех, кто не спешит расходиться.</p>
+          </article>
+          <article class="event-card">
+            <p class="event-date">По запросу</p>
+            <h3>Private Dining</h3>
+            <p>Закрытые ужины для компаний до 18 гостей с отдельным сценарием подачи и винным сопровождением.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="booking-section" id="booking">
+        <div class="booking-copy">
+          <p class="eyebrow">Бронирование</p>
+          <h2>Оставьте заявку, и мы подтвердим столик в течение 15 минут в рабочее время.</h2>
+          <p>Для мероприятий, дней рождений и больших компаний отметьте это в комментарии.</p>
+        </div>
+
+        <form class="booking-form" id="booking-form">
+          <label>
+            Имя
+            <input type="text" name="name" placeholder="Ваше имя" required>
+          </label>
+          <label>
+            Телефон
+            <input type="tel" name="phone" placeholder="+7 (999) 123-45-67" required>
+          </label>
+          <label>
+            Дата
+            <input type="date" name="date" required>
+          </label>
+          <label>
+            Гостей
+            <select name="guests" required>
+              <option value="">Выберите</option>
+              <option>2 гостя</option>
+              <option>4 гостя</option>
+              <option>6 гостей</option>
+              <option>8+ гостей</option>
+            </select>
+          </label>
+          <label class="full-width">
+            Комментарий
+            <textarea name="details" rows="4" placeholder="Повод, пожелания по столу, аллергии"></textarea>
+          </label>
+          <button class="button button-primary" type="submit">Отправить заявку</button>
+          <p class="form-note" id="form-note" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer" id="contacts">
+      <div>
+        <p class="eyebrow">Контакты</p>
+        <h2>Москва, Спиридоньевский переулок, 9с1</h2>
+      </div>
+      <div class="footer-links">
+        <a href="tel:+74951234567">+7 (495) 123-45-67</a>
+        <a href="mailto:hello@ember-restaurant.ru">hello@ember-restaurant.ru</a>
+        <p>Пн-Чт: 12:00-00:00 | Пт-Сб: 12:00-02:00 | Вс: 12:00-23:00</p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
