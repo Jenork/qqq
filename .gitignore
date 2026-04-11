@@ -13,3 +13,4 @@ contracts/out
 *.log
 *.tsbuildinfo
 public/audio/Telegram Desktop/
+.git_ssh/
