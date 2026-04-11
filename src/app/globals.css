@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg-0: #090100;
+  --bg-1: #180502;
+  --bg-2: #23100a;
+  --text: #f4efe7;
+  --muted: #c2b39a;
+  --panel: rgba(27, 10, 6, 0.88);
+  --panel-border: rgba(255, 167, 105, 0.16);
+  --accent: #ff8a2f;
+  --accent-soft: rgba(255, 138, 47, 0.2);
+  --success: #8cff66;
+  --danger: #ff557a;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at top, rgba(255, 107, 61, 0.14), transparent 35%),
+    linear-gradient(180deg, #060a13 0%, #09101f 42%, #0a1122 100%);
+  color: var(--text);
+}
+
+body {
+  font-family: "Trebuchet MS", "Arial Black", Arial, sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(255, 154, 62, 0.2), transparent 28%),
+    radial-gradient(circle at 70% 20%, rgba(255, 90, 14, 0.18), transparent 24%),
+    linear-gradient(180deg, #0b0100 0%, #180401 26%, #120606 55%, #0b0b12 100%);
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+}
+
+.safe-shell {
+  padding-top: calc(8px + var(--safe-top));
+  padding-right: calc(8px + var(--safe-right));
+  padding-bottom: calc(8px + var(--safe-bottom));
+  padding-left: calc(8px + var(--safe-left));
+}
+
+.panel {
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  box-shadow: 0 16px 40px rgba(4, 7, 18, 0.34);
+  backdrop-filter: blur(18px);
+}
+
+.pixel-panel {
+  border: 2px solid rgba(255, 171, 90, 0.24);
+  background:
+    linear-gradient(180deg, rgba(56, 18, 10, 0.94), rgba(18, 8, 8, 0.96)),
+    linear-gradient(90deg, rgba(255, 145, 76, 0.08), rgba(255, 255, 255, 0));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 229, 181, 0.06),
+    0 18px 44px rgba(0, 0, 0, 0.34);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+
+.panel-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e8c9a8;
+}
+
+.action-button {
+  border-radius: 0;
+  border: 1px solid rgba(255, 196, 143, 0.12);
+  background: linear-gradient(180deg, rgba(69, 31, 18, 0.96), rgba(24, 10, 8, 0.96));
+  color: var(--text);
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.retro-button {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+.action-button:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.action-button:disabled {
+  opacity: 0.55;
+}
+
+.action-button.rounded-\[18px\],
+.action-button.rounded-\[22px\] {
+  clip-path: none;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.hud-slot {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.28));
+}
+
+.game-canvas canvas {
+  image-rendering: pixelated;
+}
+
+.game-canvas,
+.game-canvas canvas {
+  touch-action: none;
+}
+
+.doom-game-over {
+  margin: 0;
+  font-size: clamp(2.9rem, 8vw, 5.4rem);
+  line-height: 0.9;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ffdca8;
+  text-shadow:
+    0 1px 0 #fff2cf,
+    0 3px 0 #ffb36a,
+    0 6px 0 #b93d14,
+    0 10px 24px rgba(0, 0, 0, 0.45),
+    0 0 24px rgba(255, 114, 33, 0.28);
+  background: linear-gradient(180deg, #fff7d6 0%, #ffd780 26%, #ff8a2f 62%, #b21f06 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: perspective(420px) rotateX(12deg);
+}

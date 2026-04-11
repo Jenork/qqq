@@ -1,0 +1,15 @@
+.next
+node_modules
+.env
+.env.local
+coverage
+dist
+out
+artifacts
+cache
+broadcast
+contracts/cache
+contracts/out
+*.log
+*.tsbuildinfo
+public/audio/Telegram Desktop/
