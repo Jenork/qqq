@@ -8,19 +8,13 @@ import { shortenAddress } from '@/lib/score'
 
 export function LeaderboardPanel() {
   const { address } = useAccount()
-  const leaderboardOpen = useGameStore((state) => state.leaderboardOpen)
-  const toggleLeaderboard = useGameStore((state) => state.toggleLeaderboard)
   const status = useGameStore((state) => state.status)
   const pendingScore = useGameStore((state) => state.pendingScore)
-  const { data, isLoading, isError, isFetching, refetch } = useLeaderboard(10, address)
-
-  if (!leaderboardOpen) {
-    return null
-  }
+  const { data, isLoading, isError, isFetching, refetch } = useLeaderboard(undefined, address)
 
   return (
-    <div className="absolute inset-0 z-20 flex items-end justify-center bg-slate-950/65 p-2 sm:items-center sm:p-3">
-      <div className="panel w-full max-w-[440px] rounded-[1.5rem] p-4 sm:max-w-2xl sm:rounded-[2rem] sm:p-5">
+    <section className="panel w-full rounded-[28px] p-4 sm:p-5 lg:p-6">
+      <div className="mx-auto w-full max-w-[1100px]">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <p className="panel-title">Onchain Leaderboard</p>
@@ -37,13 +31,6 @@ export function LeaderboardPanel() {
               onClick={() => void refetch()}
             >
               {isFetching ? 'Refreshing...' : 'Refresh'}
-            </button>
-            <button
-              type="button"
-              className="action-button rounded-2xl px-4 py-3 text-sm font-bold"
-              onClick={() => toggleLeaderboard(false)}
-            >
-              Close
             </button>
           </div>
         </div>
@@ -110,6 +97,6 @@ export function LeaderboardPanel() {
           ) : null}
         </div>
       </div>
-    </div>
+    </section>
   )
 }

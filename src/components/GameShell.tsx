@@ -5,7 +5,6 @@ import type Phaser from 'phaser'
 import { GameOverModal } from '@/components/GameOverModal'
 import { Hud } from '@/components/Hud'
 import { InventoryPanel } from '@/components/InventoryPanel'
-import { LeaderboardPanel } from '@/components/LeaderboardPanel'
 import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
 
@@ -75,7 +74,6 @@ export function GameShell() {
 
         <Hud />
         <InventoryPanel />
-        <LeaderboardPanel />
         <GameOverModal />
 
         {status === 'paused' ? (

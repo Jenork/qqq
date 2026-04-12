@@ -52,7 +52,6 @@ export function Hud() {
   const healCharges = useGameStore((state) => state.healCharges)
   const status = useGameStore((state) => state.status)
   const toggleInventory = useGameStore((state) => state.toggleInventory)
-  const toggleLeaderboard = useGameStore((state) => state.toggleLeaderboard)
   const togglePause = useGameStore((state) => state.togglePause)
   const setMobileControl = useGameStore((state) => state.setMobileControl)
   const pulseAction = useGameStore((state) => state.pulseAction)
@@ -86,13 +85,6 @@ export function Hud() {
             className="rounded-full border border-white/10 bg-black/24 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-stone-100 backdrop-blur"
           >
             Inv
-          </button>
-          <button
-            type="button"
-            onClick={() => toggleLeaderboard(true)}
-            className="rounded-full border border-white/10 bg-black/24 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-stone-100 backdrop-blur"
-          >
-            Top
           </button>
           {status !== 'ready' && status !== 'gameover' ? (
             <button
