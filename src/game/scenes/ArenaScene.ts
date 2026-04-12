@@ -27,6 +27,7 @@ import { ArenaRunDirector } from '@/game/systems/ArenaRunDirector'
 import { createArenaEnemy } from '@/game/systems/enemyFactory'
 
 export class ArenaScene extends Phaser.Scene {
+  private static readonly BACKGROUND_FLOOR_SOURCE_Y = 604
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private keys!: Record<string, Phaser.Input.Keyboard.Key>
   private player!: Player
@@ -65,7 +66,14 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, ARENA_SIZE.width, ARENA_SIZE.height)
 
     const background = this.add.image(ARENA_SIZE.width / 2, ARENA_SIZE.height / 2, 'arena-background')
-    background.setDisplaySize(ARENA_SIZE.width, ARENA_SIZE.height)
+    const source = this.textures.get('arena-background').getSourceImage() as { width: number; height: number }
+    const coverScale = Math.max(ARENA_SIZE.width / source.width, ARENA_SIZE.height / source.height)
+    const displayWidth = source.width * coverScale
+    const displayHeight = source.height * coverScale
+    const floorAnchorY = ArenaScene.BACKGROUND_FLOOR_SOURCE_Y * coverScale
+
+    background.setDisplaySize(displayWidth, displayHeight)
+    background.setPosition(ARENA_SIZE.width / 2, ARENA_BOUNDS.floorY - floorAnchorY + displayHeight / 2)
     background.setDepth(-10)
     background.setScrollFactor(0)
 
