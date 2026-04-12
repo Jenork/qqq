@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser'
+import { preloadSpriteManifest } from '@/game/assets/spriteCatalog'
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -7,10 +8,7 @@ export class BootScene extends Phaser.Scene {
 
   preload() {
     this.load.image('arena-background', '/backgrounds/arena-background.png')
-    this.load.image('player', '/sprites/player-marine.png')
-    this.load.image('melee-enemy', '/sprites/enemy-melee.png')
-    this.load.image('ranged-enemy', '/sprites/enemy-ranged.png')
-    this.load.image('heavy-enemy', '/sprites/enemy-heavy.png')
+    preloadSpriteManifest(this.load)
   }
 
   create() {

@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser'
 import { SPRITE_TUNING, type EnemyType } from '@/config/game'
+import { getEnemyTextureKey } from '@/game/assets/spriteCatalog'
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   readonly enemyType: EnemyType
@@ -12,6 +13,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   projectileDamage: number
   projectileSpeed: number
   attackReadyAt = 0
+  lastAttackAt = -1000
   scoreValue: number
   activeSlowMultiplier = 1
   damageFlashUntil = 0
@@ -33,7 +35,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       scoreValue: number
     },
   ) {
-    super(scene, x, y, `${type}-enemy`)
+    super(scene, x, y, getEnemyTextureKey(type, 'idle'))
 
     this.enemyType = type
     this.hp = tuning.hp

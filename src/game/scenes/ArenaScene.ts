@@ -22,6 +22,7 @@ import {
   resolveRangedEnemyStep,
   shouldApplyContactHit,
 } from '@/game/systems/combatSystem'
+import { applyEnemyPresentation, applyPlayerPresentation } from '@/game/systems/presentationSystem'
 import { ArenaRunDirector } from '@/game/systems/ArenaRunDirector'
 import { createArenaEnemy } from '@/game/systems/enemyFactory'
 
@@ -405,11 +406,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private updateAmbientAnimation(time: number) {
-    const bob = Math.sin(time / 180) * 0.45
-    this.player.setScale(
-      SPRITE_TUNING.player.scale + bob * SPRITE_TUNING.player.bobScaleX,
-      SPRITE_TUNING.player.scale + bob * SPRITE_TUNING.player.bobScaleY,
-    )
+    applyPlayerPresentation(this.player, time)
     this.player.refreshVisualState(time)
 
     this.ambientFlames.forEach((flame, index) => {
@@ -666,11 +663,13 @@ export class ArenaScene extends Phaser.Scene {
       }
 
       enemy.setFlipX(enemy.x < playerX)
+      applyEnemyPresentation(enemy, time)
       return true
     })
   }
 
   private fireEnemyProjectile(enemy: Enemy) {
+    enemy.lastAttackAt = this.time.now
     const shot = buildEnemyProjectile({
       enemy,
       player: this.player,

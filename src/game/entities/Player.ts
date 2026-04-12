@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser'
 import { PLAYER_CONFIG, SPRITE_TUNING } from '@/config/game'
+import { getPlayerTextureKey } from '@/game/assets/spriteCatalog'
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   hp: number = PLAYER_CONFIG.maxHp
@@ -17,7 +18,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   damageFlashUntil = 0
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'player')
+    super(scene, x, y, getPlayerTextureKey('idle'))
 
     scene.add.existing(this)
     scene.physics.add.existing(this)
