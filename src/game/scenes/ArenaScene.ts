@@ -14,6 +14,15 @@ import { Enemy } from '@/game/entities/Enemy'
 import { Player } from '@/game/entities/Player'
 import { Bullet } from '@/game/projectiles/Bullet'
 import { Grenade } from '@/game/projectiles/Grenade'
+import {
+  buildEnemyProjectile,
+  buildPlayerVolley,
+  resolveHeavyEnemyStep,
+  resolveHealAmount,
+  resolveMeleeEnemyStep,
+  resolveRangedEnemyStep,
+  shouldApplyContactHit,
+} from '@/game/systems/combatSystem'
 import { WaveDirector } from '@/game/systems/WaveDirector'
 
 export class ArenaScene extends Phaser.Scene {
@@ -252,7 +261,14 @@ export class ArenaScene extends Phaser.Scene {
       const player = playerObj as Player
       const time = this.time.now
 
-      if (enemy.attackReadyAt > time || time < this.nextContactHitAt || this.gameOver) {
+      if (
+        !shouldApplyContactHit({
+          time,
+          nextContactHitAt: this.nextContactHitAt,
+          enemyAttackReadyAt: enemy.attackReadyAt,
+          gameOver: this.gameOver,
+        })
+      ) {
         return
       }
 
@@ -325,7 +341,7 @@ export class ArenaScene extends Phaser.Scene {
       shieldRemaining: 0,
       healCharges: PLAYER_CONFIG.healCharges,
       pendingScore: 0,
-      activeMessage: startImmediately ? 'Wave 1 incoming.' : 'Tap Start Run to begin.',
+      activeMessage: startImmediately ? 'Wave 1 incoming.' : null,
     })
 
     if (startImmediately) {
@@ -498,34 +514,28 @@ export class ArenaScene extends Phaser.Scene {
 
   private fireWeapon(time: number) {
     const store = useGameStore.getState()
-    const tuning = WEAPON_TUNING[store.equippedWeapon as keyof typeof WEAPON_TUNING]
+    const shots = buildPlayerVolley({
+      player: this.player,
+      weaponId: store.equippedWeapon as keyof typeof WEAPON_TUNING,
+      time,
+    })
 
-    if (time < this.player.lastShotAt + tuning.fireRateMs) {
+    if (!shots.length) {
       return
     }
 
-    this.player.lastShotAt = time
-
-    const isRage = this.player.isRaging(time)
-    const baseDamage = tuning.damage * (isRage ? 2 : 1)
     const direction = this.player.facing
 
-    for (let index = 0; index < tuning.projectileCount; index += 1) {
-      const velocityX = PLAYER_CONFIG.bulletSpeed * direction
-      const velocityY = 0
-      const bulletX = this.player.x + direction * SPRITE_TUNING.player.muzzleOffsetX
-      const bulletY = this.player.y - SPRITE_TUNING.player.muzzleOffsetY
-      const bullet = this.playerBullets.get(bulletX, bulletY, 'bullet') as
-        | Bullet
-        | null
+    shots.forEach((shot) => {
+      const bullet = this.playerBullets.get(shot.x, shot.y, 'bullet') as Bullet | null
 
       if (!bullet) {
-        continue
+        return
       }
 
-      bullet.fire(bulletX, bulletY, velocityX, velocityY, baseDamage, 'player')
-      bullet.setAngle(direction > 0 ? 0 : 180)
-    }
+      bullet.fire(shot.x, shot.y, shot.velocityX, shot.velocityY, shot.damage, 'player')
+      bullet.setAngle(shot.angle)
+    })
 
     this.addImpact(
       this.player.x + direction * (SPRITE_TUNING.player.muzzleOffsetX + 2),
@@ -627,12 +637,7 @@ export class ArenaScene extends Phaser.Scene {
     this.player.healCharges -= 1
 
     const healType = useGameStore.getState().equippedHeal
-    const amount =
-      healType === 'instant-heal'
-        ? 2
-        : healType === 'regen-pack'
-        ? 2
-        : PLAYER_CONFIG.healAmount
+    const amount = resolveHealAmount(healType)
 
     this.player.heal(amount)
     this.cameras.main.flash(80, 140, 255, 102)
@@ -655,13 +660,27 @@ export class ArenaScene extends Phaser.Scene {
       enemy.refreshVisualState(time)
 
       if (enemy.enemyType === 'ranged') {
-        this.updateRangedEnemy(enemy, playerX, time)
+        const step = resolveRangedEnemyStep(enemy, playerX, time)
+        enemy.setY(step.y ?? enemy.y)
+        enemy.setVelocityX(step.xVelocity)
+
+        if (step.shouldFire) {
+          enemy.attackReadyAt = time + enemy.rangedCooldownMs
+          this.fireEnemyProjectile(enemy)
+        }
       } else if (enemy.enemyType === 'heavy') {
-        this.updateHeavyEnemy(enemy, playerX, time)
-        enemy.setY(ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.heavy.floorOffset)
+        const step = resolveHeavyEnemyStep(enemy, playerX, time)
+        enemy.setY(step.y ?? enemy.y)
+        enemy.setVelocityX(step.xVelocity)
+
+        if (step.shouldFire) {
+          enemy.attackReadyAt = time + enemy.rangedCooldownMs
+          this.fireEnemyProjectile(enemy)
+        }
       } else {
-        this.updateMeleeEnemy(enemy, playerX)
+        const step = resolveMeleeEnemyStep(enemy, playerX)
         enemy.setY(ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.melee.floorOffset)
+        enemy.setVelocityX(step.xVelocity)
       }
 
       enemy.setFlipX(enemy.x < playerX)
@@ -669,94 +688,30 @@ export class ArenaScene extends Phaser.Scene {
     })
   }
 
-  private updateMeleeEnemy(enemy: Enemy, playerX: number) {
-    const delta = playerX - enemy.x
-    const distance = Math.abs(delta)
-
-    if (distance < 54) {
-      enemy.setVelocityX(0)
-      return
-    }
-
-    enemy.setVelocityX(Math.sign(delta) * enemy.getEffectiveSpeed())
-  }
-
-  private updateRangedEnemy(enemy: Enemy, playerX: number, time: number) {
-    const hoverY =
-      ARENA_BOUNDS.floorY -
-      SPRITE_TUNING.enemies.ranged.hoverBaseOffset +
-      Math.sin(time / 220 + enemy.x * 0.02) * SPRITE_TUNING.enemies.ranged.hoverAmplitude
-    enemy.setY(hoverY)
-    const delta = playerX - enemy.x
-    const distance = Math.abs(delta)
-    const preferredDistance = enemy.preferredDistance
-
-    if (distance > preferredDistance + 18) {
-      enemy.setVelocityX(Math.sign(delta) * enemy.getEffectiveSpeed())
-      return
-    }
-
-    if (distance < preferredDistance - 22) {
-      enemy.setVelocityX(-Math.sign(delta) * enemy.getEffectiveSpeed() * 0.85)
-      return
-    }
-
-    enemy.setVelocityX(0)
-
-    if (time < enemy.attackReadyAt) {
-      return
-    }
-
-    enemy.attackReadyAt = time + enemy.rangedCooldownMs
-    this.fireEnemyProjectile(enemy)
-  }
-
-  private updateHeavyEnemy(enemy: Enemy, playerX: number, time: number) {
-    const delta = playerX - enemy.x
-    const distance = Math.abs(delta)
-
-    if (distance < 86) {
-      enemy.setVelocityX(0)
-    } else {
-      enemy.setVelocityX(Math.sign(delta) * enemy.getEffectiveSpeed())
-    }
-
-    if (distance > enemy.preferredDistance || time < enemy.attackReadyAt) {
-      return
-    }
-
-    enemy.attackReadyAt = time + enemy.rangedCooldownMs
-    this.fireEnemyProjectile(enemy)
-  }
-
   private fireEnemyProjectile(enemy: Enemy) {
-    const direction = this.player.x >= enemy.x ? 1 : -1
-    const isHeavyShot = enemy.enemyType === 'heavy'
-    const bulletStartX = enemy.x + direction * (isHeavyShot ? 26 : 22)
-    const bulletStartY =
-      enemy.enemyType === 'ranged'
-        ? enemy.y - SPRITE_TUNING.enemies.ranged.projectileOffsetY
-        : enemy.y - 76
-    const bullet = this.enemyBullets.get(bulletStartX, bulletStartY, 'enemy-bullet') as Bullet | null
+    const shot = buildEnemyProjectile({
+      enemy,
+      player: this.player,
+    })
+    const heavyShot = enemy.enemyType === 'heavy'
+    const bullet = this.enemyBullets.get(shot.x, shot.y, 'enemy-bullet') as Bullet | null
 
     if (!bullet) {
       return
     }
 
-    const deltaX = this.player.x - enemy.x
-    const deltaY = this.player.y - enemy.y
-    const vector = new Phaser.Math.Vector2(deltaX, deltaY).normalize().scale(enemy.projectileSpeed)
     const body = bullet.body as Phaser.Physics.Arcade.Body | null
 
-    if (isHeavyShot) {
+    if (heavyShot) {
       bullet.setTexture('heavy-bullet')
     } else {
       bullet.setTexture('enemy-bullet')
     }
 
-    bullet.fire(bulletStartX, bulletStartY, vector.x, vector.y, enemy.projectileDamage, 'enemy')
+    bullet.fire(shot.x, shot.y, shot.velocityX, shot.velocityY, shot.damage, 'enemy')
+    bullet.setAngle(shot.angle)
 
-    if (isHeavyShot) {
+    if (heavyShot) {
       bullet.setScale(1.05)
       body?.setSize(24, 24, true)
     } else {

@@ -99,7 +99,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   healCooldownRemaining: 0,
   shieldRemaining: 0,
   healCharges: PLAYER_CONFIG.healCharges,
-  activeMessage: 'Tap Start Run to begin.',
+  activeMessage: null,
   equippedWeapon: INVENTORY_DEFAULTS.weapon,
   equippedGrenade: INVENTORY_DEFAULTS.grenade,
   equippedAbility: INVENTORY_DEFAULTS.ability,
@@ -146,7 +146,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       status: 'gameover',
       pendingScore: score,
-      activeMessage: 'Run failed. Submit your score or restart instantly.',
+      activeMessage: null,
     }),
   restartRun: () => {
     get().gameApi?.restartRun()
@@ -232,6 +232,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       shieldRemaining: 0,
       healCharges: PLAYER_CONFIG.healCharges,
       pendingScore: 0,
-      activeMessage: 'Tap Start Run to begin.',
+      activeMessage: null,
     }),
 }))

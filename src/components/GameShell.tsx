@@ -105,29 +105,30 @@ export function GameShell() {
         {status === 'ready' ? (
           <div
             className={cn(
-              'absolute inset-0 z-10 flex bg-gradient-to-b from-slate-950/34 via-slate-950/52 to-slate-950/72 p-4',
-              desktopMode ? 'items-end justify-start p-6' : 'items-center justify-center',
+              'absolute inset-0 z-10 flex bg-gradient-to-b from-slate-950/18 via-slate-950/30 to-slate-950/58 p-3',
+              desktopMode ? 'items-end justify-start p-5' : 'items-end justify-center pb-6',
             )}
           >
             <div
               className={cn(
-                'rounded-[24px] border border-white/10 bg-black/52 p-5 backdrop-blur',
-                desktopMode ? 'max-w-md text-left' : 'mx-auto max-w-xs text-center',
+                'rounded-[22px] border border-white/10 bg-black/40 p-4 backdrop-blur',
+                desktopMode ? 'max-w-sm text-left' : 'mx-auto w-full max-w-[290px] text-center',
               )}
             >
-              <h1 className="text-3xl font-black text-stone-50">Inferno Arena</h1>
-              <div className="mt-4 grid gap-2 text-left text-xs uppercase tracking-[0.14em] text-stone-300">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-200/80">
+                Arena ready
+              </p>
+              <h1 className="mt-1 text-2xl font-black text-stone-50 sm:text-3xl">Inferno Arena</h1>
+              <div className="mt-3 grid gap-1.5 text-left text-[11px] uppercase tracking-[0.14em] text-stone-300">
                 {desktopMode ? (
                   <>
-                    <p>A / D move</p>
-                    <p>Space jump</p>
-                    <p>Left click shoot</p>
-                    <p>Q grenade / E ability / R heal</p>
+                    <p>A/D move, Space jump, click shoot</p>
+                    <p>Q grenade, E ability, R heal</p>
                   </>
                 ) : (
                   <>
-                    <p>Move with left thumb.</p>
-                    <p>Shoot and actions with right thumb.</p>
+                    <p>Left thumb move, right thumb attack.</p>
+                    <p>Landscape gives a cleaner combat view.</p>
                   </>
                 )}
               </div>
@@ -136,8 +137,8 @@ export function GameShell() {
                 onClick={() => startRun()}
                 disabled={!gameApiReady}
                 className={cn(
-                  'action-button retro-button mt-5 px-5 py-4 text-sm font-black uppercase tracking-[0.18em]',
-                  desktopMode ? 'min-w-[220px]' : 'w-full',
+                  'action-button retro-button mt-4 px-5 py-3.5 text-sm font-black uppercase tracking-[0.18em]',
+                  desktopMode ? 'min-w-[210px]' : 'w-full',
                 )}
               >
                 {gameApiReady ? 'Start Run' : 'Loading Arena...'}
