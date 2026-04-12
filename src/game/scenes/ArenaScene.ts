@@ -2,7 +2,6 @@ import * as Phaser from 'phaser'
 import {
   ARENA_BOUNDS,
   ARENA_SIZE,
-  ENEMY_CONFIG,
   PLAYER_CONFIG,
   SCORE_CONFIG,
   SPRITE_TUNING,
@@ -23,7 +22,8 @@ import {
   resolveRangedEnemyStep,
   shouldApplyContactHit,
 } from '@/game/systems/combatSystem'
-import { WaveDirector } from '@/game/systems/WaveDirector'
+import { ArenaRunDirector } from '@/game/systems/ArenaRunDirector'
+import { createArenaEnemy } from '@/game/systems/enemyFactory'
 
 export class ArenaScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
@@ -34,7 +34,7 @@ export class ArenaScene extends Phaser.Scene {
   private playerBullets!: Phaser.Physics.Arcade.Group
   private enemyBullets!: Phaser.Physics.Arcade.Group
   private grenades!: Phaser.Physics.Arcade.Group
-  private waveDirector = new WaveDirector()
+  private runDirector = new ArenaRunDirector()
   private ambientFlames: Phaser.GameObjects.Rectangle[] = []
   private playerBaseY = ARENA_BOUNDS.floorY + SPRITE_TUNING.player.floorOffset
   private running = false
@@ -328,25 +328,7 @@ export class ArenaScene extends Phaser.Scene {
     this.player.resetState(ARENA_BOUNDS.playerSpawnX, this.playerBaseY)
     this.survivalTickAt = this.time.now + SCORE_CONFIG.survivalTickMs
 
-    useGameStore.setState({
-      status: startImmediately ? 'playing' : 'ready',
-      hp: PLAYER_CONFIG.maxHp,
-      maxHp: PLAYER_CONFIG.maxHp,
-      score: 0,
-      wave: 1,
-      kills: 0,
-      grenadeCooldownRemaining: 0,
-      abilityCooldownRemaining: 0,
-      healCooldownRemaining: 0,
-      shieldRemaining: 0,
-      healCharges: PLAYER_CONFIG.healCharges,
-      pendingScore: 0,
-      activeMessage: startImmediately ? 'Wave 1 incoming.' : null,
-    })
-
-    if (startImmediately) {
-      this.waveDirector.restart(this.time.now)
-    }
+    useGameStore.setState(this.runDirector.reset(this.time.now, startImmediately))
   }
 
   private clearGroups() {
@@ -408,7 +390,7 @@ export class ArenaScene extends Phaser.Scene {
     this.time.timeScale = 1
     this.physics.world.resume()
     this.tweens.resumeAll()
-    useGameStore.setState({ status: 'playing', activeMessage: `Wave ${this.waveDirector.wave} active.` })
+    useGameStore.setState({ status: 'playing', activeMessage: `Wave ${this.runDirector.wave} active.` })
   }
 
   private syncHudCooldowns(time: number) {
@@ -776,26 +758,15 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private updateWaveDirector(time: number) {
-    const aliveEnemies = this.enemies.countActive(true)
-    const event = this.waveDirector.update(time, aliveEnemies)
+    const store = useGameStore.getState()
+    const runtimeUpdate = this.runDirector.update(time, this.enemies.countActive(true), store.score)
 
-    if (event.spawnType) {
-      this.spawnEnemy(event.spawnType)
+    if (runtimeUpdate.spawnType) {
+      this.spawnEnemy(runtimeUpdate.spawnType)
     }
 
-    if (event.waveCleared) {
-      const nextScore = useGameStore.getState().score + SCORE_CONFIG.waveClearBonus
-      useGameStore.setState({
-        score: nextScore,
-        activeMessage: `Wave ${event.waveCleared} cleared.`,
-      })
-    }
-
-    if (event.waveStarted) {
-      useGameStore.setState({
-        wave: event.waveStarted,
-        activeMessage: `Wave ${event.waveStarted} inbound.`,
-      })
+    if (runtimeUpdate.storePatch) {
+      useGameStore.setState(runtimeUpdate.storePatch)
     }
   }
 
@@ -811,51 +782,17 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private spawnEnemy(type: EnemyType) {
-    const wave = this.waveDirector.wave
-    const scaling = this.waveDirector.template
-    const base = ENEMY_CONFIG[type]
-    const x = Phaser.Math.Between(ARENA_BOUNDS.enemySpawnMinX, ARENA_BOUNDS.enemySpawnMaxX)
-    const spawnY =
-      type === 'ranged'
-        ? ARENA_BOUNDS.floorY - SPRITE_TUNING.enemies.ranged.hoverBaseOffset
-        : type === 'heavy'
-        ? ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.heavy.floorOffset
-        : ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.melee.floorOffset
-    const enemy = new Enemy(this, x, spawnY, type, {
-      hp: Math.round(base.hp * scaling.hpScale),
-      damage: Math.round(base.damage * scaling.damageScale),
-      speed: Math.round(base.speed * scaling.speedScale),
-      rangedCooldownMs: base.rangedCooldownMs,
-      preferredDistance: base.preferredDistance,
-      scoreValue:
-        type === 'melee'
-          ? SCORE_CONFIG.meleeKill
-          : type === 'ranged'
-          ? SCORE_CONFIG.rangedKill
-          : SCORE_CONFIG.heavyKill,
+    const enemy = createArenaEnemy({
+      scene: this,
+      type,
+      wave: this.runDirector.wave,
+      template: this.runDirector.template,
     })
+    this.enemies.add(enemy)
+  }
 
-    enemy.setDepth(1)
-
-    if (type === 'heavy') {
-      enemy.setScale(SPRITE_TUNING.enemies.heavy.scale)
-    }
-
-    if (type === 'ranged') {
-      enemy.setScale(SPRITE_TUNING.enemies.ranged.scale)
-    }
-
-    if (type === 'melee') {
-      enemy.setScale(SPRITE_TUNING.enemies.melee.scale)
-    }
-
-      enemy.setBaseTint(wave >= 4 ? (type === 'heavy' ? 0xc289ff : 0xffb28f) : null)
-
-      this.enemies.add(enemy)
-    }
-  
-    private hitEnemy(enemy: Enemy, damage: number) {
-      const hp = enemy.takeDamage(this.time.now, damage)
+  private hitEnemy(enemy: Enemy, damage: number) {
+    const hp = enemy.takeDamage(this.time.now, damage)
 
     if (hp > 0) {
       enemy.setVelocityX(enemy.body?.velocity.x ? enemy.body.velocity.x * 0.72 : 0)

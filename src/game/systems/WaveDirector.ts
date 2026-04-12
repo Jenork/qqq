@@ -36,12 +36,16 @@ export class WaveDirector {
   }
 
   restart(time: number) {
+    this.stop()
+    return this.start(time)
+  }
+
+  stop() {
     this.active = false
     this.spawnsRemaining = 0
     this.nextSpawnAt = 0
     this.awaitingAdvance = false
     this.advanceAt = 0
-    return this.start(time)
   }
 
   prepareWave(wave: number, time: number): WaveUpdate {
