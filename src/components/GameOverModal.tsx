@@ -85,6 +85,9 @@ export function GameOverModal() {
         <p className="mt-1 text-sm text-slate-300">
           Stored best: <span className="font-black">{storedBestScore}</span>
         </p>
+        <p className="mt-3 text-sm text-slate-300">
+          Submit this run through your wallet transaction to place or update your onchain leaderboard score.
+        </p>
 
         {submitError ? (
           <div className="mt-4 rounded-3xl border border-rose-300/20 bg-rose-400/10 p-4 text-sm text-rose-100">
@@ -139,7 +142,7 @@ export function GameOverModal() {
               })
             }}
           >
-            Submit Score Onchain
+            {isSuccess ? 'Score Saved Onchain' : 'Submit Score Onchain'}
           </button>
 
           <div className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200">TX state: {txState}</div>

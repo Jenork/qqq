@@ -9,18 +9,30 @@ import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } fro
 export type LeaderboardEntry = {
   address: string
   bestScore: number
+  rank: number
 }
 
-export function useLeaderboard(limit = 10) {
+export type LeaderboardSnapshot = {
+  entries: LeaderboardEntry[]
+  currentPlayerEntry: LeaderboardEntry | null
+  totalPlayers: number
+}
+
+export function useLeaderboard(limit = 10, currentAddress?: string) {
   const publicClient = usePublicClient({ chainId: baseSepolia.id })
+  const normalizedCurrentAddress = currentAddress?.toLowerCase()
 
   return useQuery({
-    queryKey: ['leaderboard', limit],
+    queryKey: ['leaderboard', limit, normalizedCurrentAddress],
     enabled: Boolean(publicClient) && HAS_GAME_PROGRESS_ADDRESS,
     staleTime: 15_000,
-    queryFn: async (): Promise<LeaderboardEntry[]> => {
+    queryFn: async (): Promise<LeaderboardSnapshot> => {
       if (!publicClient || !HAS_GAME_PROGRESS_ADDRESS) {
-        return []
+        return {
+          entries: [],
+          currentPlayerEntry: null,
+          totalPlayers: 0,
+        }
       }
 
       const playersCount = (await publicClient.readContract({
@@ -32,7 +44,11 @@ export function useLeaderboard(limit = 10) {
       const total = Number(playersCount)
 
       if (total === 0) {
-        return []
+        return {
+          entries: [],
+          currentPlayerEntry: null,
+          totalPlayers: 0,
+        }
       }
 
       const slice = (await publicClient.readContract({
@@ -42,25 +58,35 @@ export function useLeaderboard(limit = 10) {
         args: [BigInt(0), BigInt(total)],
       })) as readonly Address[]
 
-      const bestScores = await Promise.all(
-        slice.map(async (address) => {
-          const bestScore = (await publicClient.readContract({
-            address: GAME_PROGRESS_ADDRESS,
-            abi: gameProgressAbi,
-            functionName: 'getBestScore',
-            args: [address],
-          })) as bigint
+      const rankedEntries = (
+        await Promise.all(
+          slice.map(async (address) => {
+            const bestScore = (await publicClient.readContract({
+              address: GAME_PROGRESS_ADDRESS,
+              abi: gameProgressAbi,
+              functionName: 'getBestScore',
+              args: [address],
+            })) as bigint
 
-          return {
-            address,
-            bestScore: Number(bestScore),
-          }
-        }),
+            return {
+              address,
+              bestScore: Number(bestScore),
+            }
+          }),
+        )
       )
-
-      return bestScores
         .sort((left, right) => right.bestScore - left.bestScore)
-        .slice(0, limit)
+        .map((entry, index) => ({
+          ...entry,
+          rank: index + 1,
+        }))
+
+      return {
+        entries: rankedEntries.slice(0, limit),
+        currentPlayerEntry:
+          rankedEntries.find((entry) => entry.address.toLowerCase() === normalizedCurrentAddress) ?? null,
+        totalPlayers: rankedEntries.length,
+      }
     },
   })
 }
