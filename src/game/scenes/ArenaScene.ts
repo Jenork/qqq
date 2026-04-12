@@ -420,6 +420,10 @@ export class ArenaScene extends Phaser.Scene {
     const controls = useGameStore.getState().mobileControls
     const moveLeft = this.keys.left.isDown || this.cursors.left.isDown || controls.left
     const moveRight = this.keys.right.isDown || this.cursors.right.isDown || controls.right
+    const grounded = Boolean(this.player.body?.blocked.down)
+    const horizontalSpeed = grounded
+      ? PLAYER_CONFIG.moveSpeed
+      : Math.round(PLAYER_CONFIG.moveSpeed * PLAYER_CONFIG.airMoveSpeedMultiplier)
 
     if (moveLeft === moveRight) {
       this.player.setAccelerationX(0)
@@ -427,11 +431,11 @@ export class ArenaScene extends Phaser.Scene {
     } else if (moveLeft) {
       this.player.facing = -1
       this.player.setFlipX(true)
-      this.player.setVelocityX(-PLAYER_CONFIG.moveSpeed)
+      this.player.setVelocityX(-horizontalSpeed)
     } else {
       this.player.facing = 1
       this.player.setFlipX(false)
-      this.player.setVelocityX(PLAYER_CONFIG.moveSpeed)
+      this.player.setVelocityX(horizontalSpeed)
     }
 
     const jumpPressed =
@@ -440,8 +444,14 @@ export class ArenaScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
       controls.jump
 
-    if (jumpPressed && !this.jumpLatch && this.player.body?.blocked.down) {
+    if (jumpPressed && !this.jumpLatch && grounded) {
       this.player.setVelocityY(-PLAYER_CONFIG.jumpForce)
+
+      if (moveLeft !== moveRight) {
+        const jumpDirection = moveLeft ? -1 : 1
+        this.player.setVelocityX(jumpDirection * (horizontalSpeed + PLAYER_CONFIG.jumpForwardBoost))
+      }
+
       this.jumpLatch = true
     }
 

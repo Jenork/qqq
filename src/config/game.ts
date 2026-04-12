@@ -14,6 +14,8 @@ export const PLAYER_CONFIG = {
   maxHp: 5,
   moveSpeed: 245,
   jumpForce: 470,
+  airMoveSpeedMultiplier: 1.22,
+  jumpForwardBoost: 72,
   fireRateMs: 210,
   bulletSpeed: 720,
   bulletDamage: 16,
