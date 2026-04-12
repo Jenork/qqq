@@ -523,22 +523,6 @@ export class ArenaScene extends Phaser.Scene {
       10,
     )
     this.cameras.main.shake(45, 0.0012)
-    this.tweens.killTweensOf(this.player)
-    this.player.setAngle(0)
-    this.tweens.add({
-      targets: this.player,
-      angle: -direction * PLAYER_CONFIG.shootKnockback,
-      duration: 28,
-      ease: 'Quad.out',
-      onComplete: () => {
-        this.tweens.add({
-          targets: this.player,
-          angle: 0,
-          duration: 120,
-          ease: 'Cubic.out',
-        })
-      },
-    })
   }
 
   private throwGrenade(time: number) {

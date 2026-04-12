@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser'
-import { SPRITE_TUNING, type EnemyType } from '@/config/game'
+import { PLAYER_CONFIG, SPRITE_TUNING, type EnemyType } from '@/config/game'
 import {
   getEnemyTextureKey,
   getPlayerTextureKey,
@@ -19,6 +19,18 @@ function getEnemyBaseScale(type: EnemyType) {
   }
 
   return SPRITE_TUNING.enemies.melee.scale
+}
+
+function getRecentPower(time: number, startedAt: number, durationMs: number) {
+  if (durationMs <= 0) {
+    return 0
+  }
+
+  return Phaser.Math.Clamp(1 - (time - startedAt) / durationMs, 0, 1)
+}
+
+function getEnemyFacingSign(enemy: Enemy) {
+  return enemy.flipX ? 1 : -1
 }
 
 export function resolvePlayerSpriteState(player: Player, time: number) {
@@ -50,33 +62,52 @@ export function resolvePlayerSpriteState(player: Player, time: number) {
 
 export function applyPlayerPresentation(player: Player, time: number) {
   const state = resolvePlayerSpriteState(player, time)
+  const body = player.body as Phaser.Physics.Arcade.Body | null
   const baseScale = SPRITE_TUNING.player.scale
-  const pulse = Math.sin(time / 150)
+  const facing = player.facing >= 0 ? 1 : -1
+  const horizontalSpeed = Math.abs(body?.velocity.x ?? 0)
+  const moveIntensity = Phaser.Math.Clamp(horizontalSpeed / PLAYER_CONFIG.moveSpeed, 0, 1)
+  const shotPower = getRecentPower(time, player.lastShotAt, 170)
+  const hitPower = getRecentPower(time, player.damageFlashUntil - 220, 220)
+  const runCycle = Math.sin(time / 72 + player.x * 0.024)
+  const breath = Math.sin(time / 210)
   let scaleX = baseScale
   let scaleY = baseScale
+  let angle = 0
 
   if (state === 'idle') {
-    scaleX += Math.sin(time / 220) * 0.004
+    scaleX += breath * 0.004
     scaleY += Math.cos(time / 260) * 0.002
+    angle = breath * 0.6
   } else if (state === 'run') {
-    scaleX += pulse * 0.012
-    scaleY -= pulse * 0.006
+    const stride = Math.abs(runCycle)
+    scaleX += stride * (0.012 + moveIntensity * 0.01)
+    scaleY -= stride * (0.008 + moveIntensity * 0.008)
+    angle = facing * (2 + moveIntensity * 1.8 + runCycle * 3.4)
   } else if (state === 'jump') {
-    scaleX -= 0.008
-    scaleY += 0.012
+    const verticalSpeed = body?.velocity.y ?? 0
+    const rising = verticalSpeed < -24
+    scaleX += rising ? -0.012 : 0.004
+    scaleY += rising ? 0.02 : 0.012
+    angle = rising ? -facing * 5.2 : facing * 3.8
   } else if (state === 'shoot') {
-    scaleX -= 0.004
-    scaleY += 0.006
+    scaleX += shotPower * 0.016
+    scaleY -= shotPower * 0.01
+    angle = -facing * (PLAYER_CONFIG.shootKnockback + shotPower * 3.2)
   } else if (state === 'hit') {
-    scaleX += 0.012
-    scaleY -= 0.01
+    const shake = Math.sin(time / 18) * hitPower * 2.1
+    scaleX += hitPower * 0.022
+    scaleY -= hitPower * 0.018
+    angle = -facing * (7.5 * hitPower) + shake
   } else {
-    scaleX += 0.016
-    scaleY -= 0.024
+    scaleX += 0.026
+    scaleY -= 0.044
+    angle = -facing * 76
   }
 
   player.setTexture(getPlayerTextureKey(state))
   player.setScale(scaleX, scaleY)
+  player.setAngle(angle)
 
   return state
 }
@@ -105,29 +136,69 @@ export function applyEnemyPresentation(enemy: Enemy, time: number) {
   const state = resolveEnemySpriteState(enemy, time)
   const baseScale = getEnemyBaseScale(enemy.enemyType)
   const pulse = Math.sin(time / 140 + enemy.x * 0.015)
+  const stomp = Math.sin(time / 110 + enemy.x * 0.02)
+  const attackPower = getRecentPower(time, enemy.lastAttackAt, 190)
+  const hitPower = getRecentPower(time, enemy.damageFlashUntil - 220, 220)
+  const facing = getEnemyFacingSign(enemy)
   let scaleX = baseScale
   let scaleY = baseScale
+  let angle = 0
 
   if (state === 'advance') {
-    scaleX += pulse * 0.014
-    scaleY -= pulse * 0.008
+    if (enemy.enemyType === 'heavy') {
+      const stompPower = Math.abs(stomp)
+      scaleX += stompPower * 0.018
+      scaleY -= stompPower * 0.014
+      angle = facing * (1.6 + stomp * 2.8)
+    } else if (enemy.enemyType === 'ranged') {
+      scaleX += pulse * 0.006
+      scaleY -= pulse * 0.004
+      angle = facing * 1.8 + pulse * 1.6
+    } else {
+      const stride = Math.abs(stomp)
+      scaleX += stride * 0.016
+      scaleY -= stride * 0.01
+      angle = facing * (2.4 + stomp * 3.6)
+    }
   } else if (state === 'attack') {
-    scaleX += 0.014
-    scaleY -= 0.01
+    if (enemy.enemyType === 'heavy') {
+      scaleX += attackPower * 0.03
+      scaleY -= attackPower * 0.018
+      angle = facing * (9.5 * attackPower)
+    } else if (enemy.enemyType === 'ranged') {
+      scaleX += attackPower * 0.012
+      scaleY -= attackPower * 0.008
+      angle = facing * (3.2 * attackPower) + Math.sin(time / 22) * attackPower * 1.4
+    } else {
+      scaleX += attackPower * 0.02
+      scaleY -= attackPower * 0.012
+      angle = facing * (7.2 * attackPower)
+    }
   } else if (state === 'hit') {
-    scaleX += 0.016
-    scaleY -= 0.014
+    scaleX += hitPower * 0.022
+    scaleY -= hitPower * 0.018
+    angle = -facing * (8.5 * hitPower) + Math.sin(time / 18) * hitPower * 2
   } else if (state === 'idle') {
-    scaleX += Math.sin(time / 240 + enemy.x * 0.01) * 0.003
+    const idleWave = Math.sin(time / 240 + enemy.x * 0.01)
+    scaleX += idleWave * 0.003
     scaleY += Math.cos(time / 280 + enemy.x * 0.01) * 0.002
+
+    if (enemy.enemyType === 'ranged') {
+      angle = idleWave * 1.3
+    } else if (enemy.enemyType === 'heavy') {
+      angle = idleWave * 0.7
+    } else {
+      angle = idleWave * 0.9
+    }
   } else {
-    scaleX += 0.02
-    scaleY -= 0.024
+    scaleX += 0.024
+    scaleY -= 0.034
+    angle = -facing * 82
   }
 
   enemy.setTexture(getEnemyTextureKey(enemy.enemyType, state))
   enemy.setScale(scaleX, scaleY)
+  enemy.setAngle(angle)
 
   return state
 }
-
