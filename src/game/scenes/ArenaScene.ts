@@ -65,7 +65,7 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, ARENA_SIZE.width, ARENA_SIZE.height)
 
     const background = this.add.image(ARENA_SIZE.width / 2, ARENA_SIZE.height / 2, 'arena-background')
-    background.setDisplaySize(ARENA_SIZE.width * 1.08, ARENA_SIZE.height)
+    background.setDisplaySize(ARENA_SIZE.width, ARENA_SIZE.height)
     background.setDepth(-10)
     background.setScrollFactor(0)
 

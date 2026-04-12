@@ -7,7 +7,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('arena-background', '/backgrounds/arena-background.png')
+    this.load.image('arena-background', '/backgrounds/arena-background-wide.png')
     preloadSpriteManifest(this.load)
   }
 

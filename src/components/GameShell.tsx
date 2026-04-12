@@ -69,7 +69,7 @@ export function GameShell() {
       <div className="relative overflow-hidden bg-[#160603]">
         <div
           ref={containerRef}
-          className="game-canvas aspect-[10/13] min-h-[72svh] w-full max-w-full overflow-hidden bg-[#160603] sm:aspect-[16/9] sm:min-h-0 lg:max-h-[84svh]"
+          className="game-canvas aspect-[10/13] min-h-[72svh] w-full max-w-full overflow-hidden bg-[#160603] sm:aspect-[56/27] sm:min-h-0 lg:max-h-[82svh]"
         />
 
         <Hud />

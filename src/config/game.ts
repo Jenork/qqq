@@ -1,18 +1,18 @@
 export const ARENA_SIZE = {
-  width: 960,
+  width: 1120,
   height: 540,
 } as const
 
 export const ARENA_BOUNDS = {
   floorY: 392,
-  playerSpawnX: 132,
-  enemySpawnMinX: 620,
-  enemySpawnMaxX: 920,
+  playerSpawnX: 168,
+  enemySpawnMinX: 760,
+  enemySpawnMaxX: 1080,
 } as const
 
 export const PLAYER_CONFIG = {
   maxHp: 5,
-  moveSpeed: 245,
+  moveSpeed: 270,
   jumpForce: 470,
   airMoveSpeedMultiplier: 1.22,
   jumpForwardBoost: 72,
@@ -28,7 +28,7 @@ export const PLAYER_CONFIG = {
   healCharges: 3,
   healCooldownMs: 10000,
   abilityCooldownMs: 9000,
-  dashDistance: 168,
+  dashDistance: 196,
   shieldDurationMs: 3400,
   rageDurationMs: 4000,
   slowDurationMs: 3600,
