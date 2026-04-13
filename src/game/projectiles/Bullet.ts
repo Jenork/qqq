@@ -3,6 +3,8 @@ import * as Phaser from 'phaser'
 export class Bullet extends Phaser.Physics.Arcade.Image {
   damage = 0
   owner: 'player' | 'enemy' = 'player'
+  launchedAt = 0
+  lastTrailAt = 0
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture = 'bullet') {
     super(scene, x, y, texture)
@@ -20,6 +22,8 @@ export class Bullet extends Phaser.Physics.Arcade.Image {
   fire(x: number, y: number, velocityX: number, velocityY: number, damage: number, owner: 'player' | 'enemy') {
     this.damage = damage
     this.owner = owner
+    this.launchedAt = this.scene.time.now
+    this.lastTrailAt = 0
     this.enableBody(true, x, y, true, true)
     this.setVisible(true)
     this.setScale(1)
@@ -34,6 +38,8 @@ export class Bullet extends Phaser.Physics.Arcade.Image {
   }
 
   shutdown() {
+    this.launchedAt = 0
+    this.lastTrailAt = 0
     this.disableBody(true, true)
     this.setVelocity(0, 0)
     this.setAngularVelocity(0)

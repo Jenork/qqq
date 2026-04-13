@@ -270,6 +270,17 @@ export class ArenaScene extends Phaser.Scene {
       const player = playerObj as Player
       const time = this.time.now
 
+      if (enemy.enemyType === 'melee') {
+        if (enemy.attackWindupUntil === 0 && time >= enemy.attackReadyAt) {
+          this.startEnemyWindup(enemy, time, PLAYER_CONFIG.meleeTelegraphMs)
+          return
+        }
+
+        if (enemy.attackWindupUntil > time) {
+          return
+        }
+      }
+
       if (
         !shouldApplyContactHit({
           time,
@@ -284,11 +295,13 @@ export class ArenaScene extends Phaser.Scene {
       const pushDirection = enemy.x > player.x ? -1 : 1
       const contactDamage = PLAYER_CONFIG.damagePerHit
 
+      enemy.attackWindupUntil = 0
+      enemy.lastAttackAt = time
       enemy.attackReadyAt = time + PLAYER_CONFIG.contactDamageCooldownMs
       this.nextContactHitAt = time + PLAYER_CONFIG.contactDamageCooldownMs
       this.damagePlayer(contactDamage, enemy.x)
       player.setVelocityX(pushDirection * PLAYER_CONFIG.contactKnockback)
-      enemy.setX(enemy.x - pushDirection * 16)
+      enemy.setX(enemy.x - pushDirection * 26)
     })
   }
 
@@ -534,6 +547,7 @@ export class ArenaScene extends Phaser.Scene {
       bullet.setAngle(shot.angle)
     })
 
+    this.playSfx('player-shot')
     this.addImpact(
       this.player.x + direction * (SPRITE_TUNING.player.muzzleOffsetX + 2),
       this.player.y - SPRITE_TUNING.player.muzzleOffsetY + 2,
@@ -567,6 +581,7 @@ export class ArenaScene extends Phaser.Scene {
       fireVariant ? PLAYER_CONFIG.grenadeRadius + 36 : PLAYER_CONFIG.grenadeRadius,
       fireVariant ? 'fire' : 'frag',
     )
+    this.playSfx('grenade-throw')
   }
 
   private useAbility(time: number) {
@@ -643,25 +658,68 @@ export class ArenaScene extends Phaser.Scene {
       if (enemy.enemyType === 'ranged') {
         const step = resolveRangedEnemyStep(enemy, playerX, time)
         enemy.setY(step.y ?? enemy.y)
-        enemy.setVelocityX(step.xVelocity)
+        let velocityX = step.xVelocity
 
-        if (step.shouldFire) {
-          enemy.attackReadyAt = time + enemy.rangedCooldownMs
-          this.fireEnemyProjectile(enemy)
+        if (!step.shouldFire && enemy.attackWindupUntil > 0) {
+          enemy.attackWindupUntil = 0
         }
+
+        if (enemy.attackWindupUntil > time) {
+          velocityX = 0
+        } else if (enemy.attackWindupUntil > 0 && time >= enemy.attackWindupUntil) {
+          enemy.attackWindupUntil = 0
+          enemy.attackReadyAt = time + enemy.rangedCooldownMs
+          velocityX = 0
+          this.fireEnemyProjectile(enemy)
+        } else if (step.shouldFire) {
+          velocityX = 0
+          this.startEnemyWindup(enemy, time, PLAYER_CONFIG.rangedTelegraphMs)
+        }
+
+        enemy.setVelocityX(velocityX)
       } else if (enemy.enemyType === 'heavy') {
         const step = resolveHeavyEnemyStep(enemy, playerX, time)
         enemy.setY(step.y ?? enemy.y)
-        enemy.setVelocityX(step.xVelocity)
+        let velocityX = step.xVelocity
 
-        if (step.shouldFire) {
-          enemy.attackReadyAt = time + enemy.rangedCooldownMs
-          this.fireEnemyProjectile(enemy)
+        if (!step.shouldFire && enemy.attackWindupUntil > 0) {
+          enemy.attackWindupUntil = 0
         }
+
+        if (enemy.attackWindupUntil > time) {
+          velocityX = 0
+        } else if (enemy.attackWindupUntil > 0 && time >= enemy.attackWindupUntil) {
+          enemy.attackWindupUntil = 0
+          enemy.attackReadyAt = time + enemy.rangedCooldownMs
+          velocityX = 0
+          this.fireEnemyProjectile(enemy)
+        } else if (step.shouldFire) {
+          velocityX = 0
+          this.startEnemyWindup(enemy, time, PLAYER_CONFIG.heavyTelegraphMs)
+        }
+
+        enemy.setVelocityX(velocityX)
       } else {
+        const distance = Math.abs(playerX - enemy.x)
         const step = resolveMeleeEnemyStep(enemy, playerX)
         enemy.setY(ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.melee.floorOffset)
-        enemy.setVelocityX(step.xVelocity)
+        let velocityX = step.xVelocity
+
+        if (distance > 96 && enemy.attackWindupUntil > 0) {
+          enemy.attackWindupUntil = 0
+        }
+
+        if (enemy.attackWindupUntil > time) {
+          velocityX = 0
+        } else if (enemy.attackWindupUntil > 0 && time >= enemy.attackWindupUntil + PLAYER_CONFIG.meleeWhiffRecoveryMs) {
+          enemy.attackWindupUntil = 0
+          enemy.attackReadyAt = time + 320
+        } else if (distance <= 76 && time >= enemy.attackReadyAt && enemy.attackWindupUntil === 0) {
+          velocityX = 0
+          this.startEnemyWindup(enemy, time, PLAYER_CONFIG.meleeTelegraphMs)
+        }
+
+        enemy.setVelocityX(velocityX)
       }
 
       enemy.setFlipX(enemy.x < playerX)
@@ -699,8 +757,10 @@ export class ArenaScene extends Phaser.Scene {
       body?.setSize(24, 24, true)
     } else {
       bullet.setScale(1)
-      body?.setSize(14, 14, true)
+      body?.setSize(18, 14, true)
     }
+
+    this.playSfx(heavyShot ? 'heavy-shot' : 'enemy-shot')
   }
 
   private updateProjectiles(time: number) {
@@ -713,6 +773,8 @@ export class ArenaScene extends Phaser.Scene {
       if (!projectile.active) {
         return true
       }
+
+      this.emitProjectileTrail(projectile, time)
 
       if (
         projectile.x < -40 ||
@@ -767,6 +829,16 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     if (runtimeUpdate.storePatch) {
+      if (runtimeUpdate.storePatch.activeMessage) {
+        if (/cleared/i.test(runtimeUpdate.storePatch.activeMessage)) {
+          this.cameras.main.flash(100, 255, 187, 71)
+          this.playSfx('wave-clear')
+        } else if (/inbound|incoming/i.test(runtimeUpdate.storePatch.activeMessage)) {
+          this.cameras.main.flash(90, 255, 132, 44)
+          this.playSfx('wave-start')
+        }
+      }
+
       useGameStore.setState(runtimeUpdate.storePatch)
     }
   }
@@ -794,13 +866,17 @@ export class ArenaScene extends Phaser.Scene {
 
   private hitEnemy(enemy: Enemy, damage: number) {
     const hp = enemy.takeDamage(this.time.now, damage)
+    this.playSfx(hp > 0 ? 'enemy-hit' : 'enemy-death')
+    this.addImpact(enemy.x, enemy.y - 32, hp > 0 ? 0xffa366 : 0xffd48a, hp > 0 ? 12 : 20)
 
     if (hp > 0) {
+      this.cameras.main.shake(40, 0.0009)
       enemy.setVelocityX(enemy.body?.velocity.x ? enemy.body.velocity.x * 0.72 : 0)
       return
     }
 
     this.addImpact(enemy.x, enemy.y, 0xffd48a)
+    this.cameras.main.shake(75, 0.0016)
     enemy.destroy()
     const store = useGameStore.getState()
     useGameStore.setState({
@@ -840,6 +916,7 @@ export class ArenaScene extends Phaser.Scene {
       }
     })
 
+    this.playSfx('grenade-explode')
     this.cameras.main.shake(120, 0.004)
     this.recycleArcadeSprite(grenade)
   }
@@ -871,11 +948,14 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     if (this.player.isShielded(this.time.now)) {
+      this.playSfx('shield-block')
       useGameStore.getState().setHudState({ shieldRemaining: Math.max(0, this.player.shieldUntil - this.time.now) })
       return
     }
 
     const hp = this.player.takeDamage(this.time.now, Math.max(1, Math.round(damage)))
+    this.playSfx(hp > 0 ? 'player-hit' : 'player-death')
+    this.addImpact(this.player.x, this.player.y - 72, 0xff6273, 18)
     this.player.setVelocityX((sourceX > this.player.x ? -1 : 1) * 132)
     this.cameras.main.shake(110, 0.003)
     useGameStore.setState({ hp })
@@ -909,5 +989,159 @@ export class ArenaScene extends Phaser.Scene {
       duration: 180,
       onComplete: () => circle.destroy(),
     })
+  }
+
+  private startEnemyWindup(enemy: Enemy, time: number, durationMs: number) {
+    if (time < enemy.attackReadyAt || enemy.attackWindupUntil > time) {
+      return
+    }
+
+    enemy.lastAttackAt = time
+    enemy.attackWindupUntil = time + durationMs
+    this.addImpact(
+      enemy.x,
+      enemy.enemyType === 'ranged' ? enemy.y - 54 : enemy.y - 44,
+      enemy.enemyType === 'heavy' ? 0xff7d4d : 0xffb066,
+      enemy.enemyType === 'heavy' ? 16 : 10,
+    )
+    this.playSfx(enemy.enemyType === 'heavy' ? 'heavy-charge' : 'enemy-charge')
+  }
+
+  private emitProjectileTrail(projectile: Bullet, time: number) {
+    if (time < projectile.lastTrailAt + 36) {
+      return
+    }
+
+    projectile.lastTrailAt = time
+    const color =
+      projectile.owner === 'player'
+        ? 0xffd88a
+        : projectile.texture.key === 'heavy-bullet'
+          ? 0xff6b42
+          : 0xff9a52
+    const radius = projectile.texture.key === 'heavy-bullet' ? 5 : 3
+    const alpha = projectile.texture.key === 'heavy-bullet' ? 0.28 : 0.22
+    const trail = this.add.circle(projectile.x, projectile.y, radius, color, alpha)
+
+    this.tweens.add({
+      targets: trail,
+      alpha: 0,
+      scale: 0.35,
+      duration: projectile.texture.key === 'heavy-bullet' ? 170 : 110,
+      onComplete: () => trail.destroy(),
+    })
+  }
+
+  private playSfx(
+    kind:
+      | 'player-shot'
+      | 'enemy-shot'
+      | 'heavy-shot'
+      | 'enemy-charge'
+      | 'heavy-charge'
+      | 'enemy-hit'
+      | 'enemy-death'
+      | 'player-hit'
+      | 'player-death'
+      | 'shield-block'
+      | 'grenade-throw'
+      | 'grenade-explode'
+      | 'wave-start'
+      | 'wave-clear',
+  ) {
+    if (useGameStore.getState().audioMuted) {
+      return
+    }
+
+    const manager = this.sound as Phaser.Sound.WebAudioSoundManager & {
+      context?: AudioContext
+    }
+    const context = manager.context
+
+    if (!context) {
+      return
+    }
+
+    void context.resume().catch(() => undefined)
+
+    const pulse = (frequency: number, durationMs: number, options?: {
+      type?: OscillatorType
+      volume?: number
+      endFrequency?: number
+      detune?: number
+    }) => {
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      const now = context.currentTime
+      const duration = durationMs / 1000
+
+      oscillator.type = options?.type ?? 'square'
+      oscillator.frequency.setValueAtTime(frequency, now)
+
+      if (options?.endFrequency) {
+        oscillator.frequency.exponentialRampToValueAtTime(
+          Math.max(25, options.endFrequency),
+          now + duration,
+        )
+      }
+
+      if (options?.detune) {
+        oscillator.detune.setValueAtTime(options.detune, now)
+      }
+
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.exponentialRampToValueAtTime(options?.volume ?? 0.028, now + 0.012)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration)
+
+      oscillator.connect(gain)
+      gain.connect(context.destination)
+      oscillator.start(now)
+      oscillator.stop(now + duration)
+    }
+
+    switch (kind) {
+      case 'player-shot':
+        pulse(520, 55, { endFrequency: 300, volume: 0.018 })
+        break
+      case 'enemy-shot':
+        pulse(250, 85, { type: 'sawtooth', endFrequency: 120, volume: 0.022 })
+        break
+      case 'heavy-shot':
+        pulse(140, 180, { type: 'sawtooth', endFrequency: 58, volume: 0.034 })
+        break
+      case 'enemy-charge':
+        pulse(180, 120, { type: 'triangle', endFrequency: 260, volume: 0.018 })
+        break
+      case 'heavy-charge':
+        pulse(90, 220, { type: 'sawtooth', endFrequency: 150, volume: 0.026 })
+        break
+      case 'enemy-hit':
+        pulse(320, 70, { endFrequency: 180, volume: 0.018 })
+        break
+      case 'enemy-death':
+        pulse(240, 160, { type: 'sawtooth', endFrequency: 62, volume: 0.026 })
+        break
+      case 'player-hit':
+        pulse(170, 120, { type: 'sawtooth', endFrequency: 80, volume: 0.03 })
+        break
+      case 'player-death':
+        pulse(110, 260, { type: 'sawtooth', endFrequency: 34, volume: 0.04 })
+        break
+      case 'shield-block':
+        pulse(720, 90, { type: 'triangle', endFrequency: 420, volume: 0.02 })
+        break
+      case 'grenade-throw':
+        pulse(280, 90, { type: 'triangle', endFrequency: 180, volume: 0.018 })
+        break
+      case 'grenade-explode':
+        pulse(82, 280, { type: 'sawtooth', endFrequency: 30, volume: 0.04 })
+        break
+      case 'wave-start':
+        pulse(420, 150, { type: 'triangle', endFrequency: 720, volume: 0.022 })
+        break
+      case 'wave-clear':
+        pulse(620, 180, { type: 'triangle', endFrequency: 980, volume: 0.024 })
+        break
+    }
   }
 }

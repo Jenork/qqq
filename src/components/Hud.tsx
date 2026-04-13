@@ -74,6 +74,7 @@ export function Hud() {
   const grenadeIcon = getItemIconPath('frag-grenade')
   const abilityIcon = getItemIconPath('shield')
   const healIcon = getItemIconPath('medkit')
+  const isWaveMessage = Boolean(activeMessage && /wave/i.test(activeMessage))
 
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-2 sm:p-3">
@@ -154,7 +155,14 @@ export function Hud() {
           </div>
 
           {activeMessage ? (
-            <p className="max-w-[280px] rounded-full border border-orange-200/10 bg-black/24 px-2.5 py-1 text-right text-[8px] uppercase tracking-[0.14em] text-orange-100/80 sm:text-[9px]">
+            <p
+              className={cn(
+                'max-w-[320px] rounded-full border px-2.5 py-1 text-right uppercase tracking-[0.14em] sm:text-[9px]',
+                isWaveMessage
+                  ? 'border-orange-300/22 bg-orange-500/14 text-[9px] font-black text-orange-50 shadow-[0_0_18px_rgba(255,145,63,0.18)]'
+                  : 'border-orange-200/10 bg-black/24 text-[8px] text-orange-100/80',
+              )}
+            >
               {activeMessage}
             </p>
           ) : null}

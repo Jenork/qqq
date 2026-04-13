@@ -13,6 +13,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   projectileDamage: number
   projectileSpeed: number
   attackReadyAt = 0
+  attackWindupUntil = 0
   lastAttackAt = -1000
   scoreValue: number
   activeSlowMultiplier = 1

@@ -53,7 +53,7 @@ export class ArenaRunDirector {
       shieldRemaining: 0,
       healCharges: PLAYER_CONFIG.healCharges,
       pendingScore: 0,
-      activeMessage: startImmediately ? 'Wave 1 incoming.' : null,
+      activeMessage: startImmediately ? 'WAVE 1 INCOMING' : null,
     }
   }
 
@@ -68,7 +68,7 @@ export class ArenaRunDirector {
       return {
         storePatch: {
           score: currentScore + SCORE_CONFIG.waveClearBonus,
-          activeMessage: `Wave ${event.waveCleared} cleared.`,
+          activeMessage: `WAVE ${event.waveCleared} CLEARED  +${SCORE_CONFIG.waveClearBonus}`,
         },
       }
     }
@@ -77,7 +77,7 @@ export class ArenaRunDirector {
       return {
         storePatch: {
           wave: event.waveStarted,
-          activeMessage: `Wave ${event.waveStarted} inbound.`,
+          activeMessage: `WAVE ${event.waveStarted} INBOUND`,
         },
       }
     }
@@ -85,4 +85,3 @@ export class ArenaRunDirector {
     return {}
   }
 }
-

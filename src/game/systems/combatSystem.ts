@@ -101,7 +101,7 @@ export function resolveMeleeEnemyStep(enemy: Enemy, playerX: number): EnemyStep 
   const delta = playerX - enemy.x
   const distance = Math.abs(delta)
 
-  if (distance < 54) {
+  if (distance < 68) {
     return { xVelocity: 0, shouldFire: false }
   }
 
@@ -125,9 +125,9 @@ export function resolveRangedEnemyStep(enemy: Enemy, playerX: number, time: numb
     }
   }
 
-  if (distance < preferredDistance - 22) {
+  if (distance < preferredDistance - 44) {
     return {
-      xVelocity: -Math.sign(delta) * enemy.getEffectiveSpeed() * 0.85,
+      xVelocity: -Math.sign(delta) * enemy.getEffectiveSpeed(),
       y: hoverY,
       shouldFire: false,
     }
