@@ -316,6 +316,9 @@ export class ArenaScene extends Phaser.Scene {
       grenade: 'Q',
       ability: 'E',
       heal: 'R',
+      weapon1: 'ONE',
+      weapon2: 'TWO',
+      weapon3: 'THREE',
     }) as Record<string, Phaser.Input.Keyboard.Key>
   }
 
@@ -476,6 +479,7 @@ export class ArenaScene extends Phaser.Scene {
 
   private handleCombatInputs(time: number) {
     const store = useGameStore.getState()
+    this.handleWeaponHotkeys()
     const tuning = WEAPON_TUNING[store.equippedWeapon as keyof typeof WEAPON_TUNING]
     const triggerHeld = this.input.activePointer.leftButtonDown() || store.mobileControls.shoot
     const triggerJustPressed = triggerHeld && !this.shootLatch
@@ -513,6 +517,36 @@ export class ArenaScene extends Phaser.Scene {
     if (store.consumeAction('heal') > 0) {
       this.useHeal(time)
     }
+  }
+
+  private handleWeaponHotkeys() {
+    if (Phaser.Input.Keyboard.JustDown(this.keys.weapon1)) {
+      this.equipWeaponFromHotkey('pistol', 'Pistol ready.')
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.keys.weapon2)) {
+      this.equipWeaponFromHotkey('shotgun', 'Shotgun ready.')
+    }
+
+    if (Phaser.Input.Keyboard.JustDown(this.keys.weapon3)) {
+      this.equipWeaponFromHotkey('burst-rifle', 'Burst rifle ready.')
+    }
+  }
+
+  private equipWeaponFromHotkey(weaponId: 'pistol' | 'shotgun' | 'burst-rifle', successMessage: string) {
+    const store = useGameStore.getState()
+
+    if (!store.unlockedItemIds.includes(weaponId)) {
+      store.setMessage('Weapon is locked.')
+      return
+    }
+
+    if (store.equippedWeapon === weaponId) {
+      return
+    }
+
+    store.equipItem(weaponId)
+    store.setMessage(successMessage)
   }
 
   private fireWeapon(time: number) {
