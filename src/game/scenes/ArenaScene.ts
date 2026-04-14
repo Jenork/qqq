@@ -271,14 +271,7 @@ export class ArenaScene extends Phaser.Scene {
       const time = this.time.now
 
       if (enemy.enemyType === 'melee') {
-        if (enemy.attackWindupUntil === 0 && time >= enemy.attackReadyAt) {
-          this.startEnemyWindup(enemy, time, PLAYER_CONFIG.meleeTelegraphMs)
-          return
-        }
-
-        if (enemy.attackWindupUntil > time) {
-          return
-        }
+        return
       }
 
       if (
@@ -704,6 +697,7 @@ export class ArenaScene extends Phaser.Scene {
         const step = resolveMeleeEnemyStep(enemy, playerX)
         enemy.setY(ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.melee.floorOffset)
         let velocityX = step.xVelocity
+        const withinStrikeRange = distance <= 82
 
         if (distance > 96 && enemy.attackWindupUntil > 0) {
           enemy.attackWindupUntil = 0
@@ -711,10 +705,16 @@ export class ArenaScene extends Phaser.Scene {
 
         if (enemy.attackWindupUntil > time) {
           velocityX = 0
-        } else if (enemy.attackWindupUntil > 0 && time >= enemy.attackWindupUntil + PLAYER_CONFIG.meleeWhiffRecoveryMs) {
-          enemy.attackWindupUntil = 0
-          enemy.attackReadyAt = time + 320
-        } else if (distance <= 76 && time >= enemy.attackReadyAt && enemy.attackWindupUntil === 0) {
+        } else if (enemy.attackWindupUntil > 0 && time >= enemy.attackWindupUntil) {
+          velocityX = 0
+
+          if (withinStrikeRange) {
+            this.applyMeleeContactHit(enemy, time)
+          } else {
+            enemy.attackWindupUntil = 0
+            enemy.attackReadyAt = time + PLAYER_CONFIG.meleeWhiffRecoveryMs
+          }
+        } else if (withinStrikeRange && time >= enemy.attackReadyAt && enemy.attackWindupUntil === 0) {
           velocityX = 0
           this.startEnemyWindup(enemy, time, PLAYER_CONFIG.meleeTelegraphMs)
         }
@@ -965,6 +965,29 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     this.endRun()
+  }
+
+  private applyMeleeContactHit(enemy: Enemy, time: number) {
+    if (
+      !shouldApplyContactHit({
+        time,
+        nextContactHitAt: this.nextContactHitAt,
+        enemyAttackReadyAt: enemy.attackReadyAt,
+        gameOver: this.gameOver,
+      })
+    ) {
+      return
+    }
+
+    const pushDirection = enemy.x > this.player.x ? -1 : 1
+
+    enemy.attackWindupUntil = 0
+    enemy.lastAttackAt = time
+    enemy.attackReadyAt = time + PLAYER_CONFIG.contactDamageCooldownMs
+    this.nextContactHitAt = time + PLAYER_CONFIG.contactDamageCooldownMs
+    this.damagePlayer(PLAYER_CONFIG.damagePerHit, enemy.x)
+    this.player.setVelocityX(pushDirection * PLAYER_CONFIG.contactKnockback)
+    enemy.setX(enemy.x - pushDirection * 26)
   }
 
   private endRun() {
