@@ -51,7 +51,6 @@ export function Hud() {
   const shieldRemaining = useGameStore((state) => state.shieldRemaining)
   const healCharges = useGameStore((state) => state.healCharges)
   const status = useGameStore((state) => state.status)
-  const toggleInventory = useGameStore((state) => state.toggleInventory)
   const togglePause = useGameStore((state) => state.togglePause)
   const setMobileControl = useGameStore((state) => state.setMobileControl)
   const pulseAction = useGameStore((state) => state.pulseAction)
@@ -80,13 +79,6 @@ export function Hud() {
     <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-2 sm:p-3">
       <div className="pointer-events-auto flex items-start justify-between gap-2 sm:gap-3">
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            onClick={() => toggleInventory(true)}
-            className="rounded-full border border-white/10 bg-black/24 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-stone-100 backdrop-blur"
-          >
-            Inv
-          </button>
           {status !== 'ready' && status !== 'gameover' ? (
             <button
               type="button"

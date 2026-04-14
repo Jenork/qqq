@@ -34,7 +34,7 @@ export const ITEMS: GameItem[] = [
     category: 'weapon',
     label: 'Shotgun',
     description: 'Short-range spread blast that deletes clustered demons.',
-    defaultUnlocked: false,
+    defaultUnlocked: true,
     claimableOnchain: true,
   },
   {
@@ -43,7 +43,7 @@ export const ITEMS: GameItem[] = [
     category: 'weapon',
     label: 'Burst Rifle',
     description: 'Controlled three-round burst for consistent ranged DPS.',
-    defaultUnlocked: false,
+    defaultUnlocked: true,
     claimableOnchain: true,
   },
   {

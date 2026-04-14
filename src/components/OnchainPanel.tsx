@@ -113,7 +113,7 @@ export function OnchainPanel() {
                 </>
               ) : (
                 <div className="rounded-[18px] border border-white/10 bg-black/24 px-4 py-3 text-sm text-stone-300">
-                  Connect only when you want to claim items or submit best score onchain.
+                  Connect only when you want to submit your best score onchain.
                 </div>
               )}
             </div>

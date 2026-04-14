@@ -33,7 +33,6 @@ export function SiteTabs() {
   const [activeTab, setActiveTab] = useState<SiteTab>('game')
   const status = useGameStore((state) => state.status)
   const pauseRun = useGameStore((state) => state.pauseRun)
-  const toggleInventory = useGameStore((state) => state.toggleInventory)
   const toggleLeaderboard = useGameStore((state) => state.toggleLeaderboard)
 
   useEffect(() => {
@@ -50,13 +49,12 @@ export function SiteTabs() {
       return
     }
 
-    toggleInventory(false)
     toggleLeaderboard(false)
 
     if (status === 'playing') {
       pauseRun()
     }
-  }, [activeTab, pauseRun, status, toggleInventory, toggleLeaderboard])
+  }, [activeTab, pauseRun, status, toggleLeaderboard])
 
   const activeLabel = useMemo(() => TAB_ORDER.find((tab) => tab.id === activeTab)?.description ?? '', [activeTab])
 

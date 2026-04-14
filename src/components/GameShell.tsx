@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import type Phaser from 'phaser'
 import { GameOverModal } from '@/components/GameOverModal'
 import { Hud } from '@/components/Hud'
-import { InventoryPanel } from '@/components/InventoryPanel'
 import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
 
@@ -73,7 +72,6 @@ export function GameShell() {
         />
 
         <Hud />
-        <InventoryPanel />
         <GameOverModal />
 
         {status === 'paused' ? (
