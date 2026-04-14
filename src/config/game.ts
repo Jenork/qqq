@@ -121,12 +121,12 @@ export type EnemyTuning = {
 
 export const ENEMY_CONFIG: Record<EnemyType, EnemyTuning> = {
   melee: {
-    hp: 34,
+    hp: 3,
     damage: 1,
     speed: 58,
   },
   ranged: {
-    hp: 28,
+    hp: 2,
     damage: 1,
     speed: 44,
     rangedCooldownMs: 1700,
@@ -135,7 +135,7 @@ export const ENEMY_CONFIG: Record<EnemyType, EnemyTuning> = {
     projectileSpeed: 300,
   },
   heavy: {
-    hp: 82,
+    hp: 5,
     damage: 1,
     speed: 32,
     rangedCooldownMs: 3200,
