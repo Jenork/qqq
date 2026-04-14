@@ -423,7 +423,11 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private updateAmbientAnimation(time: number) {
-    applyPlayerPresentation(this.player, time)
+    applyPlayerPresentation(
+      this.player,
+      time,
+      useGameStore.getState().equippedWeapon as 'pistol' | 'shotgun' | 'burst-rifle',
+    )
     this.player.refreshVisualState(time)
 
     this.ambientFlames.forEach((flame, index) => {

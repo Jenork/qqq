@@ -1,5 +1,5 @@
 import type Phaser from 'phaser'
-import type { EnemyType } from '@/config/game'
+import type { EnemyType, WeaponId } from '@/config/game'
 
 export type PlayerSpriteState = 'idle' | 'run' | 'jump' | 'shoot' | 'hit' | 'dead'
 export type EnemySpriteState = 'idle' | 'advance' | 'attack' | 'hit' | 'dead'
@@ -12,6 +12,11 @@ type SpriteAsset = {
 const PLAYER_BASE_TEXTURE: SpriteAsset = {
   key: 'player-marine-base',
   path: '/sprites/player-marine.png',
+}
+
+const PLAYER_SHOTGUN_TEXTURE: SpriteAsset = {
+  key: 'player-marine-shotgun',
+  path: '/sprites/shotgun.png',
 }
 
 const ENEMY_BASE_TEXTURES: Record<EnemyType, SpriteAsset> = {
@@ -31,6 +36,7 @@ const ENEMY_BASE_TEXTURES: Record<EnemyType, SpriteAsset> = {
 
 export const SPRITE_ASSET_MANIFEST: SpriteAsset[] = [
   PLAYER_BASE_TEXTURE,
+  PLAYER_SHOTGUN_TEXTURE,
   ...Object.values(ENEMY_BASE_TEXTURES),
 ]
 
@@ -40,11 +46,14 @@ export function preloadSpriteManifest(loader: Phaser.Loader.LoaderPlugin) {
   })
 }
 
-export function getPlayerTextureKey(_state: PlayerSpriteState) {
+export function getPlayerTextureKey(_state: PlayerSpriteState, weaponId: WeaponId = 'pistol') {
+  if (weaponId === 'shotgun') {
+    return PLAYER_SHOTGUN_TEXTURE.key
+  }
+
   return PLAYER_BASE_TEXTURE.key
 }
 
 export function getEnemyTextureKey(type: EnemyType, _state: EnemySpriteState) {
   return ENEMY_BASE_TEXTURES[type].key
 }
-
