@@ -22,7 +22,7 @@ export const PLAYER_CONFIG = {
   heavyTelegraphMs: 520,
   fireRateMs: 210,
   bulletSpeed: 720,
-  bulletDamage: 16,
+  bulletDamage: 1,
   grenadeDamage: 50,
   grenadeCooldownMs: 4200,
   grenadeSpeedX: 250,
@@ -243,7 +243,7 @@ export function getWaveTemplate(wave: number): WaveTemplate {
 
 export const WEAPON_TUNING = {
   pistol: {
-    damage: 16,
+    damage: 1,
     fireRateMs: 210,
     projectileCount: 1,
     spread: 0,
@@ -251,7 +251,7 @@ export const WEAPON_TUNING = {
     triggerMode: 'tap',
   },
   shotgun: {
-    damage: 6,
+    damage: 1,
     fireRateMs: 720,
     projectileCount: 6,
     spread: 0.32,
@@ -259,7 +259,7 @@ export const WEAPON_TUNING = {
     triggerMode: 'tap',
   },
   'burst-rifle': {
-    damage: 13,
+    damage: 1,
     fireRateMs: 360,
     projectileCount: 3,
     spread: 0.08,

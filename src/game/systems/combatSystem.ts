@@ -40,7 +40,7 @@ export function buildPlayerVolley(options: {
 
   player.lastShotAt = time
 
-  const damage = tuning.damage * (player.isRaging(time) ? 2 : 1)
+  const damage = tuning.damage
   const direction = player.facing
   const x = player.x + direction * SPRITE_TUNING.player.muzzleOffsetX
   const y = player.y - SPRITE_TUNING.player.muzzleOffsetY
