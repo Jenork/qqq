@@ -247,20 +247,23 @@ export const WEAPON_TUNING = {
     fireRateMs: 210,
     projectileCount: 1,
     spread: 0,
+    maxDistance: 920,
     triggerMode: 'tap',
   },
   shotgun: {
-    damage: 11,
-    fireRateMs: 650,
-    projectileCount: 5,
-    spread: 0.22,
-    triggerMode: 'auto',
+    damage: 6,
+    fireRateMs: 720,
+    projectileCount: 6,
+    spread: 0.32,
+    maxDistance: 260,
+    triggerMode: 'tap',
   },
   'burst-rifle': {
     damage: 13,
     fireRateMs: 360,
     projectileCount: 3,
     spread: 0.08,
+    maxDistance: 980,
     triggerMode: 'auto',
   },
 } satisfies Record<
@@ -270,6 +273,7 @@ export const WEAPON_TUNING = {
     fireRateMs: number
     projectileCount: number
     spread: number
+    maxDistance: number
     triggerMode: 'tap' | 'auto'
   }
 >

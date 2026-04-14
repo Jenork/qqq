@@ -5,6 +5,9 @@ export class Bullet extends Phaser.Physics.Arcade.Image {
   owner: 'player' | 'enemy' = 'player'
   launchedAt = 0
   lastTrailAt = 0
+  originX = 0
+  originY = 0
+  maxDistance = Number.POSITIVE_INFINITY
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture = 'bullet') {
     super(scene, x, y, texture)
@@ -19,11 +22,22 @@ export class Bullet extends Phaser.Physics.Arcade.Image {
     body?.setAllowGravity(false)
   }
 
-  fire(x: number, y: number, velocityX: number, velocityY: number, damage: number, owner: 'player' | 'enemy') {
+  fire(
+    x: number,
+    y: number,
+    velocityX: number,
+    velocityY: number,
+    damage: number,
+    owner: 'player' | 'enemy',
+    maxDistance = Number.POSITIVE_INFINITY,
+  ) {
     this.damage = damage
     this.owner = owner
     this.launchedAt = this.scene.time.now
     this.lastTrailAt = 0
+    this.originX = x
+    this.originY = y
+    this.maxDistance = maxDistance
     this.enableBody(true, x, y, true, true)
     this.setVisible(true)
     this.setScale(1)
@@ -40,6 +54,9 @@ export class Bullet extends Phaser.Physics.Arcade.Image {
   shutdown() {
     this.launchedAt = 0
     this.lastTrailAt = 0
+    this.originX = 0
+    this.originY = 0
+    this.maxDistance = Number.POSITIVE_INFINITY
     this.disableBody(true, true)
     this.setVelocity(0, 0)
     this.setAngularVelocity(0)

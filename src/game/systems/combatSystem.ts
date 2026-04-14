@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 import {
   ARENA_BOUNDS,
+  ARENA_SIZE,
   PLAYER_CONFIG,
   SPRITE_TUNING,
   WEAPON_TUNING,
@@ -16,6 +17,7 @@ export type ProjectileSpec = {
   velocityY: number
   damage: number
   angle: number
+  maxDistance: number
 }
 
 export type EnemyStep = {
@@ -42,15 +44,24 @@ export function buildPlayerVolley(options: {
   const direction = player.facing
   const x = player.x + direction * SPRITE_TUNING.player.muzzleOffsetX
   const y = player.y - SPRITE_TUNING.player.muzzleOffsetY
+  const baseAngle = direction > 0 ? 0 : Math.PI
+  const projectileCount = tuning.projectileCount
 
-  return Array.from({ length: tuning.projectileCount }, () => ({
-    x,
-    y,
-    velocityX: PLAYER_CONFIG.bulletSpeed * direction,
-    velocityY: 0,
-    damage,
-    angle: direction > 0 ? 0 : 180,
-  }))
+  return Array.from({ length: projectileCount }, (_, index) => {
+    const progress = projectileCount === 1 ? 0.5 : index / (projectileCount - 1)
+    const spreadOffset = (progress - 0.5) * tuning.spread
+    const shotAngle = baseAngle + spreadOffset
+
+    return {
+      x,
+      y,
+      velocityX: Math.cos(shotAngle) * PLAYER_CONFIG.bulletSpeed,
+      velocityY: Math.sin(shotAngle) * PLAYER_CONFIG.bulletSpeed,
+      damage,
+      angle: Phaser.Math.RadToDeg(shotAngle),
+      maxDistance: tuning.maxDistance,
+    }
+  })
 }
 
 export function resolveHealAmount(healId: string) {
@@ -94,6 +105,7 @@ export function buildEnemyProjectile(options: {
     velocityY: vector.y,
     damage: enemy.projectileDamage,
     angle: Phaser.Math.RadToDeg(Math.atan2(vector.y, vector.x)),
+    maxDistance: ARENA_SIZE.width + 180,
   }
 }
 

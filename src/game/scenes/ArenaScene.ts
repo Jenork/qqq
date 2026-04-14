@@ -536,18 +536,18 @@ export class ArenaScene extends Phaser.Scene {
         return
       }
 
-      bullet.fire(shot.x, shot.y, shot.velocityX, shot.velocityY, shot.damage, 'player')
+      bullet.fire(shot.x, shot.y, shot.velocityX, shot.velocityY, shot.damage, 'player', shot.maxDistance)
       bullet.setAngle(shot.angle)
     })
 
-    this.playSfx('player-shot')
+    this.playSfx(store.equippedWeapon === 'shotgun' ? 'shotgun-shot' : 'player-shot')
     this.addImpact(
       this.player.x + direction * (SPRITE_TUNING.player.muzzleOffsetX + 2),
       this.player.y - SPRITE_TUNING.player.muzzleOffsetY + 2,
       0xffea79,
-      10,
+      store.equippedWeapon === 'shotgun' ? 16 : 10,
     )
-    this.cameras.main.shake(45, 0.0012)
+    this.cameras.main.shake(store.equippedWeapon === 'shotgun' ? 65 : 45, store.equippedWeapon === 'shotgun' ? 0.0018 : 0.0012)
   }
 
   private throwGrenade(time: number) {
@@ -749,7 +749,7 @@ export class ArenaScene extends Phaser.Scene {
       bullet.setTexture('enemy-bullet')
     }
 
-    bullet.fire(shot.x, shot.y, shot.velocityX, shot.velocityY, shot.damage, 'enemy')
+    bullet.fire(shot.x, shot.y, shot.velocityX, shot.velocityY, shot.damage, 'enemy', shot.maxDistance)
     bullet.setAngle(shot.angle)
 
     if (heavyShot) {
@@ -780,7 +780,9 @@ export class ArenaScene extends Phaser.Scene {
         projectile.x < -40 ||
         projectile.x > boundsWidth + 40 ||
         projectile.y < -60 ||
-        projectile.y > boundsHeight + 60
+        projectile.y > boundsHeight + 60 ||
+        Phaser.Math.Distance.Between(projectile.originX, projectile.originY, projectile.x, projectile.y) >
+          projectile.maxDistance
       ) {
         this.recycleArcadeSprite(projectile)
       }
@@ -1058,6 +1060,7 @@ export class ArenaScene extends Phaser.Scene {
   private playSfx(
     kind:
       | 'player-shot'
+      | 'shotgun-shot'
       | 'enemy-shot'
       | 'heavy-shot'
       | 'enemy-charge'
@@ -1125,6 +1128,10 @@ export class ArenaScene extends Phaser.Scene {
     switch (kind) {
       case 'player-shot':
         pulse(520, 55, { endFrequency: 300, volume: 0.018 })
+        break
+      case 'shotgun-shot':
+        pulse(180, 90, { type: 'sawtooth', endFrequency: 92, volume: 0.03 })
+        pulse(120, 130, { type: 'triangle', endFrequency: 58, volume: 0.02 })
         break
       case 'enemy-shot':
         pulse(250, 85, { type: 'sawtooth', endFrequency: 120, volume: 0.022 })
