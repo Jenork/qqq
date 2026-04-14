@@ -44,8 +44,6 @@ type GameStore = {
   equippedHeal: ItemId
   unlockedItemIds: ItemId[]
   onchainUnlockedItemIds: ItemId[]
-  inventoryOpen: boolean
-  leaderboardOpen: boolean
   mobileControls: ButtonState
   actionTokens: ActionTokens
   pendingScore: number
@@ -75,8 +73,6 @@ type GameStore = {
     >,
   ) => void
   setMessage: (message: string | null) => void
-  toggleInventory: (open?: boolean) => void
-  toggleLeaderboard: (open?: boolean) => void
   setMobileControl: (key: keyof ButtonState, value: boolean) => void
   pulseAction: (key: keyof ActionTokens) => void
   consumeAction: (key: keyof ActionTokens) => number
@@ -106,8 +102,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   equippedHeal: INVENTORY_DEFAULTS.heal,
   unlockedItemIds: DEFAULT_UNLOCKED_ITEM_IDS,
   onchainUnlockedItemIds: [],
-  inventoryOpen: false,
-  leaderboardOpen: false,
   mobileControls: {
     left: false,
     right: false,
@@ -155,16 +149,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleAudioMuted: () => set((state) => ({ audioMuted: !state.audioMuted })),
   setHudState: (next) => set(next),
   setMessage: (message) => set({ activeMessage: message }),
-  toggleInventory: (open) =>
-    set((state) => ({
-      inventoryOpen: open ?? !state.inventoryOpen,
-      leaderboardOpen: open === true ? false : state.leaderboardOpen,
-    })),
-  toggleLeaderboard: (open) =>
-    set((state) => ({
-      leaderboardOpen: open ?? !state.leaderboardOpen,
-      inventoryOpen: open === true ? false : state.inventoryOpen,
-    })),
   setMobileControl: (key, value) =>
     set((state) => ({
       mobileControls: {

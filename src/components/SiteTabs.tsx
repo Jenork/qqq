@@ -2,18 +2,18 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { AudioToggleButton } from '@/components/AudioToggleButton'
+import { ArsenalPanel } from '@/components/ArsenalPanel'
 import { GameShell } from '@/components/GameShell'
 import { LeaderboardPanel } from '@/components/LeaderboardPanel'
-import { MissionsPanel } from '@/components/MissionsPanel'
 import { cn } from '@/lib/cn'
 import { useGameStore } from '@/hooks/useGameStore'
 
-type SiteTab = 'game' | 'leaderboard' | 'missions'
+type SiteTab = 'game' | 'leaderboard' | 'arsenal'
 
 const TAB_ORDER: Array<{ id: SiteTab; label: string; description: string }> = [
   { id: 'game', label: 'Game', description: 'Play the survival run' },
   { id: 'leaderboard', label: 'Leaderboard', description: 'View all saved onchain scores' },
-  { id: 'missions', label: 'Missions', description: 'Extra tasks and community quests' },
+  { id: 'arsenal', label: 'Arsenal', description: 'Weapon and loadout section reserved for the next phase' },
 ]
 
 function readHashTab(): SiteTab {
@@ -22,7 +22,11 @@ function readHashTab(): SiteTab {
   }
 
   const raw = window.location.hash.replace('#', '')
-  if (raw === 'leaderboard' || raw === 'missions' || raw === 'game') {
+  if (raw === 'missions') {
+    return 'arsenal'
+  }
+
+  if (raw === 'leaderboard' || raw === 'arsenal' || raw === 'game') {
     return raw
   }
 
@@ -33,7 +37,6 @@ export function SiteTabs() {
   const [activeTab, setActiveTab] = useState<SiteTab>('game')
   const status = useGameStore((state) => state.status)
   const pauseRun = useGameStore((state) => state.pauseRun)
-  const toggleLeaderboard = useGameStore((state) => state.toggleLeaderboard)
 
   useEffect(() => {
     const syncFromHash = () => setActiveTab(readHashTab())
@@ -49,12 +52,10 @@ export function SiteTabs() {
       return
     }
 
-    toggleLeaderboard(false)
-
     if (status === 'playing') {
       pauseRun()
     }
-  }, [activeTab, pauseRun, status, toggleLeaderboard])
+  }, [activeTab, pauseRun, status])
 
   const activeLabel = useMemo(() => TAB_ORDER.find((tab) => tab.id === activeTab)?.description ?? '', [activeTab])
 
@@ -113,8 +114,8 @@ export function SiteTabs() {
           <LeaderboardPanel />
         </section>
 
-        <section className={cn(activeTab === 'missions' ? 'block' : 'hidden')}>
-          <MissionsPanel />
+        <section className={cn(activeTab === 'arsenal' ? 'block' : 'hidden')}>
+          <ArsenalPanel />
         </section>
       </div>
     </div>
