@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser'
-import { PLAYER_CONFIG, SPRITE_TUNING, type EnemyType, type WeaponId } from '@/config/game'
+import { PLAYER_CONFIG, SPRITE_TUNING, type EnemyType } from '@/config/game'
 import {
   getEnemyTextureKey,
   getPlayerTextureKey,
@@ -60,7 +60,7 @@ export function resolvePlayerSpriteState(player: Player, time: number) {
   return 'idle' satisfies PlayerSpriteState
 }
 
-export function applyPlayerPresentation(player: Player, time: number, weaponId: WeaponId = 'pistol') {
+export function applyPlayerPresentation(player: Player, time: number) {
   const state = resolvePlayerSpriteState(player, time)
   const body = player.body as Phaser.Physics.Arcade.Body | null
   const baseScale = SPRITE_TUNING.player.scale
@@ -105,7 +105,7 @@ export function applyPlayerPresentation(player: Player, time: number, weaponId: 
     angle = -facing * 76
   }
 
-  player.setTexture(getPlayerTextureKey(state, weaponId))
+  player.setTexture(getPlayerTextureKey(state))
   player.setScale(scaleX, scaleY)
   player.setAngle(angle)
 
