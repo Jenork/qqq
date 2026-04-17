@@ -3,8 +3,8 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Address } from 'viem'
 import { usePublicClient } from 'wagmi'
-import { baseSepolia } from 'wagmi/chains'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
+import { BASE_CHAIN_ID } from '@/config/web3'
 
 export type LeaderboardEntry = {
   address: string
@@ -18,8 +18,16 @@ export type LeaderboardSnapshot = {
   totalPlayers: number
 }
 
+function compareEntries(left: Pick<LeaderboardEntry, 'address' | 'bestScore'>, right: Pick<LeaderboardEntry, 'address' | 'bestScore'>) {
+  if (left.bestScore !== right.bestScore) {
+    return right.bestScore - left.bestScore
+  }
+
+  return left.address.localeCompare(right.address)
+}
+
 export function useLeaderboard(limit?: number, currentAddress?: string) {
-  const publicClient = usePublicClient({ chainId: baseSepolia.id })
+  const publicClient = usePublicClient({ chainId: BASE_CHAIN_ID })
   const normalizedCurrentAddress = currentAddress?.toLowerCase()
   const normalizedLimit = typeof limit === 'number' && limit > 0 ? limit : null
 
@@ -59,9 +67,13 @@ export function useLeaderboard(limit?: number, currentAddress?: string) {
         args: [BigInt(0), BigInt(total)],
       })) as readonly Address[]
 
+      const uniquePlayers = Array.from(
+        new Map(slice.map((address) => [address.toLowerCase(), address])).values(),
+      )
+
       const rankedEntries = (
         await Promise.all(
-          slice.map(async (address) => {
+          uniquePlayers.map(async (address) => {
             const bestScore = (await publicClient.readContract({
               address: GAME_PROGRESS_ADDRESS,
               abi: gameProgressAbi,
@@ -76,7 +88,7 @@ export function useLeaderboard(limit?: number, currentAddress?: string) {
           }),
         )
       )
-        .sort((left, right) => right.bestScore - left.bestScore)
+        .sort(compareEntries)
         .map((entry, index) => ({
           ...entry,
           rank: index + 1,

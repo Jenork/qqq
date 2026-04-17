@@ -336,6 +336,12 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private resetRun(startImmediately: boolean) {
+    const store = useGameStore.getState()
+    const rewards = {
+      bonusHealCharges: store.bonusHealCharges,
+      bonusArmorPoints: store.bonusArmorPoints,
+    }
+
     this.clearGroups()
     this.running = startImmediately
     this.paused = false
@@ -343,10 +349,10 @@ export class ArenaScene extends Phaser.Scene {
     this.playerBaseY = ARENA_BOUNDS.floorY + SPRITE_TUNING.player.floorOffset
     this.nextContactHitAt = 0
     this.shootLatch = false
-    this.player.resetState(ARENA_BOUNDS.playerSpawnX, this.playerBaseY)
+    this.player.resetState(ARENA_BOUNDS.playerSpawnX, this.playerBaseY, rewards)
     this.survivalTickAt = this.time.now + SCORE_CONFIG.survivalTickMs
 
-    useGameStore.setState(this.runDirector.reset(this.time.now, startImmediately))
+    useGameStore.setState(this.runDirector.reset(this.time.now, startImmediately, rewards))
   }
 
   private clearGroups() {
@@ -412,13 +418,30 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private syncHudCooldowns(time: number) {
+    this.syncRewardArmorBonus()
+
     useGameStore.getState().setHudState({
       hp: this.player.hp,
+      armor: this.player.armor,
+      maxArmor: this.player.maxArmor,
       grenadeCooldownRemaining: Math.max(0, this.player.lastGrenadeAt + PLAYER_CONFIG.grenadeCooldownMs - time),
       abilityCooldownRemaining: Math.max(0, this.player.lastAbilityAt + PLAYER_CONFIG.abilityCooldownMs - time),
       healCooldownRemaining: Math.max(0, this.player.lastHealAt + PLAYER_CONFIG.healCooldownMs - time),
       shieldRemaining: Math.max(0, this.player.shieldUntil - time),
       healCharges: this.player.healCharges,
+    })
+  }
+
+  private syncRewardArmorBonus() {
+    const store = useGameStore.getState()
+
+    if (!this.player.syncArmorBonus(store.bonusArmorPoints)) {
+      return
+    }
+
+    store.setHudState({
+      armor: this.player.armor,
+      maxArmor: this.player.maxArmor,
     })
   }
 
@@ -989,14 +1012,14 @@ export class ArenaScene extends Phaser.Scene {
       return
     }
 
-    const hp = this.player.takeDamage(this.time.now, Math.max(1, Math.round(damage)))
-    this.playSfx(hp > 0 ? 'player-hit' : 'player-death')
+    const result = this.player.takeDamage(this.time.now, Math.max(1, Math.round(damage)))
+    this.playSfx(result.hp > 0 ? 'player-hit' : 'player-death')
     this.addImpact(this.player.x, this.player.y - 72, 0xff6273, 18)
     this.player.setVelocityX((sourceX > this.player.x ? -1 : 1) * 132)
     this.cameras.main.shake(110, 0.003)
-    useGameStore.setState({ hp })
+    useGameStore.setState({ hp: result.hp, armor: result.armor, maxArmor: this.player.maxArmor })
 
-    if (hp > 0) {
+    if (result.hp > 0) {
       return
     }
 

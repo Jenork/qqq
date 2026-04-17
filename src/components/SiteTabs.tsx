@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ArsenalMissionsPanel } from '@/components/ArsenalMissionsPanel'
 import { AudioToggleButton } from '@/components/AudioToggleButton'
-import { ArsenalPanel } from '@/components/ArsenalPanel'
 import { GameShell } from '@/components/GameShell'
 import { LeaderboardPanel } from '@/components/LeaderboardPanel'
 import { cn } from '@/lib/cn'
@@ -10,10 +10,10 @@ import { useGameStore } from '@/hooks/useGameStore'
 
 type SiteTab = 'game' | 'leaderboard' | 'arsenal'
 
-const TAB_ORDER: Array<{ id: SiteTab; label: string; description: string }> = [
-  { id: 'game', label: 'Game', description: 'Play the survival run' },
-  { id: 'leaderboard', label: 'Leaderboard', description: 'View all saved onchain scores' },
-  { id: 'arsenal', label: 'Arsenal', description: 'Weapon and loadout section reserved for the next phase' },
+const TAB_ORDER: Array<{ id: SiteTab; label: string }> = [
+  { id: 'game', label: 'Game' },
+  { id: 'leaderboard', label: 'Leaderboard' },
+  { id: 'arsenal', label: 'Arsenal' },
 ]
 
 function readHashTab(): SiteTab {
@@ -57,42 +57,41 @@ export function SiteTabs() {
     }
   }, [activeTab, pauseRun, status])
 
-  const activeLabel = useMemo(() => TAB_ORDER.find((tab) => tab.id === activeTab)?.description ?? '', [activeTab])
-
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-4">
-      <header className="panel rounded-[28px] px-4 py-4 sm:px-5">
+      <header className="panel inferno-subtle-grid rounded-[30px] px-4 py-4 sm:px-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <p className="panel-title">BaseUp Survival</p>
-            <h1 className="mt-1 text-2xl font-black text-stone-50 sm:text-3xl">Inferno Command Console</h1>
-            <p className="mt-2 text-sm text-slate-300">{activeLabel}</p>
+            <p className="panel-title text-[#ffb78a]">BaseUp Survival</p>
+            <h1 className="inferno-heading mt-1 text-[2rem] font-black sm:text-[2.65rem]">Inferno Command Console</h1>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
-            <nav className="grid grid-cols-3 gap-2 rounded-[22px] border border-white/8 bg-black/20 p-1.5">
-              {TAB_ORDER.map((tab) => {
-                const active = tab.id === activeTab
+            <nav className="rounded-[24px] border border-[#52241a] bg-[linear-gradient(180deg,rgba(18,8,8,0.98),rgba(8,6,8,0.98))] p-1.5 shadow-[0_0_0_1px_rgba(255,68,22,0.05),0_18px_36px_rgba(0,0,0,0.3)]">
+              <div className="grid grid-cols-3 gap-2">
+                {TAB_ORDER.map((tab) => {
+                  const active = tab.id === activeTab
 
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => {
-                      window.location.hash = tab.id
-                      setActiveTab(tab.id)
-                    }}
-                    className={cn(
-                      'rounded-[18px] px-4 py-3 text-sm font-black uppercase tracking-[0.14em] transition-colors',
-                      active
-                        ? 'bg-orange-500/18 text-orange-100 shadow-[inset_0_0_0_1px_rgba(255,178,123,0.24)]'
-                        : 'bg-transparent text-stone-300 hover:bg-white/5 hover:text-stone-100',
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                )
-              })}
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        window.location.hash = tab.id
+                        setActiveTab(tab.id)
+                      }}
+                      className={cn(
+                        'inferno-tab min-w-[128px] px-4 py-3 text-sm font-black uppercase tracking-[0.14em] transition-all',
+                        active
+                          ? 'inferno-tab-active'
+                          : 'text-stone-300 hover:border-[#6d3121] hover:text-stone-100',
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
             </nav>
 
             <AudioToggleButton className="self-start sm:self-auto" />
@@ -115,7 +114,7 @@ export function SiteTabs() {
         </section>
 
         <section className={cn(activeTab === 'arsenal' ? 'block' : 'hidden')}>
-          <ArsenalPanel />
+          <ArsenalMissionsPanel />
         </section>
       </div>
     </div>

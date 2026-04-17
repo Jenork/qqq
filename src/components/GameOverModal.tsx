@@ -10,10 +10,12 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi'
-import { baseSepolia } from 'wagmi/chains'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
+import { BASE_CHAIN_ID, BASE_CHAIN_NAME } from '@/config/web3'
 import { useGameStore } from '@/hooks/useGameStore'
-import { bigintToNumber } from '@/lib/score'
+import { getDisplayErrorMessage } from '@/lib/missions'
+import { ensureBaseMainnetSelected } from '@/lib/wallet'
+import { bigintToNumber, isNewBestScore } from '@/lib/score'
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
@@ -31,7 +33,7 @@ export function GameOverModal() {
     abi: gameProgressAbi,
     functionName: 'getBestScore',
     args: [address ?? ZERO_ADDRESS],
-    chainId: baseSepolia.id,
+    chainId: BASE_CHAIN_ID,
     query: {
       enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
     },
@@ -53,11 +55,12 @@ export function GameOverModal() {
 
   useEffect(() => {
     if (error) {
-      setSubmitError(error.message)
+      setSubmitError(getDisplayErrorMessage(error))
     }
   }, [error])
 
   const storedBestScore = bigintToNumber(bestScore)
+  const canSubmitScore = isNewBestScore(pendingScore, storedBestScore)
 
   if (status !== 'gameover') {
     return null
@@ -75,19 +78,14 @@ export function GameOverModal() {
 
   return (
     <div className="absolute inset-0 z-30 flex items-end justify-center bg-slate-950/80 p-2 sm:items-center sm:p-4">
-      <div className="panel w-full max-w-[440px] rounded-[1.5rem] p-4 sm:max-w-lg sm:rounded-[2rem] sm:p-5">
+      <div className="inferno-frame w-full max-w-[440px] rounded-[1.8rem] p-5 sm:max-w-lg sm:rounded-[2rem] sm:p-6">
         <div className="mt-2">
-          <h2 className="doom-game-over text-center">Game Over</h2>
+          <h2 className="doom-game-over text-center">Run Terminated</h2>
         </div>
-        <p className="mt-3 text-sm text-slate-300">
-          Final score: <span className="font-black text-amber-200">{pendingScore}</span>
-        </p>
-        <p className="mt-1 text-sm text-slate-300">
-          Stored best: <span className="font-black">{storedBestScore}</span>
-        </p>
-        <p className="mt-3 text-sm text-slate-300">
-          Submit this run through your wallet transaction to place or update your onchain leaderboard score.
-        </p>
+        <div className="mt-5 grid gap-2 rounded-[22px] border border-[#3f1714] bg-[linear-gradient(180deg,rgba(18,8,8,0.92),rgba(10,6,8,0.96))] px-4 py-4 text-sm text-stone-200">
+          <p className="flex items-center justify-between gap-3"><span className="text-stone-400">Final score</span><span className="font-black text-[#ffbf6c]">{pendingScore}</span></p>
+          <p className="flex items-center justify-between gap-3"><span className="text-stone-400">Best score</span><span className="font-black text-stone-50">{storedBestScore}</span></p>
+        </div>
 
         {submitError ? (
           <div className="mt-4 rounded-3xl border border-rose-300/20 bg-rose-400/10 p-4 text-sm text-rose-100">
@@ -102,28 +100,28 @@ export function GameOverModal() {
             </div>
           ) : null}
 
-          {isConnected && chainId !== baseSepolia.id ? (
+          {isConnected && chainId !== BASE_CHAIN_ID ? (
             <button
               type="button"
-              className="action-button rounded-2xl px-4 py-3 text-sm font-bold"
-              onClick={() => switchChain({ chainId: baseSepolia.id })}
+              className="action-button rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
+              onClick={() => switchChain({ chainId: BASE_CHAIN_ID })}
             >
-              {isSwitching ? 'Switching...' : 'Switch to Base Sepolia'}
+              {isSwitching ? 'Switching...' : `Switch to ${BASE_CHAIN_NAME}`}
             </button>
           ) : null}
 
           <button
             type="button"
-            className="action-button rounded-2xl px-4 py-4 text-sm font-bold"
-            disabled={!HAS_GAME_PROGRESS_ADDRESS || !isConnected || isPending || isConfirming}
+            className="action-button rounded-2xl px-4 py-4 text-sm font-bold uppercase tracking-[0.14em]"
+            disabled={!HAS_GAME_PROGRESS_ADDRESS || !isConnected || isPending || isConfirming || !canSubmitScore}
             onClick={() => {
               if (!isConnected) {
                 setSubmitError('Connect a wallet before submitting score onchain.')
                 return
               }
 
-              if (chainId !== baseSepolia.id) {
-                setSubmitError('Switch to Base Sepolia before submitting.')
+              if (chainId !== BASE_CHAIN_ID) {
+                setSubmitError(`Switch to ${BASE_CHAIN_NAME} before submitting.`)
                 return
               }
 
@@ -132,24 +130,46 @@ export function GameOverModal() {
                 return
               }
 
-              setSubmitError(null)
-              writeContract({
-                address: GAME_PROGRESS_ADDRESS,
-                abi: gameProgressAbi,
-                functionName: 'submitScore',
-                args: [BigInt(pendingScore)],
-                chainId: baseSepolia.id,
-              })
+              if (!canSubmitScore) {
+                setSubmitError('Only a higher score can update your onchain best.')
+                return
+              }
+
+              void (async () => {
+                try {
+                  await ensureBaseMainnetSelected()
+                  setSubmitError(null)
+                  writeContract({
+                    address: GAME_PROGRESS_ADDRESS,
+                    abi: gameProgressAbi,
+                    functionName: 'submitScore',
+                    args: [BigInt(pendingScore)],
+                    chainId: BASE_CHAIN_ID,
+                  })
+                } catch (submitNetworkError) {
+                  setSubmitError(
+                    submitNetworkError instanceof Error
+                      ? submitNetworkError.message
+                      : 'Failed to switch wallet network.',
+                  )
+                }
+              })()
             }}
           >
-            {isSuccess ? 'Score Saved Onchain' : 'Submit Score Onchain'}
+            {isSuccess ? 'Score Saved Onchain' : canSubmitScore ? 'Submit Score Onchain' : 'Score Not Higher'}
           </button>
 
-          <div className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200">TX state: {txState}</div>
+          <div className="rounded-2xl border border-[#3b1714] bg-black/22 px-4 py-3 text-sm text-slate-200">TX state: {txState}</div>
+
+          {!canSubmitScore ? (
+            <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-300">
+              This run does not beat your stored best, so leaderboard state will remain unchanged.
+            </div>
+          ) : null}
 
           <button
             type="button"
-            className="action-button rounded-2xl px-4 py-4 text-sm font-bold"
+            className="action-button rounded-2xl px-4 py-4 text-sm font-bold uppercase tracking-[0.14em]"
             onClick={() => restartRun()}
           >
             Restart Run

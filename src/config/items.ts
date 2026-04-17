@@ -33,9 +33,9 @@ export const ITEMS: GameItem[] = [
     itemId: 2,
     category: 'weapon',
     label: 'Shotgun',
-    description: 'Short-range spread blast that deletes clustered demons.',
-    defaultUnlocked: true,
-    claimableOnchain: true,
+    description: 'Short-range spread blast unlocked after the USDC arsenal payment.',
+    defaultUnlocked: false,
+    claimableOnchain: false,
   },
   {
     id: 'burst-rifle',

@@ -5,6 +5,8 @@ type RunStatePatch = {
   status: 'ready' | 'playing'
   hp: number
   maxHp: number
+  armor: number
+  maxArmor: number
   score: number
   wave: number
   kills: number
@@ -15,6 +17,11 @@ type RunStatePatch = {
   healCharges: number
   pendingScore: number
   activeMessage: string | null
+}
+
+type RunRewardBonuses = {
+  bonusHealCharges: number
+  bonusArmorPoints: number
 }
 
 type RunDirectorUpdate = {
@@ -33,17 +40,22 @@ export class ArenaRunDirector {
     return this.waveDirector.template
   }
 
-  reset(time: number, startImmediately: boolean): RunStatePatch {
+  reset(time: number, startImmediately: boolean, rewards?: Partial<RunRewardBonuses>): RunStatePatch {
     if (startImmediately) {
       this.waveDirector.restart(time)
     } else {
       this.waveDirector.stop()
     }
 
+    const bonusHealCharges = rewards?.bonusHealCharges ?? 0
+    const bonusArmorPoints = rewards?.bonusArmorPoints ?? 0
+
     return {
       status: startImmediately ? 'playing' : 'ready',
       hp: PLAYER_CONFIG.maxHp,
       maxHp: PLAYER_CONFIG.maxHp,
+      armor: bonusArmorPoints,
+      maxArmor: bonusArmorPoints,
       score: 0,
       wave: 1,
       kills: 0,
@@ -51,7 +63,7 @@ export class ArenaRunDirector {
       abilityCooldownRemaining: 0,
       healCooldownRemaining: 0,
       shieldRemaining: 0,
-      healCharges: PLAYER_CONFIG.healCharges,
+      healCharges: PLAYER_CONFIG.healCharges + bonusHealCharges,
       pendingScore: 0,
       activeMessage: startImmediately ? 'WAVE 1 INCOMING' : null,
     }

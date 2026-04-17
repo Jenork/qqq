@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { SOCIAL_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { getItemIconPath } from '@/config/items'
 import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
@@ -42,6 +43,8 @@ function HoldButton({
 export function Hud() {
   const hp = useGameStore((state) => state.hp)
   const maxHp = useGameStore((state) => state.maxHp)
+  const armor = useGameStore((state) => state.armor)
+  const maxArmor = useGameStore((state) => state.maxArmor)
   const score = useGameStore((state) => state.score)
   const wave = useGameStore((state) => state.wave)
   const activeMessage = useGameStore((state) => state.activeMessage)
@@ -50,6 +53,7 @@ export function Hud() {
   const healCooldownRemaining = useGameStore((state) => state.healCooldownRemaining)
   const shieldRemaining = useGameStore((state) => state.shieldRemaining)
   const healCharges = useGameStore((state) => state.healCharges)
+  const unlockedItemIds = useGameStore((state) => state.unlockedItemIds)
   const status = useGameStore((state) => state.status)
   const togglePause = useGameStore((state) => state.togglePause)
   const setMobileControl = useGameStore((state) => state.setMobileControl)
@@ -74,90 +78,107 @@ export function Hud() {
   const abilityIcon = getItemIconPath('shield')
   const healIcon = getItemIconPath('medkit')
   const isWaveMessage = Boolean(activeMessage && /wave/i.test(activeMessage))
+  const armoredRewardActive = maxArmor > 0
+  const fireGrenadeUnlocked = unlockedItemIds.includes(SOCIAL_GRENADE_REWARD_ITEM_ID)
+  const shotgunUnlocked = unlockedItemIds.includes('shotgun')
 
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-2 sm:p-3">
       <div className="pointer-events-auto flex items-start justify-between gap-2 sm:gap-3">
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {status !== 'ready' && status !== 'gameover' ? (
-            <button
-              type="button"
-              onClick={togglePause}
-              className="rounded-full border border-white/10 bg-black/24 px-2.5 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-stone-100 backdrop-blur"
-            >
-              {status === 'paused' ? 'Play' : 'Pause'}
-            </button>
-          ) : null}
-        </div>
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+          <div className="inferno-frame w-[min(100%,320px)] px-3 py-3">
+            <div className="relative z-[1] flex items-center gap-3">
+              <div className="flex h-[62px] w-[62px] items-center justify-center rounded-[18px] border border-[#7d2416] bg-[radial-gradient(circle_at_50%_25%,rgba(255,114,41,0.22),rgba(28,8,8,0.98)_68%)] text-[10px] font-black uppercase tracking-[0.18em] text-[#ffcf9f] shadow-[inset_0_0_18px_rgba(255,86,22,0.18)]">
+                Marine
+              </div>
 
-        <div className="flex max-w-[72%] flex-col items-end gap-1 sm:max-w-[62%]">
-          <div className="w-[min(100%,360px)] rounded-[20px] border border-white/10 bg-black/24 px-2.5 py-2 backdrop-blur">
-            <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <p className="truncate text-[9px] font-black uppercase tracking-[0.14em] text-orange-200">
-                    HP {Math.ceil(hp)}/{maxHp}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <span className="rounded-full border border-white/10 bg-black/28 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-orange-100">
-                      W {wave}
-                    </span>
-                    <span className="rounded-full border border-white/10 bg-black/28 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.14em] text-amber-200">
-                      S {score}
-                    </span>
-                  </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb47f]">HP</span>
+                  <span className="text-sm font-black text-[#ffe1ba]">{Math.ceil(hp)}/{maxHp}</span>
+                </div>
+                <div className="mt-1 h-3 overflow-hidden rounded-[4px] border border-[#7b2115] bg-black/50">
+                  <div
+                    className="h-full bg-[linear-gradient(90deg,#b50b07_0%,#ff5f1e_62%,#ffc45e_100%)] transition-all"
+                    style={{ width: `${hpPercent}%` }}
+                  />
                 </div>
 
-                <div className="h-1.5 overflow-hidden rounded-full bg-black/45">
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#77dfff]">Armor</span>
+                  <span className="text-sm font-black text-[#b3f0ff]">{armor}/{maxArmor || 0}</span>
+                </div>
+                <div className="mt-1 h-2.5 overflow-hidden rounded-[4px] border border-cyan-400/18 bg-black/50">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-rose-700 via-orange-500 to-yellow-300 transition-all"
-                    style={{ width: `${hpPercent}%` }}
+                    className="h-full bg-[linear-gradient(90deg,#0b5d83_0%,#28b8db_100%)] transition-all"
+                    style={{ width: `${maxArmor > 0 ? (armor / maxArmor) * 100 : 0}%` }}
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap justify-end gap-1">
-            <span className="flex items-center gap-1 rounded-full border border-white/10 bg-black/24 px-2 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-orange-100 sm:text-[9px]">
-              {grenadeIcon ? (
-                <img src={grenadeIcon} alt="" className="h-3.5 w-3.5 object-contain [image-rendering:pixelated]" />
-              ) : null}
-              GR {grenadeLabel}
-            </span>
-            <span
-              className={cn(
-                'flex items-center gap-1 rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-[0.14em] sm:text-[9px]',
-                shieldRemaining > 0
-                  ? 'border-cyan-300/25 bg-cyan-500/12 text-cyan-100'
-                  : 'border-white/10 bg-black/24 text-orange-100',
-              )}
-            >
-              {abilityIcon ? (
-                <img src={abilityIcon} alt="" className="h-3.5 w-3.5 object-contain [image-rendering:pixelated]" />
-              ) : null}
-              AB {abilityLabel}
-            </span>
-            <span className="flex items-center gap-1 rounded-full border border-white/10 bg-black/24 px-2 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-orange-100 sm:text-[9px]">
-              {healIcon ? (
-                <img src={healIcon} alt="" className="h-3.5 w-3.5 object-contain [image-rendering:pixelated]" />
-              ) : null}
-              HL {healLabel}
-            </span>
-          </div>
+          <div className="flex max-w-[56%] flex-col items-end gap-2">
+            <div className="grid grid-cols-[repeat(2,minmax(84px,1fr))] gap-2 sm:grid-cols-[repeat(5,minmax(76px,1fr))]">
+              <div className="inferno-frame min-w-[82px] px-3 py-2 text-center">
+                <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-[#ffb37e]">Score</div>
+                <div className="relative z-[1] mt-1 text-2xl font-black text-[#ff9c36]">{score}</div>
+              </div>
+              <div className="inferno-frame min-w-[82px] px-3 py-2 text-center">
+                <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-[#ffb37e]">Wave</div>
+                <div className="relative z-[1] mt-1 text-2xl font-black text-[#ff9c36]">{wave}</div>
+              </div>
 
-          {activeMessage ? (
-            <p
-              className={cn(
-                'max-w-[320px] rounded-full border px-2.5 py-1 text-right uppercase tracking-[0.14em] sm:text-[9px]',
-                isWaveMessage
-                  ? 'border-orange-300/22 bg-orange-500/14 text-[9px] font-black text-orange-50 shadow-[0_0_18px_rgba(255,145,63,0.18)]'
-                  : 'border-orange-200/10 bg-black/24 text-[8px] text-orange-100/80',
-              )}
-            >
-              {activeMessage}
-            </p>
-          ) : null}
+              {[
+                { label: 'Grenade', value: grenadeLabel, icon: grenadeIcon, tone: 'text-[#ffb86e]' },
+                { label: 'Ability', value: abilityLabel, icon: abilityIcon, tone: shieldRemaining > 0 ? 'text-cyan-100' : 'text-[#8ad5ff]' },
+                { label: 'Heal', value: healLabel, icon: healIcon, tone: 'text-[#85ff78]' },
+              ].map((entry) => (
+                <div key={entry.label} className="inferno-frame min-w-[82px] px-3 py-2 text-center">
+                  <div className="relative z-[1] flex items-center justify-center gap-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#ffb37e]">
+                    {entry.icon ? (
+                      <img src={entry.icon} alt="" className="h-3.5 w-3.5 object-contain [image-rendering:pixelated]" />
+                    ) : null}
+                    <span>{entry.label}</span>
+                  </div>
+                  <div className={cn('relative z-[1] mt-1 text-lg font-black', entry.tone)}>{entry.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {armoredRewardActive || fireGrenadeUnlocked || shotgunUnlocked ? (
+              <div className="flex flex-wrap justify-end gap-1">
+                {armoredRewardActive ? (
+                  <span className="inferno-chip rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-rose-100 sm:text-[9px]">
+                    Armored
+                  </span>
+                ) : null}
+                {fireGrenadeUnlocked ? (
+                  <span className="inferno-chip rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-orange-50 sm:text-[9px]">
+                    Fire Grenade
+                  </span>
+                ) : null}
+                {shotgunUnlocked ? (
+                  <span className="inferno-chip rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-amber-100 sm:text-[9px]">
+                    Shotgun Unlocked
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+
+            {activeMessage ? (
+              <p
+                className={cn(
+                  'inferno-chip max-w-[320px] rounded-full px-2.5 py-1 text-right uppercase tracking-[0.14em] sm:text-[9px]',
+                  isWaveMessage
+                    ? 'text-[9px] font-black text-orange-50 shadow-[0_0_18px_rgba(255,145,63,0.18)]'
+                    : 'text-[8px] text-orange-100/80',
+                )}
+              >
+                {activeMessage}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
 

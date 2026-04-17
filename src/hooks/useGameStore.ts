@@ -29,6 +29,8 @@ type GameStore = {
   audioMuted: boolean
   hp: number
   maxHp: number
+  armor: number
+  maxArmor: number
   score: number
   wave: number
   kills: number
@@ -44,6 +46,9 @@ type GameStore = {
   equippedHeal: ItemId
   unlockedItemIds: ItemId[]
   onchainUnlockedItemIds: ItemId[]
+  offchainUnlockedItemIds: ItemId[]
+  bonusHealCharges: number
+  bonusArmorPoints: number
   mobileControls: ButtonState
   actionTokens: ActionTokens
   pendingScore: number
@@ -64,6 +69,8 @@ type GameStore = {
         | 'score'
         | 'wave'
         | 'kills'
+        | 'armor'
+        | 'maxArmor'
         | 'grenadeCooldownRemaining'
         | 'abilityCooldownRemaining'
         | 'healCooldownRemaining'
@@ -73,13 +80,40 @@ type GameStore = {
     >,
   ) => void
   setMessage: (message: string | null) => void
+  setRewardBonuses: (
+    next: Partial<Pick<GameStore, 'bonusHealCharges' | 'bonusArmorPoints'>>,
+  ) => void
   setMobileControl: (key: keyof ButtonState, value: boolean) => void
   pulseAction: (key: keyof ActionTokens) => void
   consumeAction: (key: keyof ActionTokens) => number
   equipItem: (itemId: ItemId) => void
   setOnchainUnlocked: (itemIds: ItemId[]) => void
+  setOffchainUnlocked: (itemIds: ItemId[]) => void
   registerGameApi: (api: GameApi | null) => void
   resetRunState: () => void
+}
+
+function mergeUnlockedItemIds(onchainUnlockedItemIds: ItemId[], offchainUnlockedItemIds: ItemId[]) {
+  return Array.from(new Set([...DEFAULT_UNLOCKED_ITEM_IDS, ...onchainUnlockedItemIds, ...offchainUnlockedItemIds]))
+}
+
+function resolveEquippedLoadout(state: Pick<GameStore, 'equippedWeapon' | 'equippedGrenade' | 'equippedAbility' | 'equippedHeal'>, unlockedItemIds: ItemId[], preferredGrenade?: ItemId) {
+  return {
+    equippedWeapon: unlockedItemIds.includes(state.equippedWeapon)
+      ? state.equippedWeapon
+      : INVENTORY_DEFAULTS.weapon,
+    equippedGrenade: preferredGrenade && unlockedItemIds.includes(preferredGrenade)
+      ? preferredGrenade
+      : unlockedItemIds.includes(state.equippedGrenade)
+        ? state.equippedGrenade
+        : INVENTORY_DEFAULTS.grenade,
+    equippedAbility: unlockedItemIds.includes(state.equippedAbility)
+      ? state.equippedAbility
+      : INVENTORY_DEFAULTS.ability,
+    equippedHeal: unlockedItemIds.includes(state.equippedHeal)
+      ? state.equippedHeal
+      : INVENTORY_DEFAULTS.heal,
+  }
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -87,6 +121,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   audioMuted: false,
   hp: PLAYER_CONFIG.maxHp,
   maxHp: PLAYER_CONFIG.maxHp,
+  armor: 0,
+  maxArmor: 0,
   score: 0,
   wave: 1,
   kills: 0,
@@ -102,6 +138,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   equippedHeal: INVENTORY_DEFAULTS.heal,
   unlockedItemIds: DEFAULT_UNLOCKED_ITEM_IDS,
   onchainUnlockedItemIds: [],
+  offchainUnlockedItemIds: [],
+  bonusHealCharges: 0,
+  bonusArmorPoints: 0,
   mobileControls: {
     left: false,
     right: false,
@@ -149,6 +188,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toggleAudioMuted: () => set((state) => ({ audioMuted: !state.audioMuted })),
   setHudState: (next) => set(next),
   setMessage: (message) => set({ activeMessage: message }),
+  setRewardBonuses: (next) => set(next),
   setMobileControl: (key, value) =>
     set((state) => ({
       mobileControls: {
@@ -198,9 +238,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { equippedHeal: itemId }
     }),
   setOnchainUnlocked: (itemIds) =>
-    set({
-      onchainUnlockedItemIds: itemIds,
-      unlockedItemIds: Array.from(new Set([...DEFAULT_UNLOCKED_ITEM_IDS, ...itemIds])),
+    set((state) => {
+      const unlockedItemIds = mergeUnlockedItemIds(itemIds, state.offchainUnlockedItemIds)
+
+      return {
+        onchainUnlockedItemIds: itemIds,
+        unlockedItemIds,
+        ...resolveEquippedLoadout(state, unlockedItemIds),
+      }
+    }),
+  setOffchainUnlocked: (itemIds) =>
+    set((state) => {
+      const unlockedItemIds = mergeUnlockedItemIds(state.onchainUnlockedItemIds, itemIds)
+
+      return {
+        offchainUnlockedItemIds: itemIds,
+        unlockedItemIds,
+        ...resolveEquippedLoadout(state, unlockedItemIds, itemIds[0]),
+      }
     }),
   registerGameApi: (api) => set({ gameApi: api }),
   resetRunState: () =>
@@ -210,6 +265,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       score: 0,
       wave: 1,
       kills: 0,
+      armor: 0,
+      maxArmor: 0,
       grenadeCooldownRemaining: 0,
       abilityCooldownRemaining: 0,
       healCooldownRemaining: 0,

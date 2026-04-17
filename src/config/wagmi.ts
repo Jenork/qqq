@@ -1,12 +1,9 @@
 import { cookieStorage, createConfig, createStorage, http } from 'wagmi'
-import { baseSepolia } from 'wagmi/chains'
 import { baseAccount, injected } from 'wagmi/connectors'
-
-const rpcUrl =
-  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL?.trim() || 'https://sepolia.base.org'
+import { BASE_CHAIN, BASE_RPC_URL } from '@/config/web3'
 
 export const config = createConfig({
-  chains: [baseSepolia],
+  chains: [BASE_CHAIN],
   multiInjectedProviderDiscovery: false,
   connectors: [
     injected(),
@@ -17,7 +14,7 @@ export const config = createConfig({
   storage: createStorage({ storage: cookieStorage }),
   ssr: true,
   transports: {
-    [baseSepolia.id]: http(rpcUrl),
+    [BASE_CHAIN.id]: http(BASE_RPC_URL),
   },
 })
 

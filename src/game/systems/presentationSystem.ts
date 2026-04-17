@@ -62,6 +62,7 @@ export function resolvePlayerSpriteState(player: Player, time: number) {
 
 export function applyPlayerPresentation(player: Player, time: number) {
   const state = resolvePlayerSpriteState(player, time)
+  const variant = player.maxArmor > 0 ? 'armored' : 'base'
   const body = player.body as Phaser.Physics.Arcade.Body | null
   const baseScale = SPRITE_TUNING.player.scale
   const facing = player.facing >= 0 ? 1 : -1
@@ -105,7 +106,7 @@ export function applyPlayerPresentation(player: Player, time: number) {
     angle = -facing * 76
   }
 
-  player.setTexture(getPlayerTextureKey(state))
+  player.setTexture(getPlayerTextureKey(state, variant))
   player.setScale(scaleX, scaleY)
   player.setAngle(angle)
 

@@ -14,6 +14,7 @@ export function GameShell() {
   const startRun = useGameStore((state) => state.startRun)
   const resumeRun = useGameStore((state) => state.resumeRun)
   const gameApiReady = useGameStore((state) => Boolean(state.gameApi))
+  const shotgunUnlocked = useGameStore((state) => state.unlockedItemIds.includes('shotgun'))
   const [showRotateHint, setShowRotateHint] = useState(false)
   const [desktopMode, setDesktopMode] = useState(false)
 
@@ -64,21 +65,24 @@ export function GameShell() {
   }, [])
 
   return (
-    <section className="relative w-full overflow-hidden rounded-[28px] border border-white/8 bg-[#0d0504] shadow-[0_20px_48px_rgba(0,0,0,0.4)]">
+    <section className="panel inferno-subtle-grid relative w-full overflow-hidden rounded-[30px] border border-[#4a1912] bg-[#0d0504] shadow-[0_22px_52px_rgba(0,0,0,0.44)]">
       <div className="relative overflow-hidden bg-[#160603]">
         <div
           ref={containerRef}
           className="game-canvas aspect-[10/13] min-h-[72svh] w-full max-w-full overflow-hidden bg-[#160603] sm:aspect-[56/27] sm:min-h-0 lg:max-h-[82svh]"
         />
 
+        <div className="pointer-events-none absolute inset-0 border border-[#762314]/40" />
+        <div className="pointer-events-none absolute inset-[14px] border border-[#4e1d16]/60 [clip-path:polygon(0_14px,14px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-18px))]" />
+
         <Hud />
         <GameOverModal />
 
         {status === 'paused' ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 p-4">
-            <div className="panel w-full max-w-sm rounded-[2rem] p-6 text-center">
+            <div className="inferno-frame w-full max-w-sm rounded-[2rem] p-6 text-center">
               <p className="panel-title">Paused</p>
-              <h2 className="mt-2 text-4xl font-black text-stone-50">Pause</h2>
+              <h2 className="inferno-heading mt-2 text-4xl font-black">Pause</h2>
               <button
                 type="button"
                 onClick={() => resumeRun()}
@@ -91,11 +95,7 @@ export function GameShell() {
         ) : null}
 
         {showRotateHint ? (
-          <div className="pointer-events-none absolute left-2 right-2 top-2 z-20 flex justify-center">
-            <div className="pointer-events-auto rounded-full border border-white/10 bg-black/50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-orange-100 backdrop-blur">
-              Landscape recommended for wider combat view.
-            </div>
-          </div>
+          null
         ) : null}
 
         {status === 'ready' ? (
@@ -107,27 +107,14 @@ export function GameShell() {
           >
             <div
               className={cn(
-                'rounded-[22px] border border-white/10 bg-black/40 p-4 backdrop-blur',
+                'inferno-frame p-4 backdrop-blur',
                 desktopMode ? 'max-w-sm text-left' : 'mx-auto w-full max-w-[290px] text-center',
               )}
             >
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-200/80">
                 Arena ready
               </p>
-              <h1 className="mt-1 text-2xl font-black text-stone-50 sm:text-3xl">Inferno Arena</h1>
-              <div className="mt-3 grid gap-1.5 text-left text-[11px] uppercase tracking-[0.14em] text-stone-300">
-                {desktopMode ? (
-                  <>
-                    <p>A/D move, Space jump, click shoot</p>
-                    <p>Q grenade, E ability, R heal</p>
-                  </>
-                ) : (
-                  <>
-                    <p>Left thumb move, right thumb attack.</p>
-                    <p>Landscape gives a cleaner combat view.</p>
-                  </>
-                )}
-              </div>
+              <h1 className="inferno-heading mt-1 text-2xl font-black sm:text-3xl">Inferno Arena</h1>
               <button
                 type="button"
                 onClick={() => startRun()}

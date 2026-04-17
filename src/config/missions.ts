@@ -1,0 +1,31 @@
+import { PLAYER_CONFIG } from '@/config/game'
+import type { ItemId } from '@/config/items'
+
+export const SHOTGUN_ITEM_ID = 2
+export const DAILY_CHECK_IN_INTERVAL_MS = 24 * 60 * 60 * 1000
+export const DAILY_CHECK_IN_ARMOR_POINTS = PLAYER_CONFIG.maxHp
+export const SOCIAL_GRENADE_REWARD_ITEM_ID = 'fire-grenade' satisfies ItemId
+
+export const SOCIAL_TWITTER_URL =
+  process.env.NEXT_PUBLIC_SOCIAL_TWITTER_URL?.trim() || 'https://twitter.com/'
+
+export const SOCIAL_TELEGRAM_URL =
+  process.env.NEXT_PUBLIC_SOCIAL_TELEGRAM_URL?.trim() || 'https://t.me/'
+
+export type MissionStatus =
+  | 'available'
+  | 'pending'
+  | 'confirm-in-wallet'
+  | 'confirming'
+  | 'completed'
+  | 'success'
+  | 'already-claimed'
+  | 'error'
+  | 'wallet-disconnected'
+  | 'wrong-network'
+  | 'not-started'
+  | 'links-opened'
+  | 'confirmed'
+  | 'reward-active'
+  | 'insufficient-balance'
+  | 'approval-required'
