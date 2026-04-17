@@ -70,8 +70,10 @@ export function Hud() {
     return () => mediaQuery.removeEventListener('change', sync)
   }, [])
 
+  const grenadeUnlocked =
+    unlockedItemIds.includes('frag-grenade') || unlockedItemIds.includes(SOCIAL_GRENADE_REWARD_ITEM_ID)
   const hpPercent = Math.max(0, Math.min(100, (hp / maxHp) * 100))
-  const grenadeLabel = formatCooldown(grenadeCooldownRemaining)
+  const grenadeLabel = grenadeUnlocked ? formatCooldown(grenadeCooldownRemaining) : 'Locked'
   const abilityLabel = shieldRemaining > 0 ? `On ${formatCooldown(shieldRemaining)}` : formatCooldown(abilityCooldownRemaining)
   const healLabel = healCharges <= 0 ? 'Empty' : healCooldownRemaining > 0 ? formatCooldown(healCooldownRemaining) : `x${healCharges}`
   const grenadeIcon = getItemIconPath('frag-grenade')
@@ -214,6 +216,7 @@ export function Hud() {
               <button
                 type="button"
                 className="action-button min-h-[56px] rounded-full border-white/10 bg-white/6 px-2 py-2 text-[10px] font-black uppercase tracking-[0.16em]"
+                disabled={!grenadeUnlocked}
                 onClick={() => pulseAction('grenade')}
               >
                 Gren

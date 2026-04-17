@@ -17,6 +17,8 @@ type ActionTokens = {
   heal: number
 }
 
+const DISABLED_ITEM_IDS = ['burst-rifle'] as const satisfies ItemId[]
+
 type GameApi = {
   startRun: () => void
   restartRun: () => void
@@ -94,7 +96,9 @@ type GameStore = {
 }
 
 function mergeUnlockedItemIds(onchainUnlockedItemIds: ItemId[], offchainUnlockedItemIds: ItemId[]) {
-  return Array.from(new Set([...DEFAULT_UNLOCKED_ITEM_IDS, ...onchainUnlockedItemIds, ...offchainUnlockedItemIds]))
+  return Array.from(
+    new Set([...DEFAULT_UNLOCKED_ITEM_IDS, ...onchainUnlockedItemIds, ...offchainUnlockedItemIds]),
+  ).filter((itemId) => !DISABLED_ITEM_IDS.includes(itemId as (typeof DISABLED_ITEM_IDS)[number]))
 }
 
 function resolveEquippedLoadout(state: Pick<GameStore, 'equippedWeapon' | 'equippedGrenade' | 'equippedAbility' | 'equippedHeal'>, unlockedItemIds: ItemId[], preferredGrenade?: ItemId) {
@@ -223,7 +227,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return state
       }
 
-      if (itemId === 'pistol' || itemId === 'shotgun' || itemId === 'burst-rifle') {
+      if (itemId === 'pistol' || itemId === 'shotgun') {
         return { equippedWeapon: itemId }
       }
 

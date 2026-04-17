@@ -318,7 +318,6 @@ export class ArenaScene extends Phaser.Scene {
       heal: 'R',
       weapon1: 'ONE',
       weapon2: 'TWO',
-      weapon3: 'THREE',
     }) as Record<string, Phaser.Input.Keyboard.Key>
   }
 
@@ -502,6 +501,8 @@ export class ArenaScene extends Phaser.Scene {
 
   private handleCombatInputs(time: number) {
     const store = useGameStore.getState()
+    const grenadeUnlocked =
+      store.unlockedItemIds.includes('frag-grenade') || store.unlockedItemIds.includes('fire-grenade')
     this.handleWeaponHotkeys()
     const tuning = WEAPON_TUNING[store.equippedWeapon as keyof typeof WEAPON_TUNING]
     const triggerHeld = this.input.activePointer.leftButtonDown() || store.mobileControls.shoot
@@ -530,7 +531,11 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     if (store.consumeAction('grenade') > 0) {
+      if (!grenadeUnlocked) {
+        store.setMessage('Grenade is locked.')
+      } else {
       this.throwGrenade(time)
+      }
     }
 
     if (store.consumeAction('ability') > 0) {
@@ -551,12 +556,9 @@ export class ArenaScene extends Phaser.Scene {
       this.equipWeaponFromHotkey('shotgun', 'Shotgun ready.')
     }
 
-    if (Phaser.Input.Keyboard.JustDown(this.keys.weapon3)) {
-      this.equipWeaponFromHotkey('burst-rifle', 'Burst rifle ready.')
-    }
   }
 
-  private equipWeaponFromHotkey(weaponId: 'pistol' | 'shotgun' | 'burst-rifle', successMessage: string) {
+  private equipWeaponFromHotkey(weaponId: 'pistol' | 'shotgun', successMessage: string) {
     const store = useGameStore.getState()
 
     if (!store.unlockedItemIds.includes(weaponId)) {
@@ -608,13 +610,22 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private throwGrenade(time: number) {
+    const store = useGameStore.getState()
+
+    if (
+      !store.unlockedItemIds.includes('frag-grenade') &&
+      !store.unlockedItemIds.includes('fire-grenade')
+    ) {
+      store.setMessage('Grenade is locked.')
+      return
+    }
+
     if (time < this.player.lastGrenadeAt + PLAYER_CONFIG.grenadeCooldownMs) {
-      useGameStore.getState().setMessage('Grenade cooling down.')
+      store.setMessage('Grenade cooling down.')
       return
     }
 
     this.player.lastGrenadeAt = time
-    const store = useGameStore.getState()
     const grenade = this.grenades.get(this.player.x, this.player.y - SPRITE_TUNING.player.grenadeOffsetY, 'grenade') as Grenade | null
 
     if (!grenade) {

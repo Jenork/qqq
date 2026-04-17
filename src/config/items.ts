@@ -43,8 +43,8 @@ export const ITEMS: GameItem[] = [
     category: 'weapon',
     label: 'Burst Rifle',
     description: 'Controlled three-round burst for consistent ranged DPS.',
-    defaultUnlocked: true,
-    claimableOnchain: true,
+    defaultUnlocked: false,
+    claimableOnchain: false,
   },
   {
     id: 'frag-grenade',
@@ -52,7 +52,7 @@ export const ITEMS: GameItem[] = [
     category: 'grenade',
     label: 'Frag Grenade',
     description: 'Classic explosive grenade with strong area burst.',
-    defaultUnlocked: true,
+    defaultUnlocked: false,
     claimableOnchain: false,
   },
   {
