@@ -9,7 +9,7 @@ type UsdcMission = ReturnType<typeof useUsdcPayment>
 
 export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
   return (
-    <article className="inferno-frame rounded-[28px] p-5">
+    <article className="inferno-frame mission-card rounded-[28px] p-5">
       <div className="relative z-[1] flex items-start justify-between gap-3">
         <div>
           <p className="panel-title text-[#ffb78a]">Onchain</p>
@@ -18,11 +18,15 @@ export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
         <RewardStatusBadge status={mission.status} />
       </div>
 
-      <div className="relative z-[1] mt-5 grid gap-3 text-sm text-stone-200">
-        <p><span className="text-stone-400">Reward</span> <span className="font-black text-stone-50">Shotgun</span></p>
-        <p><span className="text-stone-400">Amount</span> <span className="font-black text-stone-50">{USDC_PAYMENT_AMOUNT_USDC} USDC</span></p>
-        <p><span className="text-stone-400">Recipient</span> <span className="font-black text-stone-50">{shortenAddress(USDC_RECIPIENT)}</span></p>
-        <p><span className="text-stone-400">Shotgun</span> <span className="font-black text-stone-50">{mission.shotgunUnlocked ? 'Unlocked' : 'Locked'}</span></p>
+      <div className="mission-poster mission-poster-glow-green rounded-[24px]">
+        <span className="mission-poster-label">0.3</span>
+      </div>
+
+      <div className="stats-strip relative z-[1]">
+        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">Shotgun Unlock</span></p>
+        <p className="stats-row"><span className="stats-row-label">Amount</span><span className="stats-row-value">{USDC_PAYMENT_AMOUNT_USDC} USDC</span></p>
+        <p className="stats-row"><span className="stats-row-label">Recipient</span><span className="stats-row-value">{shortenAddress(USDC_RECIPIENT)}</span></p>
+        <p className="stats-row"><span className="stats-row-label">Shotgun</span><span className="stats-row-value">{mission.shotgunUnlocked ? 'Unlocked' : 'Locked'}</span></p>
       </div>
 
       {mission.error ? (

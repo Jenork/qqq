@@ -33,7 +33,7 @@ export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }
   const buttonLabel = checkedInToday ? 'Success' : mission.actionLabel
 
   return (
-    <article className="inferno-frame rounded-[28px] p-5">
+    <article className="inferno-frame mission-card rounded-[28px] p-5">
       <div className="relative z-[1] flex items-start justify-between gap-3">
         <div>
           <p className="panel-title text-[#ffb78a]">Onchain</p>
@@ -42,25 +42,15 @@ export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }
         <RewardStatusBadge status={displayStatus} />
       </div>
 
-      <div className="relative z-[1] mt-5 grid gap-3 text-sm text-stone-200">
-        <p>
-          <span className="text-stone-400">Reward</span>{' '}
-          <span className="font-black text-stone-50">Armor</span>
-        </p>
-        <p>
-          <span className="text-stone-400">Status</span>{' '}
-          <span className="font-black text-stone-50">
-            {checkedInToday ? 'Already checked in today' : 'Available'}
-          </span>
-        </p>
-        <p>
-          <span className="text-stone-400">Next</span>{' '}
-          <span className="font-black text-stone-50">{availabilityText}</span>
-        </p>
-        <p>
-          <span className="text-stone-400">Total</span>{' '}
-          <span className="font-black text-stone-50">{mission.totalCount}</span>
-        </p>
+      <div className="mission-poster mission-poster-glow-orange rounded-[24px]">
+        <span className="mission-poster-label">Check</span>
+      </div>
+
+      <div className="stats-strip relative z-[1]">
+        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">Bonus Armor</span></p>
+        <p className="stats-row"><span className="stats-row-label">Status</span><span className="stats-row-value">{checkedInToday ? 'Already checked in today' : 'Available'}</span></p>
+        <p className="stats-row"><span className="stats-row-label">Next</span><span className="stats-row-value">{availabilityText}</span></p>
+        <p className="stats-row"><span className="stats-row-label">Total</span><span className="stats-row-value">{mission.totalCount}</span></p>
       </div>
 
       {mission.error ? (

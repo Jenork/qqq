@@ -59,15 +59,17 @@ export function SiteTabs() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-4">
-      <header className="panel inferno-subtle-grid rounded-[30px] px-4 py-4 sm:px-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <header className="chrome-shell rounded-[30px] px-4 py-4 sm:px-5">
+        <div className="relative z-[1] flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <p className="panel-title text-[#ffb78a]">BaseUp Survival</p>
-            <h1 className="inferno-heading mt-1 text-[2rem] font-black sm:text-[2.65rem]">Inferno Command Console</h1>
+            <div className="doom-logo">
+              <span className="doom-logo-wordmark">BaseUp</span>
+              <span className="doom-logo-sub">Survival</span>
+            </div>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
-            <nav className="rounded-[24px] border border-[#52241a] bg-[linear-gradient(180deg,rgba(18,8,8,0.98),rgba(8,6,8,0.98))] p-1.5 shadow-[0_0_0_1px_rgba(255,68,22,0.05),0_18px_36px_rgba(0,0,0,0.3)]">
+            <nav className="chrome-shell rounded-[24px] p-1.5">
               <div className="grid grid-cols-3 gap-2">
                 {TAB_ORDER.map((tab) => {
                   const active = tab.id === activeTab
@@ -116,6 +118,15 @@ export function SiteTabs() {
         <section className={cn(activeTab === 'arsenal' ? 'block' : 'hidden')}>
           <ArsenalMissionsPanel />
         </section>
+      </div>
+
+      <div className="chrome-shell hidden rounded-[24px] px-4 py-3 lg:block">
+        <div className="relative z-[1] flex flex-wrap items-center justify-between gap-3 text-[11px] font-black uppercase tracking-[0.18em] text-[#a88f79]">
+          <span>BaseUp Survival</span>
+          <span>Doom-like Aesthetic</span>
+          <span>Atmospheric and Immersive</span>
+          <span>Gameplay First</span>
+        </div>
       </div>
     </div>
   )

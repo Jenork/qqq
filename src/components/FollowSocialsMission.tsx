@@ -17,7 +17,7 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
       : mission.status
 
   return (
-    <article className="inferno-frame rounded-[28px] p-5">
+    <article className="inferno-frame mission-card rounded-[28px] p-5">
       <div className="relative z-[1] flex items-start justify-between gap-3">
         <div>
           <p className="panel-title text-[#ffb78a]">Offchain</p>
@@ -26,10 +26,14 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
         <RewardStatusBadge status={displayStatus} />
       </div>
 
-      <div className="relative z-[1] mt-5 grid gap-3 text-sm text-stone-200">
-        <p><span className="text-stone-400">Reward</span> <span className="font-black text-stone-50">{mission.grenadeRewardActive ? 'Fire Grenade' : 'Grenade Locked'}</span></p>
-        <p><span className="text-stone-400">Twitter</span> <span className="font-black text-stone-50">{mission.twitterOpened ? 'Opened' : 'Pending'}</span></p>
-        <p><span className="text-stone-400">Telegram</span> <span className="font-black text-stone-50">{mission.telegramOpened ? 'Opened' : 'Pending'}</span></p>
+      <div className="mission-poster mission-poster-glow-blue rounded-[24px]">
+        <span className="mission-poster-label">Social</span>
+      </div>
+
+      <div className="stats-strip relative z-[1]">
+        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">{mission.grenadeRewardActive ? 'Fire Grenade' : 'Grenade Locked'}</span></p>
+        <p className="stats-row"><span className="stats-row-label">Twitter</span><span className="stats-row-value">{mission.twitterOpened ? 'Opened' : 'Pending'}</span></p>
+        <p className="stats-row"><span className="stats-row-label">Telegram</span><span className="stats-row-value">{mission.telegramOpened ? 'Opened' : 'Pending'}</span></p>
       </div>
 
       {mission.error ? (

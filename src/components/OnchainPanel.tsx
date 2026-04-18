@@ -69,7 +69,7 @@ export function OnchainPanel() {
         />
       ) : null}
 
-      <div className="fixed bottom-[calc(12px+var(--safe-bottom))] right-[calc(12px+var(--safe-right))] z-50 left-[calc(12px+var(--safe-left))] sm:left-auto sm:w-[360px]">
+      <div className="fixed left-[calc(12px+var(--safe-left))] right-[calc(12px+var(--safe-right))] top-[calc(12px+var(--safe-top))] z-50 sm:left-auto sm:w-[360px]">
         {expanded ? (
           <section className="inferno-frame rounded-[26px] p-4">
             <div className="mb-3 flex items-start justify-between gap-3">
@@ -152,11 +152,11 @@ export function OnchainPanel() {
         ) : (
           <button
             type="button"
-            className="inferno-chip ml-auto flex items-center gap-3 rounded-full px-4 py-3 text-left shadow-[0_14px_34px_rgba(0,0,0,0.4)] backdrop-blur"
+            className="wallet-trigger ml-auto flex items-center gap-3 rounded-[18px] px-4 py-3 text-left backdrop-blur"
             onClick={() => setExpanded(true)}
           >
-            <span className="text-[11px] font-black uppercase tracking-[0.14em] text-orange-200">Wallet</span>
-            {isConnected ? <span className="text-sm text-stone-200">{shortenAddress(address)}</span> : null}
+            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#34ff73] shadow-[0_0_12px_rgba(52,255,115,0.7)]" />
+            {isConnected ? <span className="text-sm font-black text-stone-100">{shortenAddress(address)}</span> : <span className="text-sm font-black text-stone-100">Wallet</span>}
           </button>
         )}
       </div>

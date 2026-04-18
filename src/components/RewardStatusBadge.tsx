@@ -55,7 +55,7 @@ export function RewardStatusBadge({ status }: { status: MissionStatus }) {
   return (
     <span
       className={cn(
-        'inline-flex rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] backdrop-blur',
+        'inline-flex rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] backdrop-blur',
         STATUS_STYLES[status],
       )}
     >

@@ -88,13 +88,14 @@ export function Hud() {
     <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-2 sm:p-3">
       <div className="pointer-events-auto flex items-start justify-between gap-2 sm:gap-3">
         <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-          <div className="inferno-frame w-[min(100%,320px)] px-3 py-3">
+          <div className="inferno-frame w-[min(100%,344px)] px-3 py-3">
             <div className="relative z-[1] flex items-center gap-3">
               <div className="flex h-[62px] w-[62px] items-center justify-center rounded-[18px] border border-[#7d2416] bg-[radial-gradient(circle_at_50%_25%,rgba(255,114,41,0.22),rgba(28,8,8,0.98)_68%)] text-[10px] font-black uppercase tracking-[0.18em] text-[#ffcf9f] shadow-[inset_0_0_18px_rgba(255,86,22,0.18)]">
                 Marine
               </div>
 
               <div className="min-w-0 flex-1">
+                <p className="micro-copy mb-1">Gameplay HUD - In Game</p>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb47f]">HP</span>
                   <span className="text-sm font-black text-[#ffe1ba]">{Math.ceil(hp)}/{maxHp}</span>
@@ -121,7 +122,7 @@ export function Hud() {
           </div>
 
           <div className="flex max-w-[56%] flex-col items-end gap-2">
-            <div className="grid grid-cols-[repeat(2,minmax(84px,1fr))] gap-2 sm:grid-cols-[repeat(5,minmax(76px,1fr))]">
+            <div className="grid grid-cols-[repeat(2,minmax(84px,1fr))] gap-2 sm:grid-cols-[repeat(5,minmax(82px,1fr))]">
               <div className="inferno-frame min-w-[82px] px-3 py-2 text-center">
                 <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-[#ffb37e]">Score</div>
                 <div className="relative z-[1] mt-1 text-2xl font-black text-[#ff9c36]">{score}</div>
@@ -182,9 +183,18 @@ export function Hud() {
             ) : null}
           </div>
         </div>
+
+        <button
+          type="button"
+          className="action-button rounded-2xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.16em]"
+          disabled={status === 'ready' || status === 'gameover'}
+          onClick={() => togglePause()}
+        >
+          {status === 'paused' ? 'Resume' : 'Pause'}
+        </button>
       </div>
 
-      {showTouchControls ? (
+          {showTouchControls ? (
         <div className="pointer-events-auto grid grid-cols-[1fr_auto] items-end gap-2">
           <div className="rounded-[24px] border border-white/10 bg-black/24 p-1.5 backdrop-blur-sm">
             <div className="grid grid-cols-2 gap-2">

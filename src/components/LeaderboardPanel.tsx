@@ -13,13 +13,19 @@ export function LeaderboardPanel() {
   return (
     <section className="panel inferno-subtle-grid w-full rounded-[30px] p-4 sm:p-5 lg:p-6">
       <div className="mx-auto w-full max-w-[1100px]">
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div className="min-w-0">
             <p className="panel-title text-[#ffb78a]">Leaderboard</p>
-            <h3 className="inferno-heading mt-1 text-[2.2rem] font-black">Top Survivors</h3>
+            <h3 className="monitor-title mt-1">Leaderboard</h3>
+            <p className="micro-copy mt-1">Top survivors</p>
           </div>
 
           <div className="flex items-center gap-2">
+            {data?.currentPlayerEntry ? (
+              <span className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#8bff85]">
+                You: #{data.currentPlayerEntry.rank}
+              </span>
+            ) : null}
             <button
               type="button"
               className="action-button rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
@@ -30,8 +36,8 @@ export function LeaderboardPanel() {
           </div>
         </div>
 
-        <div className="grid gap-2">
-          <div className="inferno-frame grid grid-cols-[44px_1fr_86px] rounded-[22px] px-3 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-[#ffbc91] sm:grid-cols-[56px_1fr_100px] sm:px-4">
+        <div className="table-shell rounded-[26px] p-2 sm:p-3">
+          <div className="grid grid-cols-[52px_1fr_100px] rounded-[18px] border border-[#4b1d16] bg-[linear-gradient(180deg,rgba(16,9,10,0.98),rgba(10,8,9,0.98))] px-3 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-[#ffbc91] sm:grid-cols-[64px_1fr_124px] sm:px-4">
             <span>Rank</span>
             <span>Wallet</span>
             <span className="text-right">Best Score</span>
@@ -47,13 +53,24 @@ export function LeaderboardPanel() {
               <div
                 key={entry.address}
                 className={cn(
-                  'grid grid-cols-[44px_1fr_86px] items-center rounded-[22px] border px-3 py-4 text-sm shadow-[0_14px_28px_rgba(0,0,0,0.18)] sm:grid-cols-[56px_1fr_100px] sm:px-4',
+                  'mt-2 grid grid-cols-[52px_1fr_100px] items-center rounded-[18px] border px-3 py-4 text-sm shadow-[0_14px_28px_rgba(0,0,0,0.18)] sm:grid-cols-[64px_1fr_124px] sm:px-4',
                   isCurrentPlayer
                     ? 'border-[#2ca74c]/50 bg-[linear-gradient(180deg,rgba(12,32,14,0.96),rgba(10,21,13,0.96))] text-[#d5ffd5]'
                     : 'border-[#3f1714] bg-[linear-gradient(180deg,rgba(25,10,10,0.92),rgba(14,8,9,0.96))] text-slate-100',
                 )}
               >
-                <span className={cn('font-black', isCurrentPlayer ? 'text-[#86ff76]' : 'text-[#ffb772]')}>#{entry.rank}</span>
+                <span className="flex items-center justify-center">
+                  <span
+                    className={cn(
+                      'rank-medal',
+                      entry.rank === 2 ? 'rank-medal-silver' : '',
+                      entry.rank === 3 ? 'rank-medal-bronze' : '',
+                      entry.rank > 3 ? 'h-8 w-8 border-[#5e261a] bg-[linear-gradient(180deg,rgba(40,16,14,0.96),rgba(16,9,10,0.98))] text-[#ffb772] shadow-none' : '',
+                    )}
+                  >
+                    {entry.rank}
+                  </span>
+                </span>
                 <span className="flex items-center gap-2">
                   <span>{shortenAddress(entry.address)}</span>
                   {isCurrentPlayer ? (
