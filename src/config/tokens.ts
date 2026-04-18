@@ -21,6 +21,16 @@ export const HAS_USDC_RECIPIENT = USDC_RECIPIENT !== ZERO_ADDRESS
 
 export const erc20Abi = [
   {
+    type: 'event',
+    name: 'Transfer',
+    anonymous: false,
+    inputs: [
+      { indexed: true, name: 'from', type: 'address' },
+      { indexed: true, name: 'to', type: 'address' },
+      { indexed: false, name: 'value', type: 'uint256' },
+    ],
+  },
+  {
     type: 'function',
     name: 'approve',
     stateMutability: 'nonpayable',

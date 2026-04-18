@@ -89,136 +89,6 @@ export class ArenaScene extends Phaser.Scene {
     this.ground = floor
   }
 
-  private drawInfernoSky() {
-    const sky = this.add.graphics()
-
-    for (let y = 0; y < 300; y += 6) {
-      const ratio = y / 300
-      const rowColor = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(0x240503),
-        Phaser.Display.Color.ValueToColor(ratio > 0.6 ? 0xffb14e : 0xee5c0b),
-        1,
-        ratio,
-      )
-
-      for (let x = 0; x < ARENA_SIZE.width; x += 6) {
-        const noise = Phaser.Math.Between(-18, 22)
-        sky.fillStyle(
-          Phaser.Display.Color.GetColor(
-            Phaser.Math.Clamp(rowColor.r + noise, 10, 255),
-            Phaser.Math.Clamp(rowColor.g + Math.floor(noise * 0.55), 3, 190),
-            Phaser.Math.Clamp(rowColor.b + Math.floor(noise * 0.22), 0, 80),
-          ),
-          0.86,
-        )
-        sky.fillRect(x, y, 6, 6)
-      }
-    }
-
-    for (let index = 0; index < 8; index += 1) {
-      sky.fillStyle(0xffd06a, 0.12)
-      sky.fillRect(
-        Phaser.Math.Between(20, ARENA_SIZE.width - 60),
-        Phaser.Math.Between(34, 180),
-        Phaser.Math.Between(18, 36),
-        Phaser.Math.Between(100, 180),
-      )
-    }
-  }
-
-  private drawHellCity() {
-    const city = this.add.graphics()
-
-    for (let index = 0; index < 16; index += 1) {
-      const x = index * 64 + Phaser.Math.Between(-10, 10)
-      const width = Phaser.Math.Between(24, 56)
-      const height = Phaser.Math.Between(90, 220)
-      city.fillStyle(0x120605, 1)
-      city.fillRect(x, 300 - height, width, height)
-
-      if (Phaser.Math.Between(0, 10) > 5) {
-        city.fillStyle(0xff9a2f, 0.35)
-        city.fillRect(x + Phaser.Math.Between(4, 10), 300 - height + Phaser.Math.Between(12, 30), 6, 18)
-      }
-    }
-
-    for (let x = 0; x < ARENA_SIZE.width; x += 84) {
-      city.fillStyle(0xff6d1a, 0.28)
-      city.fillTriangle(
-        x + 10,
-        ARENA_BOUNDS.floorY - 20,
-        x + Phaser.Math.Between(20, 38),
-        ARENA_BOUNDS.floorY - Phaser.Math.Between(80, 140),
-        x + 56,
-        ARENA_BOUNDS.floorY - 18,
-      )
-    }
-  }
-
-  private drawCatwalk() {
-    const floor = this.add.graphics()
-
-    floor.fillStyle(0x67442c, 1)
-    floor.fillPoints(
-      [
-        new Phaser.Geom.Point(0, 402),
-        new Phaser.Geom.Point(ARENA_SIZE.width, 372),
-        new Phaser.Geom.Point(ARENA_SIZE.width, ARENA_SIZE.height),
-        new Phaser.Geom.Point(0, ARENA_SIZE.height),
-      ],
-      true,
-    )
-
-    floor.fillStyle(0x372019, 1)
-    floor.fillPoints(
-      [
-        new Phaser.Geom.Point(0, 468),
-        new Phaser.Geom.Point(ARENA_SIZE.width, 432),
-        new Phaser.Geom.Point(ARENA_SIZE.width, ARENA_SIZE.height),
-        new Phaser.Geom.Point(0, ARENA_SIZE.height),
-      ],
-      true,
-    )
-
-    for (let x = -40; x < ARENA_SIZE.width + 40; x += 54) {
-      floor.fillStyle(0x886148, 1)
-      floor.fillRect(x, 400 + Math.floor(x * 0.04), 28, 6)
-      floor.fillStyle(0x341713, 0.7)
-      floor.fillRect(x + 4, 430 + Math.floor(x * 0.02), 16, 4)
-    }
-
-    for (let x = 60; x < ARENA_SIZE.width; x += 96) {
-      floor.fillStyle(0x741706, 0.55)
-      floor.fillEllipse(x, Phaser.Math.Between(420, 500), Phaser.Math.Between(24, 52), Phaser.Math.Between(8, 16))
-    }
-
-    floor.fillStyle(0x24100f, 1)
-    floor.fillRect(0, ARENA_BOUNDS.floorY + 18, ARENA_SIZE.width, 10)
-  }
-
-  private createAmbientFlames() {
-    const flameAnchors = [
-      { x: 140, y: 356 },
-      { x: 248, y: 334 },
-      { x: 604, y: 302 },
-      { x: 774, y: 286 },
-      { x: 882, y: 260 },
-    ]
-
-    this.ambientFlames = flameAnchors.map((anchor, index) => {
-      const flame = this.add.rectangle(
-        anchor.x,
-        anchor.y,
-        18 + index * 2,
-        48 + index * 6,
-        Phaser.Math.RND.pick([0xffc84f, 0xff7a22, 0xff5010]),
-        0.42,
-      )
-      flame.setBlendMode(Phaser.BlendModes.ADD)
-      return flame
-    })
-  }
-
   private buildActors() {
     this.player = new Player(this, ARENA_BOUNDS.playerSpawnX, this.playerBaseY)
     this.player.setScale(SPRITE_TUNING.player.scale)
@@ -534,7 +404,7 @@ export class ArenaScene extends Phaser.Scene {
       if (!grenadeUnlocked) {
         store.setMessage('Grenade is locked.')
       } else {
-      this.throwGrenade(time)
+        this.throwGrenade(time)
       }
     }
 

@@ -1,17 +1,26 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
-import { useAccount, useReadContract } from 'wagmi'
+import { decodeEventLog, isAddressEqual, type Hex } from 'viem'
+import { useAccount, usePublicClient, useReadContract } from 'wagmi'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
 import { SHOTGUN_ITEM_ID } from '@/config/missions'
 import { BASE_CHAIN_ID } from '@/config/web3'
-import { readAnyUsdcMissionState, readUsdcMissionState, USDC_MISSION_EVENT_NAME } from '@/lib/usdcMission'
+import {
+  erc20Abi,
+  HAS_USDC_RECIPIENT,
+  HAS_USDC_TOKEN_ADDRESS,
+  USDC_PAYMENT_AMOUNT_UNITS,
+  USDC_RECIPIENT,
+  USDC_TOKEN_ADDRESS,
+} from '@/config/tokens'
+import { readUsdcMissionState, USDC_MISSION_EVENT_NAME } from '@/lib/usdcMission'
 
 export function useWeaponUnlocks() {
   const { address, isConnected } = useAccount()
-  const [localUnlock, setLocalUnlock] = useState(() =>
-    Boolean(address ? readUsdcMissionState(address) : readAnyUsdcMissionState()),
-  )
+  const publicClient = usePublicClient({ chainId: BASE_CHAIN_ID })
+  const [localMission, setLocalMission] = useState(() => readUsdcMissionState(address))
 
   const query = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
@@ -27,7 +36,7 @@ export function useWeaponUnlocks() {
 
   useEffect(() => {
     const sync = () => {
-      setLocalUnlock(Boolean(address ? readUsdcMissionState(address) : readAnyUsdcMissionState()))
+      setLocalMission(readUsdcMissionState(address))
     }
 
     sync()
@@ -40,7 +49,57 @@ export function useWeaponUnlocks() {
     }
   }, [address])
 
-  const shotgunUnlocked = Boolean(query.data) || localUnlock
+  const verifiedPayment = useQuery({
+    queryKey: ['weapon-unlocks', 'verify-usdc-payment', address, localMission?.txHash ?? null],
+    enabled:
+      Boolean(address) &&
+      Boolean(localMission?.txHash) &&
+      Boolean(publicClient) &&
+      HAS_USDC_TOKEN_ADDRESS &&
+      HAS_USDC_RECIPIENT,
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!address || !localMission?.txHash || !publicClient) {
+        return false
+      }
+
+      const receipt = await publicClient.getTransactionReceipt({
+        hash: localMission.txHash as Hex,
+      })
+
+      if (receipt.status !== 'success') {
+        return false
+      }
+
+      return receipt.logs.some((log) => {
+        if (!isAddressEqual(log.address, USDC_TOKEN_ADDRESS)) {
+          return false
+        }
+
+        try {
+          const decoded = decodeEventLog({
+            abi: erc20Abi,
+            data: log.data,
+            topics: log.topics,
+          })
+
+          if (decoded.eventName !== 'Transfer') {
+            return false
+          }
+
+          return (
+            isAddressEqual(decoded.args.from, address) &&
+            isAddressEqual(decoded.args.to, USDC_RECIPIENT) &&
+            decoded.args.value === USDC_PAYMENT_AMOUNT_UNITS
+          )
+        } catch {
+          return false
+        }
+      })
+    },
+  })
+
+  const shotgunUnlocked = Boolean(query.data) || Boolean(verifiedPayment.data)
 
   return useMemo(
     () => ({
@@ -49,8 +108,16 @@ export function useWeaponUnlocks() {
       isLoading: query.isLoading,
       isFetching: query.isFetching,
       isError: query.isError,
+      isPaymentVerified: Boolean(verifiedPayment.data),
       refetch: query.refetch,
     }),
-    [query.isError, query.isFetching, query.isLoading, query.refetch, shotgunUnlocked],
+    [
+      query.isError,
+      query.isFetching,
+      query.isLoading,
+      query.refetch,
+      shotgunUnlocked,
+      verifiedPayment.data,
+    ],
   )
 }

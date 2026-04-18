@@ -14,3 +14,4 @@ contracts/out
 *.tsbuildinfo
 public/audio/Telegram Desktop/
 .git_ssh/
+.scratch-run/

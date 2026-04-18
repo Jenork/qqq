@@ -14,8 +14,6 @@ export function GameShell() {
   const startRun = useGameStore((state) => state.startRun)
   const resumeRun = useGameStore((state) => state.resumeRun)
   const gameApiReady = useGameStore((state) => Boolean(state.gameApi))
-  const shotgunUnlocked = useGameStore((state) => state.unlockedItemIds.includes('shotgun'))
-  const [showRotateHint, setShowRotateHint] = useState(false)
   const [desktopMode, setDesktopMode] = useState(false)
 
   useEffect(() => {
@@ -42,16 +40,6 @@ export function GameShell() {
       gameRef.current = null
       useGameStore.getState().registerGameApi(null)
     }
-  }, [])
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(orientation: portrait) and (max-width: 900px)')
-    const sync = () => setShowRotateHint(mediaQuery.matches)
-
-    sync()
-    mediaQuery.addEventListener('change', sync)
-
-    return () => mediaQuery.removeEventListener('change', sync)
   }, [])
 
   useEffect(() => {
@@ -92,10 +80,6 @@ export function GameShell() {
               </button>
             </div>
           </div>
-        ) : null}
-
-        {showRotateHint ? (
-          null
         ) : null}
 
         {status === 'ready' ? (
