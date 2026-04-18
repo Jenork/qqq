@@ -63,8 +63,8 @@ export function SiteTabs() {
         <div className="relative z-[1] flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
             <div className="doom-logo">
-              <span className="doom-logo-wordmark">BaseUp</span>
-              <span className="doom-logo-sub">Survival</span>
+              <span className="doom-logo-wordmark">Based</span>
+              <span className="doom-logo-sub">DOOM</span>
             </div>
           </div>
 
@@ -118,15 +118,6 @@ export function SiteTabs() {
         <section className={cn(activeTab === 'arsenal' ? 'block' : 'hidden')}>
           <ArsenalMissionsPanel />
         </section>
-      </div>
-
-      <div className="chrome-shell hidden rounded-[24px] px-4 py-3 lg:block">
-        <div className="relative z-[1] flex flex-wrap items-center justify-between gap-3 text-[11px] font-black uppercase tracking-[0.18em] text-[#a88f79]">
-          <span>BaseUp Survival</span>
-          <span>Doom-like Aesthetic</span>
-          <span>Atmospheric and Immersive</span>
-          <span>Gameplay First</span>
-        </div>
       </div>
     </div>
   )

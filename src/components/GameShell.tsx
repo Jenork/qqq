@@ -98,7 +98,7 @@ export function GameShell() {
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-200/80">
                 Arena ready
               </p>
-              <h1 className="inferno-heading mt-1 text-2xl font-black sm:text-3xl">Inferno Arena</h1>
+              <h1 className="inferno-heading mt-1 text-2xl font-black sm:text-3xl">Based DOOM</h1>
               <button
                 type="button"
                 onClick={() => startRun()}

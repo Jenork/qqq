@@ -1,6 +1,6 @@
-# BaseUp Survival
+# Based DOOM
 
-BaseUp Survival is a browser-based 2D side-view survival shooter built with Next.js, TypeScript, React, Tailwind CSS, Phaser 3, Zustand, wagmi, viem, Solidity, and Foundry.
+Based DOOM is a browser-based 2D side-view survival shooter built with Next.js, TypeScript, React, Tailwind CSS, Phaser 3, Zustand, wagmi, viem, Solidity, and Foundry.
 
 The project is desktop-first for gameplay. Core combat does not require a wallet. Wallet connection is used only for optional Base Mainnet features such as leaderboard score submission and onchain Arsenal missions.
 

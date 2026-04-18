@@ -8,7 +8,7 @@ export const config = createConfig({
   connectors: [
     injected(),
     baseAccount({
-      appName: 'BaseUp',
+      appName: 'Based DOOM',
     }),
   ],
   storage: createStorage({ storage: cookieStorage }),

@@ -3,8 +3,8 @@ import { Providers } from '@/app/providers'
 import '@/app/globals.css'
 
 export const metadata: Metadata = {
-  title: 'BaseUp Survival',
-  description: 'A mobile-first Base App survival shooter MVP built with Phaser and wagmi.',
+  title: 'Based DOOM',
+  description: 'Based DOOM is a browser-based survival shooter built on Next.js, Phaser, and Base.',
 }
 
 export const viewport: Viewport = {
