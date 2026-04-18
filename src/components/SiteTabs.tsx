@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { ArsenalMissionsPanel } from '@/components/ArsenalMissionsPanel'
-import { AudioToggleButton } from '@/components/AudioToggleButton'
 import { GameShell } from '@/components/GameShell'
 import { LeaderboardPanel } from '@/components/LeaderboardPanel'
 import { cn } from '@/lib/cn'
@@ -95,8 +94,6 @@ export function SiteTabs() {
                 })}
               </div>
             </nav>
-
-            <AudioToggleButton className="self-start sm:self-auto" />
           </div>
         </div>
       </header>

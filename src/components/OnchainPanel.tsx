@@ -69,7 +69,7 @@ export function OnchainPanel() {
         />
       ) : null}
 
-      <div className="fixed left-[calc(12px+var(--safe-left))] right-[calc(12px+var(--safe-right))] top-[calc(112px+var(--safe-top))] z-50 sm:left-auto sm:top-[calc(92px+var(--safe-top))] sm:w-[360px]">
+      <div className="fixed left-[calc(12px+var(--safe-left))] right-[calc(12px+var(--safe-right))] top-[calc(12px+var(--safe-top))] z-50 sm:left-auto sm:w-[360px]">
         {expanded ? (
           <section className="inferno-frame rounded-[26px] p-4">
             <div className="mb-3 flex items-start justify-between gap-3">
