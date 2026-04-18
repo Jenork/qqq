@@ -67,7 +67,7 @@ export function SiteTabs() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end lg:pr-[372px]">
             <nav className="chrome-shell rounded-[24px] p-1.5">
               <div className="grid grid-cols-3 gap-2">
                 {TAB_ORDER.map((tab) => {
