@@ -22,6 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="base:app_id" content="69e39c8642302cc6a1381d44" />
+      </head>
       <body className="min-h-screen">
         <Providers>{children}</Providers>
       </body>
