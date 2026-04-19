@@ -1,16 +1,11 @@
 import { cookieStorage, createConfig, createStorage, http } from 'wagmi'
-import { baseAccount, injected } from 'wagmi/connectors'
+import { injected } from 'wagmi/connectors'
 import { BASE_CHAIN, BASE_RPC_URL } from '@/config/web3'
 
 export const config = createConfig({
   chains: [BASE_CHAIN],
   multiInjectedProviderDiscovery: false,
-  connectors: [
-    injected(),
-    baseAccount({
-      appName: 'Based DOOM',
-    }),
-  ],
+  connectors: [injected()],
   storage: createStorage({ storage: cookieStorage }),
   ssr: true,
   transports: {

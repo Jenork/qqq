@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { shortenAddress } from '@/lib/score'
 
@@ -9,23 +8,6 @@ export function ConnectWallet() {
   const { connect, connectors } = useConnect()
   const { disconnect } = useDisconnect()
 
-  const preferredConnectors = useMemo(() => {
-    const browserWallet = connectors.find((connector) => connector.id !== 'baseAccount')
-    const baseWallet = connectors.find((connector) => connector.id === 'baseAccount')
-
-    const nextConnectors = []
-
-    if (browserWallet) {
-      nextConnectors.push(browserWallet)
-    }
-
-    if (baseWallet) {
-      nextConnectors.push(baseWallet)
-    }
-
-    return nextConnectors
-  }, [connectors])
-
   if (isReconnecting) {
     return <p className="text-sm text-stone-300">Reconnecting wallet...</p>
   }
@@ -33,7 +15,7 @@ export function ConnectWallet() {
   if (!isConnected) {
     return (
       <div className="flex flex-col gap-2">
-        {preferredConnectors.map((connector) => (
+        {connectors.map((connector) => (
           <button
             key={connector.uid}
             type="button"
@@ -41,11 +23,7 @@ export function ConnectWallet() {
             onClick={() => connect({ connector })}
             disabled={isConnecting}
           >
-            {isConnecting
-              ? 'Confirm in wallet...'
-              : connector.id === 'baseAccount'
-              ? 'Base Account'
-              : 'Browser Wallet'}
+            {isConnecting ? 'Confirm in wallet...' : 'Browser Wallet'}
           </button>
         ))}
       </div>

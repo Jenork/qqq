@@ -7,10 +7,10 @@ export const DAILY_CHECK_IN_ARMOR_POINTS = PLAYER_CONFIG.maxHp
 export const SOCIAL_GRENADE_REWARD_ITEM_ID = 'fire-grenade' satisfies ItemId
 
 export const SOCIAL_TWITTER_URL =
-  process.env.NEXT_PUBLIC_SOCIAL_TWITTER_URL?.trim() || 'https://twitter.com/'
+  process.env.NEXT_PUBLIC_SOCIAL_TWITTER_URL?.trim() || 'https://x.com/super_jenork'
 
 export const SOCIAL_TELEGRAM_URL =
-  process.env.NEXT_PUBLIC_SOCIAL_TELEGRAM_URL?.trim() || 'https://t.me/'
+  process.env.NEXT_PUBLIC_SOCIAL_TELEGRAM_URL?.trim() || 'https://t.me/monstrohunt'
 
 export type MissionStatus =
   | 'available'

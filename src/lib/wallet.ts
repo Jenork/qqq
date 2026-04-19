@@ -1,5 +1,6 @@
 'use client'
 
+import { encodeFunctionData, type Abi, type Address, type Hex } from 'viem'
 import { BASE_CHAIN, BASE_CHAIN_ID, BASE_CHAIN_NAME, BASE_RPC_URL } from '@/config/web3'
 
 type Eip1193Provider = {
@@ -28,6 +29,10 @@ function parseHexChainId(value: unknown) {
   }
 
   return Number.parseInt(value, 16)
+}
+
+function bigintToHexQuantity(value: bigint) {
+  return `0x${value.toString(16)}` as Hex
 }
 
 export async function ensureBaseMainnetSelected() {
@@ -83,4 +88,52 @@ export async function ensureBaseMainnetSelected() {
       `Wallet is still connected to chain ${finalChainId ?? 'unknown'}. Switch to ${BASE_CHAIN_NAME} and try again.`,
     )
   }
+}
+
+type SendInjectedContractTransactionParams = {
+  from: Address
+  to: Address
+  abi: Abi
+  functionName: string
+  args?: readonly unknown[]
+  value?: bigint
+}
+
+export async function sendInjectedContractTransaction({
+  from,
+  to,
+  abi,
+  functionName,
+  args,
+  value,
+}: SendInjectedContractTransactionParams) {
+  const provider = getInjectedProvider()
+
+  if (!provider) {
+    throw new Error('Injected wallet provider is not available.')
+  }
+
+  const data = encodeFunctionData({
+    abi,
+    functionName,
+    args,
+  })
+
+  const txHash = await provider.request({
+    method: 'eth_sendTransaction',
+    params: [
+      {
+        from,
+        to,
+        data,
+        ...(value !== undefined ? { value: bigintToHexQuantity(value) } : {}),
+      },
+    ],
+  })
+
+  if (typeof txHash !== 'string' || !txHash.startsWith('0x')) {
+    throw new Error('Wallet did not return a transaction hash.')
+  }
+
+  return txHash as Hex
 }
