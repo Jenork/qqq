@@ -6,6 +6,10 @@ export function shortenAddress(value?: string | null) {
   return `${value.slice(0, 6)}...${value.slice(-4)}`
 }
 
+export function formatScore(value?: number | null) {
+  return new Intl.NumberFormat('en-US').format(value ?? 0)
+}
+
 export function isNewBestScore(candidate: number, previousBest?: number) {
   if (previousBest === undefined) {
     return candidate > 0

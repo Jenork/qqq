@@ -74,6 +74,17 @@ button {
   font: inherit;
 }
 
+button:focus-visible,
+a:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid rgba(255, 196, 122, 0.95);
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 1px rgba(22, 8, 8, 0.98),
+    0 0 0 4px rgba(255, 122, 44, 0.24),
+    0 0 20px rgba(255, 96, 28, 0.22);
+}
+
 .safe-shell {
   padding-top: calc(8px + var(--safe-top));
   padding-right: calc(8px + var(--safe-right));
@@ -360,6 +371,29 @@ button {
   text-align: center;
 }
 
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-header-center {
+  justify-content: center;
+}
+
+.dashboard-heading {
+  min-width: 0;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .arsenal-hero-title {
   font-size: clamp(2.2rem, 4vw, 3.8rem);
   font-weight: 900;
@@ -385,6 +419,14 @@ button {
   flex-direction: column;
   gap: 14px;
   min-height: 100%;
+}
+
+.mission-actions {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
 }
 
 .mission-card-complete {
@@ -471,6 +513,7 @@ button {
 .stats-strip {
   display: grid;
   gap: 10px;
+  flex: 1;
 }
 
 .stats-strip-complete .stats-row {
@@ -567,6 +610,30 @@ button {
   color: #aa8f79;
 }
 
+.panel-state {
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px;
+  text-align: center;
+}
+
+.panel-state-muted {
+  background: rgba(255, 255, 255, 0.05);
+  color: #d6d3d1;
+}
+
+.panel-state-warning {
+  border-color: rgba(252, 211, 77, 0.2);
+  background: rgba(245, 158, 11, 0.1);
+  color: #fde68a;
+}
+
+.panel-state-error {
+  border-color: rgba(253, 164, 175, 0.2);
+  background: rgba(244, 63, 94, 0.1);
+  color: #ffe4e6;
+}
+
 .wallet-trigger {
   border: 1px solid rgba(255, 106, 42, 0.16);
   background:
@@ -578,6 +645,15 @@ button {
 }
 
 @media (max-width: 1023px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-actions {
+    justify-content: flex-start;
+  }
+
   .doom-logo-wordmark {
     font-size: 1.7rem;
   }

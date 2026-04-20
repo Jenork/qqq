@@ -31,7 +31,6 @@ export class ArenaScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private keys!: Record<string, Phaser.Input.Keyboard.Key>
   private player!: Player
-  private playerWeapon!: Phaser.GameObjects.Image
   private ground!: Phaser.GameObjects.Rectangle
   private enemies!: Phaser.Physics.Arcade.Group
   private playerBullets!: Phaser.Physics.Arcade.Group
@@ -94,10 +93,6 @@ export class ArenaScene extends Phaser.Scene {
     this.player = new Player(this, ARENA_BOUNDS.playerSpawnX, this.playerBaseY)
     this.player.setScale(SPRITE_TUNING.player.scale)
     this.player.setDepth(3)
-    this.playerWeapon = this.add.image(this.player.x, this.player.y, 'weapon-pistol')
-    this.playerWeapon.setOrigin(0.18, 0.58)
-    this.playerWeapon.setDepth(4)
-    this.playerWeapon.setScale(0.94)
 
     this.enemies = this.physics.add.group({ classType: Enemy, runChildUpdate: false })
     this.playerBullets = this.physics.add.group({
@@ -224,7 +219,6 @@ export class ArenaScene extends Phaser.Scene {
     this.nextContactHitAt = 0
     this.shootLatch = false
     this.player.resetState(ARENA_BOUNDS.playerSpawnX, this.playerBaseY, rewards)
-    this.syncPlayerWeaponVisual(this.time.now)
     this.survivalTickAt = this.time.now + SCORE_CONFIG.survivalTickMs
 
     useGameStore.setState(this.runDirector.reset(this.time.now, startImmediately, rewards))
@@ -322,7 +316,6 @@ export class ArenaScene extends Phaser.Scene {
 
   private updateAmbientAnimation(time: number) {
     applyPlayerPresentation(this.player, time)
-    this.syncPlayerWeaponVisual(time)
     this.player.refreshVisualState(time)
 
     this.ambientFlames.forEach((flame, index) => {
@@ -340,24 +333,18 @@ export class ArenaScene extends Phaser.Scene {
     const horizontalSpeed = grounded
       ? PLAYER_CONFIG.moveSpeed
       : Math.round(PLAYER_CONFIG.moveSpeed * PLAYER_CONFIG.airMoveSpeedMultiplier)
-    const currentVelocityX = this.player.body?.velocity.x ?? 0
-    let targetVelocityX = 0
 
     if (moveLeft === moveRight) {
-      targetVelocityX = 0
+      this.player.setVelocityX(0)
     } else if (moveLeft) {
       this.player.facing = -1
       this.player.setFlipX(true)
-      targetVelocityX = -horizontalSpeed
+      this.player.setVelocityX(-horizontalSpeed)
     } else {
       this.player.facing = 1
       this.player.setFlipX(false)
-      targetVelocityX = horizontalSpeed
+      this.player.setVelocityX(horizontalSpeed)
     }
-
-    const velocityBlend = grounded ? 0.18 : 0.12
-    const nextVelocityX = Phaser.Math.Linear(currentVelocityX, targetVelocityX, velocityBlend)
-    this.player.setVelocityX(Math.abs(nextVelocityX) < 4 && targetVelocityX === 0 ? 0 : nextVelocityX)
 
     const jumpPressed =
       Phaser.Input.Keyboard.JustDown(this.keys.jump) ||
@@ -370,10 +357,7 @@ export class ArenaScene extends Phaser.Scene {
 
       if (moveLeft !== moveRight) {
         const jumpDirection = moveLeft ? -1 : 1
-        const boostedVelocityX = currentVelocityX + jumpDirection * PLAYER_CONFIG.jumpForwardBoost
-        this.player.setVelocityX(
-          Phaser.Math.Clamp(boostedVelocityX, -horizontalSpeed - PLAYER_CONFIG.jumpForwardBoost, horizontalSpeed + PLAYER_CONFIG.jumpForwardBoost),
-        )
+        this.player.setVelocityX(jumpDirection * (horizontalSpeed + PLAYER_CONFIG.jumpForwardBoost))
       }
 
       this.jumpLatch = true
@@ -442,34 +426,6 @@ export class ArenaScene extends Phaser.Scene {
     }
 
   }
-
-  private syncPlayerWeaponVisual(time: number) {
-    const equippedWeapon = useGameStore.getState().equippedWeapon
-    const facing = this.player.facing >= 0 ? 1 : -1
-    const shotPower = Phaser.Math.Clamp(1 - (time - this.player.lastShotAt) / 120, 0, 1)
-    const idleWave = Math.sin(time / 140 + this.player.x * 0.02)
-    const isShotgun = equippedWeapon === 'shotgun'
-    const weaponTexture = isShotgun ? 'weapon-shotgun' : 'weapon-pistol'
-    const offsetX = isShotgun ? 16 : 14
-    const offsetY = isShotgun ? 61 : 63
-    const recoilX = shotPower * (isShotgun ? 8 : 4)
-    const recoilY = shotPower * (isShotgun ? 1.8 : 1.2)
-    const rotationBase = isShotgun ? 2.2 : 6.2
-    const scaleBase = isShotgun ? 0.98 : 0.9
-
-    this.playerWeapon
-      .setTexture(weaponTexture)
-      .setDepth(facing > 0 ? 4 : 2.5)
-      .setFlipX(facing < 0)
-      .setScale(scaleBase + shotPower * 0.035)
-      .setAlpha(this.player.hp > 0 ? 0.96 : 0.7)
-      .setPosition(
-        this.player.x + facing * (offsetX - recoilX),
-        this.player.y - offsetY + idleWave * 0.8 + recoilY,
-      )
-      .setAngle(this.player.angle + facing * (rotationBase - shotPower * (isShotgun ? 8 : 10)))
-  }
-
   private equipWeaponFromHotkey(weaponId: 'pistol' | 'shotgun', successMessage: string) {
     const store = useGameStore.getState()
 
@@ -1110,12 +1066,7 @@ export class ArenaScene extends Phaser.Scene {
 
     switch (kind) {
       case 'player-shot':
-        pulse(520, 55, { endFrequency: 300, volume: 0.018 })
-        break
       case 'shotgun-shot':
-        pulse(180, 90, { type: 'sawtooth', endFrequency: 92, volume: 0.03 })
-        pulse(120, 130, { type: 'triangle', endFrequency: 58, volume: 0.02 })
-        break
       case 'enemy-shot':
         pulse(250, 85, { type: 'sawtooth', endFrequency: 120, volume: 0.022 })
         break
@@ -1144,10 +1095,7 @@ export class ArenaScene extends Phaser.Scene {
         pulse(720, 90, { type: 'triangle', endFrequency: 420, volume: 0.02 })
         break
       case 'grenade-throw':
-        pulse(280, 90, { type: 'triangle', endFrequency: 180, volume: 0.018 })
-        break
       case 'grenade-explode':
-        pulse(82, 280, { type: 'sawtooth', endFrequency: 30, volume: 0.04 })
         break
       case 'wave-start':
         pulse(420, 150, { type: 'triangle', endFrequency: 720, volume: 0.022 })

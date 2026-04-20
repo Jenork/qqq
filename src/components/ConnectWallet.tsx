@@ -34,12 +34,19 @@ export function ConnectWallet() {
   )
 
   if (isReconnecting) {
-    return <p className="text-sm text-stone-300">Reconnecting wallet...</p>
+    return (
+      <div className="panel-state panel-state-muted text-sm">
+        Reconnecting wallet...
+      </div>
+    )
   }
 
   if (!isConnected) {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="rounded-[22px] border border-[#482018] bg-[linear-gradient(180deg,rgba(19,9,9,0.94),rgba(10,7,8,0.98))] p-4 shadow-[0_18px_32px_rgba(0,0,0,0.26)]">
+        <p className="panel-title text-[#ffb78a]">Connect Wallet</p>
+        <p className="mt-2 text-sm text-stone-300">Choose a browser wallet to save score and use onchain actions.</p>
+        <div className="mt-4 flex flex-col gap-2">
         {availableConnectors.map((connector) => {
           const label = getConnectorLabel(connector.id, connector.name)
 
@@ -55,6 +62,7 @@ export function ConnectWallet() {
             </button>
           )
         })}
+        </div>
       </div>
     )
   }

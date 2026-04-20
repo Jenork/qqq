@@ -37,6 +37,17 @@ export function SiteTabs() {
   const [activeTab, setActiveTab] = useState<SiteTab>('game')
   const status = useGameStore((state) => state.status)
   const pauseRun = useGameStore((state) => state.pauseRun)
+  const gameTabId = 'site-tab-game'
+  const leaderboardTabId = 'site-tab-leaderboard'
+  const arsenalTabId = 'site-tab-arsenal'
+  const gamePanelId = 'site-panel-game'
+  const leaderboardPanelId = 'site-panel-leaderboard'
+  const arsenalPanelId = 'site-panel-arsenal'
+
+  const selectTab = (tab: SiteTab) => {
+    window.location.hash = tab
+    setActiveTab(tab)
+  }
 
   useEffect(() => {
     const syncFromHash = () => setActiveTab(readHashTab())
@@ -69,18 +80,45 @@ export function SiteTabs() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end lg:pr-[372px]">
-            <nav className="chrome-shell rounded-[24px] p-1.5">
-              <div className="grid grid-cols-3 gap-2">
+            <nav aria-label="Primary" className="chrome-shell rounded-[24px] p-1.5">
+              <div role="tablist" aria-label="Game sections" className="grid grid-cols-3 gap-2">
                 {TAB_ORDER.map((tab) => {
                   const active = tab.id === activeTab
+                  const tabId =
+                    tab.id === 'game'
+                      ? gameTabId
+                      : tab.id === 'leaderboard'
+                        ? leaderboardTabId
+                        : arsenalTabId
+                  const panelId =
+                    tab.id === 'game'
+                      ? gamePanelId
+                      : tab.id === 'leaderboard'
+                        ? leaderboardPanelId
+                        : arsenalPanelId
 
                   return (
                     <button
                       key={tab.id}
+                      id={tabId}
                       type="button"
-                      onClick={() => {
-                        window.location.hash = tab.id
-                        setActiveTab(tab.id)
+                      role="tab"
+                      aria-selected={active}
+                      aria-controls={panelId}
+                      tabIndex={active ? 0 : -1}
+                      onClick={() => selectTab(tab.id)}
+                      onKeyDown={(event) => {
+                        const currentIndex = TAB_ORDER.findIndex((entry) => entry.id === tab.id)
+
+                        if (event.key === 'ArrowRight') {
+                          event.preventDefault()
+                          selectTab(TAB_ORDER[(currentIndex + 1) % TAB_ORDER.length].id)
+                        }
+
+                        if (event.key === 'ArrowLeft') {
+                          event.preventDefault()
+                          selectTab(TAB_ORDER[(currentIndex - 1 + TAB_ORDER.length) % TAB_ORDER.length].id)
+                        }
                       }}
                       className={cn(
                         'inferno-tab min-w-[128px] px-4 py-3 text-sm font-black uppercase tracking-[0.14em] transition-all',
@@ -103,7 +141,10 @@ export function SiteTabs() {
 
       <div className="relative">
         <section
-          aria-hidden={activeTab !== 'game'}
+          id={gamePanelId}
+          role="tabpanel"
+          aria-labelledby={gameTabId}
+          hidden={activeTab !== 'game'}
           className={cn(
             activeTab === 'game' ? 'relative z-10' : 'pointer-events-none absolute inset-0 opacity-0',
           )}
@@ -111,11 +152,23 @@ export function SiteTabs() {
           <GameShell />
         </section>
 
-        <section className={cn(activeTab === 'leaderboard' ? 'block' : 'hidden')}>
+        <section
+          id={leaderboardPanelId}
+          role="tabpanel"
+          aria-labelledby={leaderboardTabId}
+          hidden={activeTab !== 'leaderboard'}
+          className={cn(activeTab === 'leaderboard' ? 'block' : 'hidden')}
+        >
           <LeaderboardPanel />
         </section>
 
-        <section className={cn(activeTab === 'arsenal' ? 'block' : 'hidden')}>
+        <section
+          id={arsenalPanelId}
+          role="tabpanel"
+          aria-labelledby={arsenalTabId}
+          hidden={activeTab !== 'arsenal'}
+          className={cn(activeTab === 'arsenal' ? 'block' : 'hidden')}
+        >
           <ArsenalMissionsPanel />
         </section>
       </div>

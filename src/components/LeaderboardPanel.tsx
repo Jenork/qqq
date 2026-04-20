@@ -3,7 +3,7 @@
 import { useAccount } from 'wagmi'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
 import { cn } from '@/lib/cn'
-import { shortenAddress } from '@/lib/score'
+import { formatScore, shortenAddress } from '@/lib/score'
 
 export function LeaderboardPanel() {
   const { address } = useAccount()
@@ -12,14 +12,19 @@ export function LeaderboardPanel() {
   return (
     <section className="panel inferno-subtle-grid w-full rounded-[30px] p-4 sm:p-5 lg:p-6">
       <div className="mx-auto w-full max-w-[1100px]">
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div className="min-w-0">
+        <div className="dashboard-header mb-5">
+          <div className="dashboard-heading">
             <p className="panel-title text-[#ffb78a]">Leaderboard</p>
             <h3 className="monitor-title mt-1">Leaderboard</h3>
             <p className="micro-copy mt-1">Top survivors</p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="dashboard-actions">
+            {typeof data?.totalPlayers === 'number' ? (
+              <span className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-stone-100">
+                Players: {formatScore(data.totalPlayers)}
+              </span>
+            ) : null}
             {data?.currentPlayerEntry ? (
               <span className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-[#8bff85]">
                 You: #{data.currentPlayerEntry.rank}
@@ -28,6 +33,7 @@ export function LeaderboardPanel() {
             <button
               type="button"
               className="action-button rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
+              disabled={isFetching}
               onClick={() => void refetch()}
             >
               {isFetching ? 'Refreshing...' : 'Refresh'}
@@ -42,8 +48,24 @@ export function LeaderboardPanel() {
             <span className="text-right">Best Score</span>
           </div>
 
-          {isLoading ? <p className="rounded-2xl bg-white/5 px-4 py-5 text-sm text-slate-300">Loading leaderboard...</p> : null}
-          {isError ? <p className="rounded-2xl bg-rose-400/10 px-4 py-5 text-sm text-rose-100">Failed to load leaderboard.</p> : null}
+          {isLoading ? (
+            <div className="panel-state panel-state-muted mt-2 py-10">
+              <p className="text-sm font-semibold text-stone-200">Loading leaderboard...</p>
+            </div>
+          ) : null}
+
+          {isError ? (
+            <div className="panel-state panel-state-error mt-2 py-8">
+              <p className="text-sm font-semibold text-rose-100">Failed to load leaderboard.</p>
+              <button
+                type="button"
+                className="action-button mt-4 rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
+                onClick={() => void refetch()}
+              >
+                Try Again
+              </button>
+            </div>
+          ) : null}
 
           {data?.entries.map((entry) => {
             const isCurrentPlayer = address?.toLowerCase() === entry.address.toLowerCase()
@@ -78,13 +100,18 @@ export function LeaderboardPanel() {
                     </span>
                   ) : null}
                 </span>
-                <span className={cn('text-right font-black', isCurrentPlayer ? 'text-[#9eff84]' : 'text-[#ffbe6e]')}>{entry.bestScore}</span>
+                <span className={cn('text-right font-black', isCurrentPlayer ? 'text-[#9eff84]' : 'text-[#ffbe6e]')}>
+                  {formatScore(entry.bestScore)}
+                </span>
               </div>
             )
           })}
 
           {!isLoading && !isError && !data?.entries.length ? (
-            <p className="rounded-2xl bg-white/5 px-4 py-5 text-sm text-slate-300">No scores submitted yet.</p>
+            <div className="panel-state panel-state-muted mt-2 py-10">
+              <p className="text-sm font-semibold text-stone-200">No scores submitted yet.</p>
+              <p className="mt-2 text-xs uppercase tracking-[0.14em] text-stone-400">Play a run and save your best score onchain.</p>
+            </div>
           ) : null}
 
           {data?.currentPlayerEntry && data.currentPlayerEntry.rank > data.entries.length ? (
@@ -102,11 +129,20 @@ export function LeaderboardPanel() {
                     You
                   </span>
                 </span>
-                <span className="font-black">{data.currentPlayerEntry.bestScore}</span>
+                <span className="font-black">{formatScore(data.currentPlayerEntry.bestScore)}</span>
               </div>
             </div>
           ) : null}
 
+          {data?.entries.length ? (
+            <div className="mt-3 flex items-center justify-between gap-3 px-2 text-[11px] font-black uppercase tracking-[0.14em] text-stone-400">
+              <span>Sorted by best score</span>
+              <span>
+                Showing {formatScore(data.entries.length)}
+                {typeof data.totalPlayers === 'number' ? ` / ${formatScore(data.totalPlayers)}` : ''}
+              </span>
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAccount, useChainId, useDisconnect, useReadContract, useSwitchChain } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
@@ -59,6 +59,7 @@ export function OnchainPanel() {
   const [expanded, setExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
   const [providerNames, setProviderNames] = useState<string[]>([])
+  const dialogRef = useRef<HTMLElement | null>(null)
 
   const { data: bestScore } = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
@@ -88,6 +89,49 @@ export function OnchainPanel() {
     setProviderNames(getProviderNames())
   }, [])
 
+  useEffect(() => {
+    if (!expanded) {
+      return
+    }
+
+    const dialog = dialogRef.current
+    if (!dialog) {
+      return
+    }
+
+    const focusable = dialog.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+    )
+
+    focusable[0]?.focus()
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setExpanded(false)
+        return
+      }
+
+      if (event.key !== 'Tab' || focusable.length === 0) {
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    dialog.addEventListener('keydown', handleKeyDown)
+    return () => dialog.removeEventListener('keydown', handleKeyDown)
+  }, [expanded, isConnected, chainId, isSwitching, copied])
+
   const explorerHref = useMemo(() => {
     if (!address) {
       return BASE_EXPLORER_URL
@@ -95,6 +139,8 @@ export function OnchainPanel() {
 
     return `${BASE_EXPLORER_URL}/address/${address}`
   }, [address])
+  const bestScoreValue = bestScore ? Number(bestScore) : 0
+  const isWrongNetwork = isConnected && chainId !== BASE_CHAIN_ID
 
   const handleCopyAddress = async () => {
     if (!address) {
@@ -122,11 +168,20 @@ export function OnchainPanel() {
 
       <div className="fixed left-[calc(12px+var(--safe-left))] right-[calc(12px+var(--safe-right))] top-[calc(12px+var(--safe-top))] z-50 sm:left-auto sm:w-[360px]">
         {expanded ? (
-          <section className="inferno-frame rounded-[26px] p-4">
+          <section
+            id="wallet-panel-dialog"
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="wallet-panel-title"
+            className="inferno-frame rounded-[26px] p-4"
+          >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <p className="panel-title text-[#ffb78a]">Wallet</p>
-                {isConnected ? <p className="mt-1 text-sm font-semibold text-stone-100">{shortenAddress(address)}</p> : null}
+                <p id="wallet-panel-title" className="panel-title text-[#ffb78a]">Wallet</p>
+                <p className="mt-1 text-sm text-stone-300">
+                  {isConnected ? 'Connected wallet status' : 'Optional onchain layer'}
+                </p>
               </div>
               <button
                 type="button"
@@ -144,14 +199,23 @@ export function OnchainPanel() {
                 <>
                   <div className="rounded-[22px] border border-[#482018] bg-[linear-gradient(180deg,rgba(19,9,9,0.94),rgba(10,7,8,0.98))] p-4 shadow-[0_18px_32px_rgba(0,0,0,0.26)]">
                     <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-[#4de06c]/35 bg-[#16301a] px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#b5ffb7]">
+                        Connected
+                      </span>
                       <span className="inferno-chip rounded-full px-3 py-2 text-sm font-semibold text-stone-100">
                         {shortenAddress(address)}
                       </span>
-                      <span className="inferno-chip rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-stone-200">
-                        {chainId === BASE_CHAIN_ID ? BASE_CHAIN_NAME : `Chain ${chainId}`}
+                      <span
+                        className={
+                          isWrongNetwork
+                            ? 'rounded-full border border-amber-300/20 bg-amber-500/12 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-amber-100'
+                            : 'inferno-chip rounded-full px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-stone-200'
+                        }
+                      >
+                        {isWrongNetwork ? `Wrong Network (${chainId})` : BASE_CHAIN_NAME}
                       </span>
                       <span className="rounded-full border border-amber-300/20 bg-amber-500/12 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-amber-100">
-                        Best {bestScore ? Number(bestScore) : 0}
+                        Best {bestScoreValue}
                       </span>
                     </div>
 
@@ -161,7 +225,7 @@ export function OnchainPanel() {
                         className="action-button rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
                         onClick={() => void handleCopyAddress()}
                       >
-                        {copied ? 'Copied' : 'Copy'}
+                        {copied ? 'Copied' : 'Copy Address'}
                       </button>
                       <a
                         href={explorerHref}
@@ -169,7 +233,7 @@ export function OnchainPanel() {
                         rel="noreferrer"
                         className="action-button flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
                       >
-                        BaseScan
+                        Open BaseScan
                       </a>
                       <button
                         type="button"
@@ -192,7 +256,7 @@ export function OnchainPanel() {
                   ) : null}
 
                   {!HAS_GAME_PROGRESS_ADDRESS ? (
-                    <div className="rounded-[18px] border border-amber-300/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                    <div className="panel-state panel-state-warning text-sm">
                       Contract not configured.
                     </div>
                   ) : null}
@@ -211,6 +275,9 @@ export function OnchainPanel() {
         ) : (
           <button
             type="button"
+            aria-haspopup="dialog"
+            aria-expanded={expanded}
+            aria-controls="wallet-panel-dialog"
             className="wallet-trigger ml-auto flex items-center gap-3 rounded-[18px] px-4 py-3 text-left backdrop-blur"
             onClick={() => setExpanded(true)}
           >

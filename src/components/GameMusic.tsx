@@ -77,7 +77,7 @@ export function GameMusic() {
     }
 
     const syncPlayback = async () => {
-      if (audioMuted) {
+      if (audioMuted || !audioUnlocked) {
         menuAudio.pause()
         gameplayAudio.pause()
         return
@@ -116,7 +116,7 @@ export function GameMusic() {
         return
       }
 
-      if (document.hidden || audioMuted) {
+      if (document.hidden || audioMuted || !audioUnlocked) {
         menuAudio.pause()
         gameplayAudio.pause()
         return

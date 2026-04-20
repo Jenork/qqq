@@ -66,20 +66,22 @@ export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }
         <p className="stats-row"><span className="stats-row-label">Total</span><span className="stats-row-value">{mission.totalCount}</span></p>
       </div>
 
-      {mission.error ? (
-        <p className="relative z-[1] mt-4 rounded-2xl border border-rose-300/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
-          {mission.error}
-        </p>
-      ) : null}
+      <div className="mission-actions">
+        {mission.error ? (
+          <p className="relative z-[1] rounded-2xl border border-rose-300/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+            {mission.error}
+          </p>
+        ) : null}
 
-      <button
-        type="button"
-        className="action-button relative z-[1] mt-5 w-full rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
-        disabled={disabled}
-        onClick={() => void mission.dailyCheckIn()}
-      >
-        {buttonLabel}
-      </button>
+        <button
+          type="button"
+          className="action-button relative z-[1] w-full rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
+          disabled={disabled}
+          onClick={() => void mission.dailyCheckIn()}
+        >
+          {buttonLabel}
+        </button>
+      </div>
     </article>
   )
 }
