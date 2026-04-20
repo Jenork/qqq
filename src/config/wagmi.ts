@@ -53,6 +53,7 @@ export const config = createConfig({
   multiInjectedProviderDiscovery: false,
   connectors: [
     injected({
+      shimDisconnect: false,
       target: {
         id: 'metaMask',
         name: 'MetaMask',
@@ -61,6 +62,7 @@ export const config = createConfig({
       unstable_shimAsyncInject: 2_000,
     }),
     injected({
+      shimDisconnect: false,
       target: {
         id: 'coinbaseWallet',
         name: 'Coinbase Wallet',
@@ -69,6 +71,7 @@ export const config = createConfig({
       unstable_shimAsyncInject: 2_000,
     }),
     injected({
+      shimDisconnect: false,
       target: {
         id: 'otherInjected',
         name: 'Other Browser Wallet',
