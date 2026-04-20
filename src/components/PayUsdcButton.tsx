@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { useUsdcPayment } from '@/hooks/useUsdcPayment'
 import { RewardStatusBadge } from '@/components/RewardStatusBadge'
 import { USDC_PAYMENT_AMOUNT_USDC, USDC_RECIPIENT } from '@/config/tokens'
@@ -8,18 +9,30 @@ import { shortenAddress } from '@/lib/score'
 type UsdcMission = ReturnType<typeof useUsdcPayment>
 
 export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
+  const [imageFailed, setImageFailed] = useState(false)
+
   return (
     <article className="inferno-frame mission-card rounded-[28px] p-5">
       <div className="relative z-[1] flex items-start justify-between gap-3">
         <div>
           <p className="panel-title text-[#ffb78a]">Onchain</p>
-          <h4 className="mt-2 text-[1.7rem] font-black uppercase tracking-[0.04em] text-[#ff5d2a]">Pay {USDC_PAYMENT_AMOUNT_USDC} USDC</h4>
+          <h4 className="mt-2 text-[1.7rem] font-black uppercase tracking-[0.04em] text-[#ff5d2a]">Shotgun</h4>
+          <p className="micro-copy mt-2">Pay {USDC_PAYMENT_AMOUNT_USDC} USDC</p>
         </div>
         <RewardStatusBadge status={mission.status} />
       </div>
 
       <div className="mission-poster mission-poster-glow-green rounded-[24px]">
-        <span className="mission-poster-label">0.3</span>
+        {imageFailed ? (
+          <span className="mission-poster-label">Shotgun Reward</span>
+        ) : (
+          <img
+            src="/rewards/reward-shotgun.png"
+            alt="Shotgun reward"
+            className="h-full w-full object-contain p-4 [image-rendering:pixelated]"
+            onError={() => setImageFailed(true)}
+          />
+        )}
       </div>
 
       <div className="stats-strip relative z-[1]">

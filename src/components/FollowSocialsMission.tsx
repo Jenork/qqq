@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import type { useSocialMission } from '@/hooks/useSocialMission'
 import { RewardStatusBadge } from '@/components/RewardStatusBadge'
 
 type SocialMission = ReturnType<typeof useSocialMission>
 
 export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
+  const [imageFailed, setImageFailed] = useState(false)
   const confirmDisabled = mission.rewardActive
   const confirmLabel =
     mission.status === 'reward-active' || mission.status === 'confirmed'
@@ -21,17 +23,27 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
       <div className="relative z-[1] flex items-start justify-between gap-3">
         <div>
           <p className="panel-title text-[#ffb78a]">Offchain</p>
-          <h4 className="mt-2 text-[1.7rem] font-black uppercase tracking-[0.04em] text-[#ff5d2a]">Follow Socials</h4>
+          <h4 className="mt-2 text-[1.7rem] font-black uppercase tracking-[0.04em] text-[#ff5d2a]">Grenade</h4>
+          <p className="micro-copy mt-2">Follow Twitter and Telegram</p>
         </div>
         <RewardStatusBadge status={displayStatus} />
       </div>
 
       <div className="mission-poster mission-poster-glow-blue rounded-[24px]">
-        <span className="mission-poster-label">Social</span>
+        {imageFailed ? (
+          <span className="mission-poster-label">Grenade Reward</span>
+        ) : (
+          <img
+            src="/rewards/reward-grenade.png"
+            alt="Grenade reward"
+            className="h-full w-full object-contain p-4 [image-rendering:pixelated]"
+            onError={() => setImageFailed(true)}
+          />
+        )}
       </div>
 
       <div className="stats-strip relative z-[1]">
-        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">{mission.grenadeRewardActive ? 'Fire Grenade' : 'Grenade Locked'}</span></p>
+        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">{mission.grenadeRewardActive ? 'Grenade Unlocked' : 'Grenade Locked'}</span></p>
         <p className="stats-row"><span className="stats-row-label">Twitter</span><span className="stats-row-value">{mission.twitterOpened ? 'Opened' : 'Pending'}</span></p>
         <p className="stats-row"><span className="stats-row-label">Telegram</span><span className="stats-row-value">{mission.telegramOpened ? 'Opened' : 'Pending'}</span></p>
       </div>

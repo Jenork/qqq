@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { RewardStatusBadge } from '@/components/RewardStatusBadge'
 import type { useDailyCheckIn } from '@/hooks/useDailyCheckIn'
+import { cn } from '@/lib/cn'
 import { formatRelativeUnlockTime } from '@/lib/missions'
 
 type DailyCheckInMission = ReturnType<typeof useDailyCheckIn>
@@ -17,6 +18,7 @@ function resolveAvailabilityText(canCheckInNow: boolean, nextAvailableAt: number
 
 export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }) {
   const [now, setNow] = useState(() => Date.now())
+  const [imageFailed, setImageFailed] = useState(false)
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -37,13 +39,23 @@ export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }
       <div className="relative z-[1] flex items-start justify-between gap-3">
         <div>
           <p className="panel-title text-[#ffb78a]">Onchain</p>
-          <h4 className="mt-2 text-[1.7rem] font-black uppercase tracking-[0.04em] text-[#ff5d2a]">Daily Check-in</h4>
+          <h4 className="mt-2 text-[1.7rem] font-black uppercase tracking-[0.04em] text-[#ff5d2a]">Armor</h4>
+          <p className="micro-copy mt-2">Daily check-in once every 24 hours</p>
         </div>
         <RewardStatusBadge status={displayStatus} />
       </div>
 
       <div className="mission-poster mission-poster-glow-orange rounded-[24px]">
-        <span className="mission-poster-label">Check</span>
+        {imageFailed ? (
+          <span className="mission-poster-label">Armor Reward</span>
+        ) : (
+          <img
+            src="/rewards/reward-armor.png"
+            alt="Armor reward"
+            className={cn('h-full w-full object-contain p-4 [image-rendering:pixelated]')}
+            onError={() => setImageFailed(true)}
+          />
+        )}
       </div>
 
       <div className="stats-strip relative z-[1]">
