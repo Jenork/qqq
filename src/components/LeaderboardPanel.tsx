@@ -2,7 +2,6 @@
 
 import { useAccount } from 'wagmi'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
-import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
 import { shortenAddress } from '@/lib/score'
 

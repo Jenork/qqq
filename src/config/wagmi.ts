@@ -56,7 +56,7 @@ export const config = createConfig({
       target: {
         id: 'metaMask',
         name: 'MetaMask',
-        provider: (window?: any) => findMetaMaskProvider(window),
+        provider: (window?: unknown) => findMetaMaskProvider(window as Window | undefined),
       },
       unstable_shimAsyncInject: 2_000,
     }),
@@ -64,7 +64,7 @@ export const config = createConfig({
       target: {
         id: 'coinbaseWallet',
         name: 'Coinbase Wallet',
-        provider: (window?: any) => findCoinbaseWalletProvider(window),
+        provider: (window?: unknown) => findCoinbaseWalletProvider(window as Window | undefined),
       },
       unstable_shimAsyncInject: 2_000,
     }),
@@ -72,7 +72,7 @@ export const config = createConfig({
       target: {
         id: 'otherInjected',
         name: 'Other Browser Wallet',
-        provider: (window?: any) => findOtherInjectedProvider(window),
+        provider: (window?: unknown) => findOtherInjectedProvider(window as Window | undefined),
       },
       unstable_shimAsyncInject: 2_000,
     }),
