@@ -1,7 +1,16 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useAccount, useChainId, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
+import {
+  useAccount,
+  useChainId,
+  useReadContract,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from 'wagmi'
+import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
+import { SHOTGUN_ITEM_ID } from '@/config/missions'
 import {
   erc20Abi,
   HAS_USDC_RECIPIENT,
@@ -21,6 +30,17 @@ export function useUsdcPayment() {
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const [error, setError] = useState<string | null>(null)
   const [storedSuccess, setStoredSuccess] = useState(() => readUsdcMissionState(address))
+  const onchainUnlock = useReadContract({
+    address: GAME_PROGRESS_ADDRESS,
+    abi: gameProgressAbi,
+    functionName: 'isItemUnlocked',
+    args: address ? [address, BigInt(SHOTGUN_ITEM_ID)] : undefined,
+    chainId: BASE_CHAIN_ID,
+    query: {
+      enabled: Boolean(address) && isConnected && HAS_GAME_PROGRESS_ADDRESS,
+      staleTime: 15_000,
+    },
+  })
 
   const { data: hash, error: writeError, isPending, writeContract } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
@@ -52,9 +72,10 @@ export function useUsdcPayment() {
     markUsdcMissionSuccess(address, hash)
     setStoredSuccess(readUsdcMissionState(address))
     setError(null)
-  }, [address, hash, isSuccess])
+    void onchainUnlock.refetch()
+  }, [address, hash, isSuccess, onchainUnlock])
 
-  const paymentSuccess = Boolean(storedSuccess)
+  const paymentSuccess = Boolean(storedSuccess) || Boolean(onchainUnlock.data)
 
   const status = useMemo(() => {
     if (!isConnected) {

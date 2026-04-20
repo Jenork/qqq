@@ -55,9 +55,7 @@ export function Hud() {
   const healCharges = useGameStore((state) => state.healCharges)
   const unlockedItemIds = useGameStore((state) => state.unlockedItemIds)
   const status = useGameStore((state) => state.status)
-  const audioMuted = useGameStore((state) => state.audioMuted)
   const togglePause = useGameStore((state) => state.togglePause)
-  const toggleAudioMuted = useGameStore((state) => state.toggleAudioMuted)
   const setMobileControl = useGameStore((state) => state.setMobileControl)
   const pulseAction = useGameStore((state) => state.pulseAction)
   const [showTouchControls, setShowTouchControls] = useState(false)
@@ -194,14 +192,6 @@ export function Hud() {
             onClick={() => togglePause()}
           >
             {status === 'paused' ? 'Resume' : 'Pause'}
-          </button>
-
-          <button
-            type="button"
-            className="action-button rounded-2xl px-4 py-3 text-[11px] font-black uppercase tracking-[0.16em]"
-            onClick={() => toggleAudioMuted()}
-          >
-            {audioMuted ? 'Sound Off' : 'Sound On'}
           </button>
         </div>
       </div>

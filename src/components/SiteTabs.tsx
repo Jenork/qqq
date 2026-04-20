@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { AudioToggleButton } from '@/components/AudioToggleButton'
 import { ArsenalMissionsPanel } from '@/components/ArsenalMissionsPanel'
 import { GameShell } from '@/components/GameShell'
 import { LeaderboardPanel } from '@/components/LeaderboardPanel'
@@ -94,6 +95,8 @@ export function SiteTabs() {
                 })}
               </div>
             </nav>
+
+            <AudioToggleButton className="wallet-trigger inline-flex items-center justify-center rounded-[18px] px-4 py-3 text-sm font-black" />
           </div>
         </div>
       </header>
