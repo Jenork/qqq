@@ -3,8 +3,16 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { shortenAddress } from '@/lib/score'
 
-function getConnectorLabel(name: string) {
-  return name === 'Injected' ? 'Browser Wallet' : name
+function getConnectorLabel(id: string, name: string) {
+  if (id === 'metaMask') {
+    return 'MetaMask'
+  }
+
+  if (id === 'coinbaseWallet') {
+    return 'Coinbase Wallet'
+  }
+
+  return name === 'Injected' ? 'Other Browser Wallet' : name
 }
 
 export function ConnectWallet() {
@@ -13,7 +21,12 @@ export function ConnectWallet() {
   const { disconnect } = useDisconnect()
   const availableConnectors = connectors.filter(
     (connector, index, list) =>
-      index === list.findIndex((candidate) => candidate.id === connector.id && candidate.name === connector.name),
+      index ===
+      list.findIndex(
+        (candidate) =>
+          getConnectorLabel(candidate.id, candidate.name) ===
+          getConnectorLabel(connector.id, connector.name),
+      ),
   )
 
   if (isReconnecting) {
@@ -24,7 +37,7 @@ export function ConnectWallet() {
     return (
       <div className="flex flex-col gap-2">
         {availableConnectors.map((connector) => {
-          const label = getConnectorLabel(connector.name)
+          const label = getConnectorLabel(connector.id, connector.name)
 
           return (
             <button
