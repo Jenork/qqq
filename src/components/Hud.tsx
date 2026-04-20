@@ -95,7 +95,6 @@ export function Hud() {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="micro-copy mb-1">Gameplay HUD - In Game</p>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb47f]">HP</span>
                   <span className="text-sm font-black text-[#ffe1ba]">{Math.ceil(hp)}/{maxHp}</span>

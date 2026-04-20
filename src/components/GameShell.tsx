@@ -63,7 +63,7 @@ export function GameShell() {
         <div className="pointer-events-none absolute inset-0 border border-[#762314]/40" />
         <div className="pointer-events-none absolute inset-[14px] border border-[#4e1d16]/60 [clip-path:polygon(0_14px,14px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-18px))]" />
 
-        <Hud />
+        {status !== 'ready' ? <Hud /> : null}
         <GameOverModal />
 
         {status === 'paused' ? (

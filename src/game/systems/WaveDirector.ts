@@ -29,6 +29,9 @@ export class WaveDirector {
   nextSpawnAt = 0
   awaitingAdvance = false
   advanceAt = 0
+  private spawnBurstCount = 0
+  private burstSize = 2
+  private burstPauseMs = 0
 
   start(time: number) {
     this.active = true
@@ -46,13 +49,17 @@ export class WaveDirector {
     this.nextSpawnAt = 0
     this.awaitingAdvance = false
     this.advanceAt = 0
+    this.spawnBurstCount = 0
   }
 
   prepareWave(wave: number, time: number): WaveUpdate {
     this.wave = wave
     this.template = getWaveTemplate(wave)
     this.spawnsRemaining = this.template.totalSpawns
-    this.nextSpawnAt = time + this.template.pauseBeforeMs
+    this.spawnBurstCount = 0
+    this.burstSize = wave >= 7 ? 5 : wave >= 4 ? 4 : 3
+    this.burstPauseMs = Math.min(720, 220 + wave * 42)
+    this.nextSpawnAt = time + this.template.pauseBeforeMs + Math.min(420, wave * 44)
     this.awaitingAdvance = false
     this.advanceAt = 0
 
@@ -68,7 +75,21 @@ export class WaveDirector {
 
     if (this.spawnsRemaining > 0 && time >= this.nextSpawnAt) {
       this.spawnsRemaining -= 1
-      this.nextSpawnAt = time + this.template.spawnDelayMs
+      this.spawnBurstCount += 1
+
+      const shouldTakeBreather =
+        this.spawnsRemaining > 0 &&
+        this.spawnBurstCount >= this.burstSize
+
+      this.nextSpawnAt =
+        time +
+        this.template.spawnDelayMs +
+        (shouldTakeBreather ? this.burstPauseMs : 0)
+
+      if (shouldTakeBreather) {
+        this.spawnBurstCount = 0
+      }
+
       return {
         spawnType: weightedPick(this.template.weights),
       }
@@ -76,7 +97,7 @@ export class WaveDirector {
 
     if (this.spawnsRemaining === 0 && aliveEnemies === 0 && !this.awaitingAdvance) {
       this.awaitingAdvance = true
-      this.advanceAt = time + 1800
+      this.advanceAt = time + Math.min(3100, 2050 + this.wave * 110)
       return {
         waveCleared: this.wave,
       }
