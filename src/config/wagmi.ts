@@ -4,7 +4,6 @@ import { BASE_CHAIN, BASE_RPC_URL } from '@/config/web3'
 
 export const config = createConfig({
   chains: [BASE_CHAIN],
-  multiInjectedProviderDiscovery: false,
   connectors: [injected()],
   storage: createStorage({ storage: cookieStorage }),
   ssr: true,

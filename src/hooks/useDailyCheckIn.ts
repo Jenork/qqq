@@ -17,7 +17,6 @@ import {
 } from '@/config/contracts'
 import { BASE_CHAIN_ID } from '@/config/web3'
 import { getDisplayErrorMessage } from '@/lib/missions'
-import { ensureBaseMainnetSelected } from '@/lib/wallet'
 
 export function useDailyCheckIn() {
   const { address, isConnected } = useAccount()
@@ -138,7 +137,6 @@ export function useDailyCheckIn() {
       setError(null)
 
       try {
-        await ensureBaseMainnetSelected()
         await switchChainAsync({ chainId: BASE_CHAIN_ID })
         return
       } catch (switchError) {
@@ -158,13 +156,11 @@ export function useDailyCheckIn() {
     }
 
     try {
-      await ensureBaseMainnetSelected()
       setError(null)
       writeContract({
         address: DAILY_CHECKIN_CONTRACT_ADDRESS,
         abi: gameProgressAbi,
         functionName: 'dailyCheckIn',
-        chainId: BASE_CHAIN_ID,
       })
     } catch (switchError) {
       setError(getDisplayErrorMessage(switchError))

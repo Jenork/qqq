@@ -1,15 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { Hex } from 'viem'
 import { useQueryClient } from '@tanstack/react-query'
-import { useAccount, useChainId, useReadContract, useSwitchChain, useWaitForTransactionReceipt } from 'wagmi'
+import {
+  useAccount,
+  useChainId,
+  useReadContract,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from 'wagmi'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
 import { BASE_CHAIN_ID, BASE_CHAIN_NAME } from '@/config/web3'
 import { useGameStore } from '@/hooks/useGameStore'
 import { getDisplayErrorMessage } from '@/lib/missions'
 import { bigintToNumber, isNewBestScore } from '@/lib/score'
-import { sendInjectedContractTransaction } from '@/lib/wallet'
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
@@ -34,8 +39,7 @@ export function GameOverModal() {
   })
 
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [hash, setHash] = useState<Hex | undefined>()
-  const [isPending, setIsPending] = useState(false)
+  const { data: hash, error, isPending, writeContract } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
 
   useEffect(() => {
@@ -47,6 +51,12 @@ export function GameOverModal() {
     void refetchBest()
     void queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
   }, [isSuccess, queryClient, refetchBest])
+
+  useEffect(() => {
+    if (error) {
+      setSubmitError(getDisplayErrorMessage(error))
+    }
+  }, [error])
 
   const storedBestScore = bigintToNumber(bestScore)
   const canSubmitScore = isNewBestScore(pendingScore, storedBestScore)
@@ -140,32 +150,13 @@ export function GameOverModal() {
                   return
                 }
 
-                const currentAddress = address
-
-                if (!currentAddress) {
-                  setSubmitError('Connected wallet address is unavailable.')
-                  return
-                }
-
-                void (async () => {
-                  setIsPending(true)
-
-                  try {
-                    setSubmitError(null)
-                    const nextHash = await sendInjectedContractTransaction({
-                      from: currentAddress,
-                      to: GAME_PROGRESS_ADDRESS,
-                      abi: gameProgressAbi,
-                      functionName: 'submitScore',
-                      args: [BigInt(pendingScore)],
-                    })
-                    setHash(nextHash)
-                  } catch (submitError) {
-                    setSubmitError(getDisplayErrorMessage(submitError))
-                  } finally {
-                    setIsPending(false)
-                  }
-                })()
+                setSubmitError(null)
+                writeContract({
+                  address: GAME_PROGRESS_ADDRESS,
+                  abi: gameProgressAbi,
+                  functionName: 'submitScore',
+                  args: [BigInt(pendingScore)],
+                })
               }}
             >
               {isSuccess ? 'Score Saved Onchain' : canSubmitScore ? 'Submit Score Onchain' : 'Score Not Higher'}

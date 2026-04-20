@@ -14,12 +14,11 @@ import {
 import { BASE_CHAIN_ID } from '@/config/web3'
 import { getDisplayErrorMessage } from '@/lib/missions'
 import { markUsdcMissionSuccess, readUsdcMissionState, USDC_MISSION_EVENT_NAME } from '@/lib/usdcMission'
-import { ensureBaseMainnetSelected } from '@/lib/wallet'
 
 export function useUsdcPayment() {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
-  const { switchChain, isPending: isSwitching } = useSwitchChain()
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const [error, setError] = useState<string | null>(null)
   const [storedSuccess, setStoredSuccess] = useState(() => readUsdcMissionState(address))
 
@@ -134,8 +133,7 @@ export function useUsdcPayment() {
       setError(null)
 
       try {
-        await ensureBaseMainnetSelected()
-        switchChain({ chainId: BASE_CHAIN_ID })
+        await switchChainAsync({ chainId: BASE_CHAIN_ID })
       } catch (switchError) {
         setError(getDisplayErrorMessage(switchError))
       }
@@ -154,14 +152,12 @@ export function useUsdcPayment() {
     }
 
     try {
-      await ensureBaseMainnetSelected()
       setError(null)
       writeContract({
         address: USDC_TOKEN_ADDRESS,
         abi: erc20Abi,
         functionName: 'transfer',
         args: [USDC_RECIPIENT, USDC_PAYMENT_AMOUNT_UNITS],
-        chainId: BASE_CHAIN_ID,
       })
     } catch (switchError) {
       setError(getDisplayErrorMessage(switchError))
