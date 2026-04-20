@@ -12,7 +12,11 @@ function getConnectorLabel(id: string, name: string) {
     return 'Coinbase Wallet'
   }
 
-  return name === 'Injected' ? 'Other Browser Wallet' : name
+  if (id === 'otherInjected') {
+    return 'Other Browser Wallet'
+  }
+
+  return name === 'Injected' ? 'Browser Wallet' : name
 }
 
 export function ConnectWallet() {

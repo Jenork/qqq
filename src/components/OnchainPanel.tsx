@@ -8,14 +8,57 @@ import { BASE_CHAIN_ID, BASE_CHAIN_NAME, BASE_EXPLORER_URL } from '@/config/web3
 import { shortenAddress } from '@/lib/score'
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
+const SHOW_WALLET_DEBUG = process.env.NEXT_PUBLIC_WALLET_DEBUG === 'true'
+
+type BrowserWalletProvider = {
+  isCoinbaseWallet?: boolean
+  isMetaMask?: boolean
+  isBraveWallet?: boolean
+  providers?: BrowserWalletProvider[]
+}
+
+type BrowserWalletWindow = Window & {
+  ethereum?: BrowserWalletProvider
+}
+
+function getProviderNames() {
+  if (typeof window === 'undefined') {
+    return []
+  }
+
+  const ethereum = (window as BrowserWalletWindow).ethereum
+
+  if (!ethereum) {
+    return []
+  }
+
+  const providers = ethereum.providers?.length ? ethereum.providers : [ethereum]
+
+  return providers.map((provider: BrowserWalletProvider) => {
+    if (provider.isMetaMask && !provider.isCoinbaseWallet) {
+      return 'MetaMask'
+    }
+
+    if (provider.isCoinbaseWallet) {
+      return 'Coinbase Wallet'
+    }
+
+    if (provider.isBraveWallet) {
+      return 'Brave Wallet'
+    }
+
+    return 'Unknown Injected'
+  })
+}
 
 export function OnchainPanel() {
-  const { address, isConnected } = useAccount()
+  const { address, connector, isConnected } = useAccount()
   const { disconnect } = useDisconnect()
   const chainId = useChainId()
   const { switchChain, isPending: isSwitching } = useSwitchChain()
   const [expanded, setExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [providerNames, setProviderNames] = useState<string[]>([])
 
   const { data: bestScore } = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
@@ -36,6 +79,14 @@ export function OnchainPanel() {
     const timeoutId = window.setTimeout(() => setCopied(false), 1400)
     return () => window.clearTimeout(timeoutId)
   }, [copied])
+
+  useEffect(() => {
+    if (!SHOW_WALLET_DEBUG) {
+      return
+    }
+
+    setProviderNames(getProviderNames())
+  }, [])
 
   const explorerHref = useMemo(() => {
     if (!address) {
@@ -143,6 +194,14 @@ export function OnchainPanel() {
                   {!HAS_GAME_PROGRESS_ADDRESS ? (
                     <div className="rounded-[18px] border border-amber-300/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
                       Contract not configured.
+                    </div>
+                  ) : null}
+
+                  {SHOW_WALLET_DEBUG ? (
+                    <div className="rounded-[18px] border border-sky-300/20 bg-sky-500/10 px-4 py-3 text-xs text-sky-100">
+                      <p>Connector: {connector?.name ?? 'none'}</p>
+                      <p>Connector id: {connector?.id ?? 'none'}</p>
+                      <p>Injected providers: {providerNames.length ? providerNames.join(', ') : 'none'}</p>
                     </div>
                   ) : null}
                 </>
