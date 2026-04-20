@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { useSocialMission } from '@/hooks/useSocialMission'
 import { RewardStatusBadge } from '@/components/RewardStatusBadge'
+import { cn } from '@/lib/cn'
 
 type SocialMission = ReturnType<typeof useSocialMission>
 
@@ -17,9 +18,10 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
     mission.status === 'reward-active' || mission.status === 'confirmed'
       ? 'success'
       : mission.status
+  const completedCard = mission.rewardActive || mission.status === 'confirmed'
 
   return (
-    <article className="inferno-frame mission-card rounded-[28px] p-5">
+    <article className={cn('inferno-frame mission-card rounded-[28px] p-5', completedCard ? 'mission-card-complete' : '')}>
       <div className="relative z-[1] flex items-start justify-between gap-3">
         <div>
           <p className="panel-title text-[#ffb78a]">Offchain</p>
@@ -29,7 +31,7 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
         <RewardStatusBadge status={displayStatus} />
       </div>
 
-      <div className="mission-poster mission-poster-glow-blue rounded-[24px]">
+      <div className={cn('mission-poster mission-poster-glow-blue rounded-[24px]', completedCard ? 'mission-poster-complete' : '')}>
         {imageFailed ? (
           <span className="mission-poster-label">Grenade Reward</span>
         ) : (
@@ -42,7 +44,7 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
         )}
       </div>
 
-      <div className="stats-strip relative z-[1]">
+      <div className={cn('stats-strip relative z-[1]', completedCard ? 'stats-strip-complete' : '')}>
         <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">{mission.grenadeRewardActive ? 'Grenade Unlocked' : 'Grenade Locked'}</span></p>
         <p className="stats-row"><span className="stats-row-label">Twitter</span><span className="stats-row-value">{mission.twitterOpened ? 'Opened' : 'Pending'}</span></p>
         <p className="stats-row"><span className="stats-row-label">Telegram</span><span className="stats-row-value">{mission.telegramOpened ? 'Opened' : 'Pending'}</span></p>

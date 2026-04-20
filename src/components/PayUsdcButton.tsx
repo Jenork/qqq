@@ -4,15 +4,17 @@ import { useState } from 'react'
 import type { useUsdcPayment } from '@/hooks/useUsdcPayment'
 import { RewardStatusBadge } from '@/components/RewardStatusBadge'
 import { USDC_PAYMENT_AMOUNT_USDC, USDC_RECIPIENT } from '@/config/tokens'
+import { cn } from '@/lib/cn'
 import { shortenAddress } from '@/lib/score'
 
 type UsdcMission = ReturnType<typeof useUsdcPayment>
 
 export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
   const [imageFailed, setImageFailed] = useState(false)
+  const completedCard = mission.isSuccess
 
   return (
-    <article className="inferno-frame mission-card rounded-[28px] p-5">
+    <article className={cn('inferno-frame mission-card rounded-[28px] p-5', completedCard ? 'mission-card-complete' : '')}>
       <div className="relative z-[1] flex items-start justify-between gap-3">
         <div>
           <p className="panel-title text-[#ffb78a]">Onchain</p>
@@ -22,7 +24,7 @@ export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
         <RewardStatusBadge status={mission.status} />
       </div>
 
-      <div className="mission-poster mission-poster-glow-green rounded-[24px]">
+      <div className={cn('mission-poster mission-poster-glow-green rounded-[24px]', completedCard ? 'mission-poster-complete' : '')}>
         {imageFailed ? (
           <span className="mission-poster-label">Shotgun Reward</span>
         ) : (
@@ -35,7 +37,7 @@ export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
         )}
       </div>
 
-      <div className="stats-strip relative z-[1]">
+      <div className={cn('stats-strip relative z-[1]', completedCard ? 'stats-strip-complete' : '')}>
         <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">Shotgun Unlock</span></p>
         <p className="stats-row"><span className="stats-row-label">Amount</span><span className="stats-row-value">{USDC_PAYMENT_AMOUNT_USDC} USDC</span></p>
         <p className="stats-row"><span className="stats-row-label">Recipient</span><span className="stats-row-value">{shortenAddress(USDC_RECIPIENT)}</span></p>

@@ -42,7 +42,7 @@ export function resolvePlayerSpriteState(player: Player, time: number) {
     return 'hit' satisfies PlayerSpriteState
   }
 
-  if (time < player.lastShotAt + 150) {
+  if (time < player.lastShotAt + 95) {
     return 'shoot' satisfies PlayerSpriteState
   }
 
@@ -68,7 +68,7 @@ export function applyPlayerPresentation(player: Player, time: number) {
   const facing = player.facing >= 0 ? 1 : -1
   const horizontalSpeed = Math.abs(body?.velocity.x ?? 0)
   const moveIntensity = Phaser.Math.Clamp(horizontalSpeed / PLAYER_CONFIG.moveSpeed, 0, 1)
-  const shotPower = getRecentPower(time, player.lastShotAt, 170)
+  const shotPower = getRecentPower(time, player.lastShotAt, 110)
   const hitPower = getRecentPower(time, player.damageFlashUntil - 220, 220)
   const runCycle = Math.sin(time / 72 + player.x * 0.024)
   const breath = Math.sin(time / 210)
@@ -82,24 +82,24 @@ export function applyPlayerPresentation(player: Player, time: number) {
     angle = breath * 0.6
   } else if (state === 'run') {
     const stride = Math.abs(runCycle)
-    scaleX += stride * (0.012 + moveIntensity * 0.01)
-    scaleY -= stride * (0.008 + moveIntensity * 0.008)
-    angle = facing * (2 + moveIntensity * 1.8 + runCycle * 3.4)
+    scaleX += stride * (0.007 + moveIntensity * 0.006)
+    scaleY -= stride * (0.005 + moveIntensity * 0.004)
+    angle = facing * (0.8 + moveIntensity * 0.9 + runCycle * 1.6)
   } else if (state === 'jump') {
     const verticalSpeed = body?.velocity.y ?? 0
     const rising = verticalSpeed < -24
-    scaleX += rising ? -0.012 : 0.004
-    scaleY += rising ? 0.02 : 0.012
-    angle = rising ? -facing * 5.2 : facing * 3.8
+    scaleX += rising ? -0.008 : 0.003
+    scaleY += rising ? 0.013 : 0.008
+    angle = rising ? -facing * 2.6 : facing * 1.8
   } else if (state === 'shoot') {
-    scaleX += shotPower * 0.016
-    scaleY -= shotPower * 0.01
-    angle = -facing * (PLAYER_CONFIG.shootKnockback + shotPower * 3.2)
+    scaleX += shotPower * 0.008
+    scaleY -= shotPower * 0.005
+    angle = -facing * (PLAYER_CONFIG.shootKnockback * 0.35 + shotPower * 1.2)
   } else if (state === 'hit') {
-    const shake = Math.sin(time / 18) * hitPower * 2.1
-    scaleX += hitPower * 0.022
-    scaleY -= hitPower * 0.018
-    angle = -facing * (7.5 * hitPower) + shake
+    const shake = Math.sin(time / 20) * hitPower * 1
+    scaleX += hitPower * 0.012
+    scaleY -= hitPower * 0.01
+    angle = -facing * (3.6 * hitPower) + shake
   } else {
     scaleX += 0.026
     scaleY -= 0.044
@@ -107,8 +107,13 @@ export function applyPlayerPresentation(player: Player, time: number) {
   }
 
   player.setTexture(getPlayerTextureKey(state, variant))
-  player.setScale(scaleX, scaleY)
-  player.setAngle(angle)
+  const scaleLerp = state === 'shoot' || state === 'hit' ? 0.22 : 0.16
+  const angleLerp = state === 'shoot' || state === 'hit' ? 0.24 : 0.14
+  player.setScale(
+    Phaser.Math.Linear(player.scaleX, scaleX, scaleLerp),
+    Phaser.Math.Linear(player.scaleY, scaleY, scaleLerp),
+  )
+  player.setAngle(Phaser.Math.Linear(player.angle, angle, angleLerp))
 
   return state
 }

@@ -333,19 +333,24 @@ export class ArenaScene extends Phaser.Scene {
     const horizontalSpeed = grounded
       ? PLAYER_CONFIG.moveSpeed
       : Math.round(PLAYER_CONFIG.moveSpeed * PLAYER_CONFIG.airMoveSpeedMultiplier)
+    const currentVelocityX = this.player.body?.velocity.x ?? 0
+    let targetVelocityX = 0
 
     if (moveLeft === moveRight) {
-      this.player.setAccelerationX(0)
-      this.player.setVelocityX(this.player.body?.velocity.x ?? 0)
+      targetVelocityX = 0
     } else if (moveLeft) {
       this.player.facing = -1
       this.player.setFlipX(true)
-      this.player.setVelocityX(-horizontalSpeed)
+      targetVelocityX = -horizontalSpeed
     } else {
       this.player.facing = 1
       this.player.setFlipX(false)
-      this.player.setVelocityX(horizontalSpeed)
+      targetVelocityX = horizontalSpeed
     }
+
+    const velocityBlend = grounded ? 0.18 : 0.12
+    const nextVelocityX = Phaser.Math.Linear(currentVelocityX, targetVelocityX, velocityBlend)
+    this.player.setVelocityX(Math.abs(nextVelocityX) < 4 && targetVelocityX === 0 ? 0 : nextVelocityX)
 
     const jumpPressed =
       Phaser.Input.Keyboard.JustDown(this.keys.jump) ||
@@ -358,7 +363,10 @@ export class ArenaScene extends Phaser.Scene {
 
       if (moveLeft !== moveRight) {
         const jumpDirection = moveLeft ? -1 : 1
-        this.player.setVelocityX(jumpDirection * (horizontalSpeed + PLAYER_CONFIG.jumpForwardBoost))
+        const boostedVelocityX = currentVelocityX + jumpDirection * PLAYER_CONFIG.jumpForwardBoost
+        this.player.setVelocityX(
+          Phaser.Math.Clamp(boostedVelocityX, -horizontalSpeed - PLAYER_CONFIG.jumpForwardBoost, horizontalSpeed + PLAYER_CONFIG.jumpForwardBoost),
+        )
       }
 
       this.jumpLatch = true
@@ -476,7 +484,10 @@ export class ArenaScene extends Phaser.Scene {
       0xffea79,
       store.equippedWeapon === 'shotgun' ? 16 : 10,
     )
-    this.cameras.main.shake(store.equippedWeapon === 'shotgun' ? 65 : 45, store.equippedWeapon === 'shotgun' ? 0.0018 : 0.0012)
+    this.cameras.main.shake(
+      store.equippedWeapon === 'shotgun' ? 42 : 26,
+      store.equippedWeapon === 'shotgun' ? 0.00085 : 0.00045,
+    )
   }
 
   private throwGrenade(time: number) {

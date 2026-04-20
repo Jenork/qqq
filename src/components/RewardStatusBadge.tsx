@@ -22,6 +22,14 @@ const STATUS_STYLES: Record<MissionStatus, string> = {
   'approval-required': 'border-orange-300/28 bg-orange-500/14 text-orange-100',
 }
 
+const CHECKMARK_STATUSES: MissionStatus[] = [
+  'available',
+  'completed',
+  'success',
+  'confirmed',
+  'reward-active',
+]
+
 function formatLabel(status: MissionStatus) {
   switch (status) {
     case 'already-claimed':
@@ -52,14 +60,19 @@ function formatLabel(status: MissionStatus) {
 }
 
 export function RewardStatusBadge({ status }: { status: MissionStatus }) {
+  const showCheckmark = CHECKMARK_STATUSES.includes(status)
+
   return (
     <span
       className={cn(
         'inline-flex rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] backdrop-blur',
+        showCheckmark ? 'min-w-[42px] items-center justify-center px-3.5 text-base leading-none' : '',
         STATUS_STYLES[status],
       )}
+      aria-label={showCheckmark ? formatLabel(status) : undefined}
+      title={showCheckmark ? formatLabel(status) : undefined}
     >
-      {formatLabel(status)}
+      {showCheckmark ? '✓' : formatLabel(status)}
     </span>
   )
 }
