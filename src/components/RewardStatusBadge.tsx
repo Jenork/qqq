@@ -23,7 +23,6 @@ const STATUS_STYLES: Record<MissionStatus, string> = {
 }
 
 const CHECKMARK_STATUSES: MissionStatus[] = [
-  'available',
   'completed',
   'success',
   'confirmed',
