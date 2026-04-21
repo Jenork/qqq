@@ -12,16 +12,17 @@ type UsdcMission = ReturnType<typeof useUsdcPayment>
 export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
   const [imageFailed, setImageFailed] = useState(false)
   const completedCard = mission.isSuccess
+  const showBadge = mission.status !== 'available'
 
   return (
     <article className={cn('inferno-frame mission-card rounded-[28px] p-5', completedCard ? 'mission-card-complete' : '')}>
-      <div className="relative z-[1] flex items-start justify-between gap-3">
-        <div>
+      <div className="mission-card-head">
+        <div className="mission-card-copy">
           <p className="panel-title text-[#ffb78a]">Onchain</p>
-          <h4 className="mt-2 text-[1.7rem] font-black uppercase tracking-[0.04em] text-[#ff5d2a]">Shotgun</h4>
-          <p className="micro-copy mt-2">Pay {USDC_PAYMENT_AMOUNT_USDC} USDC</p>
+          <h4 className="mission-card-title">Shotgun</h4>
+          <p className="micro-copy">Pay {USDC_PAYMENT_AMOUNT_USDC} USDC</p>
         </div>
-        <RewardStatusBadge status={mission.status} />
+        {showBadge ? <RewardStatusBadge status={mission.status} /> : null}
       </div>
 
       <div className={cn('mission-poster mission-poster-glow-green rounded-[24px]', completedCard ? 'mission-poster-complete' : '')}>

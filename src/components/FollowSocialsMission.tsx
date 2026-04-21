@@ -22,11 +22,11 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
 
   return (
     <article className={cn('inferno-frame mission-card rounded-[28px] p-5', completedCard ? 'mission-card-complete' : '')}>
-      <div className="relative z-[1] flex items-start justify-between gap-3">
-        <div>
+      <div className="mission-card-head">
+        <div className="mission-card-copy">
           <p className="panel-title text-[#ffb78a]">Offchain</p>
-          <h4 className="mt-2 text-[1.7rem] font-black uppercase tracking-[0.04em] text-[#ff5d2a]">Grenade</h4>
-          <p className="micro-copy mt-2">Follow Twitter and Telegram</p>
+          <h4 className="mission-card-title">Grenade</h4>
+          <p className="micro-copy">Follow Twitter and Telegram</p>
         </div>
         <RewardStatusBadge status={displayStatus} />
       </div>
