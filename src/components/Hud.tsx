@@ -91,7 +91,11 @@ export function Hud() {
           <div className="inferno-frame w-[min(100%,344px)] px-3 py-3">
             <div className="relative z-[1] flex items-center gap-3">
               <div className="flex h-[62px] w-[62px] items-center justify-center rounded-[18px] border border-[#7d2416] bg-[radial-gradient(circle_at_50%_25%,rgba(255,114,41,0.22),rgba(28,8,8,0.98)_68%)] text-[10px] font-black uppercase tracking-[0.18em] text-[#ffcf9f] shadow-[inset_0_0_18px_rgba(255,86,22,0.18)]">
-                Marine
+                <img
+                  src={armoredRewardActive ? '/ui/helmet-armored.png' : '/ui/helmet-base.png'}
+                  alt="Marine portrait"
+                  className="h-[54px] w-[54px] object-contain [image-rendering:auto]"
+                />
               </div>
 
               <div className="min-w-0 flex-1">
