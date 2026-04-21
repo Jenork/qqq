@@ -94,7 +94,7 @@ export function Hud() {
                 <img
                   src={armoredRewardActive ? '/ui/helmet-armored.png' : '/ui/helmet-base.png'}
                   alt="Marine portrait"
-                  className="h-[54px] w-[54px] object-contain [image-rendering:auto]"
+                  className="h-[54px] w-[54px] scale-[3] object-contain [image-rendering:auto]"
                 />
               </div>
 
