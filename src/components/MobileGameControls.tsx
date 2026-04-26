@@ -1,45 +1,72 @@
 'use client'
 
-import { type PointerEvent as ReactPointerEvent, useEffect } from 'react'
+import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useState } from 'react'
 import { SOCIAL_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
 
-function releaseHeldControl(
-  event: ReactPointerEvent<HTMLButtonElement>,
-  onHoldChange: (active: boolean) => void,
-) {
-  if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-    event.currentTarget.releasePointerCapture(event.pointerId)
-  }
+const JOYSTICK_RADIUS = 58
+const MOVE_THRESHOLD = 18
+const JUMP_THRESHOLD = 34
+const JUMP_RESET_THRESHOLD = 16
 
-  onHoldChange(false)
+type Point = {
+  x: number
+  y: number
 }
 
-function HoldButton({
+type JoystickState = {
+  pointerId: number
+  origin: Point
+  knob: Point
+  jumpTriggered: boolean
+}
+
+type FireState = {
+  pointerId: number
+  point: Point
+}
+
+function getLocalPoint(event: ReactPointerEvent<HTMLDivElement>): Point {
+  const rect = event.currentTarget.getBoundingClientRect()
+
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  }
+}
+
+function clampJoystick(dx: number, dy: number) {
+  const distance = Math.hypot(dx, dy)
+
+  if (distance <= JOYSTICK_RADIUS || distance === 0) {
+    return { x: dx, y: dy }
+  }
+
+  const scale = JOYSTICK_RADIUS / distance
+  return { x: dx * scale, y: dy * scale }
+}
+
+function TapActionButton({
   label,
-  onHoldChange,
+  onClick,
+  disabled,
   className,
 }: {
   label: string
-  onHoldChange: (active: boolean) => void
+  onClick: () => void
+  disabled?: boolean
   className?: string
 }) {
   return (
     <button
       type="button"
       className={cn(
-        'action-button touch-none select-none rounded-[18px] px-3 py-3 text-xs font-black uppercase tracking-[0.16em]',
+        'action-button pointer-events-auto flex min-h-[52px] min-w-[52px] touch-none items-center justify-center rounded-full border border-orange-300/18 bg-[linear-gradient(180deg,rgba(44,18,12,0.9),rgba(16,10,10,0.96))] px-3 py-3 text-[10px] font-black uppercase tracking-[0.14em] text-stone-100 shadow-[0_14px_26px_rgba(0,0,0,0.28)] backdrop-blur',
         className,
       )}
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.currentTarget.setPointerCapture(event.pointerId)
-        onHoldChange(true)
-      }}
-      onPointerUp={(event) => releaseHeldControl(event, onHoldChange)}
-      onPointerCancel={(event) => releaseHeldControl(event, onHoldChange)}
-      onLostPointerCapture={() => onHoldChange(false)}
+      disabled={disabled}
+      onClick={onClick}
     >
       {label}
     </button>
@@ -52,6 +79,8 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
   const setMobileControl = useGameStore((state) => state.setMobileControl)
   const pulseAction = useGameStore((state) => state.pulseAction)
   const togglePause = useGameStore((state) => state.togglePause)
+  const [joystick, setJoystick] = useState<JoystickState | null>(null)
+  const [fire, setFire] = useState<FireState | null>(null)
 
   useEffect(() => {
     return () => {
@@ -66,79 +95,220 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
   const grenadeUnlocked =
     unlockedItemIds.includes('frag-grenade') || unlockedItemIds.includes(SOCIAL_GRENADE_REWARD_ITEM_ID)
 
+  const joystickStyle = useMemo(() => {
+    if (!joystick) {
+      return null
+    }
+
+    return {
+      base: {
+        left: joystick.origin.x,
+        top: joystick.origin.y,
+      },
+      knob: {
+        left: joystick.origin.x + joystick.knob.x,
+        top: joystick.origin.y + joystick.knob.y,
+      },
+    }
+  }, [joystick])
+
+  const resetMovement = () => {
+    setMobileControl('left', false)
+    setMobileControl('right', false)
+    setMobileControl('jump', false)
+  }
+
+  const pulseJump = () => {
+    setMobileControl('jump', true)
+
+    window.setTimeout(() => {
+      useGameStore.getState().setMobileControl('jump', false)
+    }, 80)
+  }
+
+  const handleJoystickMove = (
+    event: ReactPointerEvent<HTMLDivElement>,
+    state: JoystickState,
+  ) => {
+    const point = getLocalPoint(event)
+    const dx = point.x - state.origin.x
+    const dy = point.y - state.origin.y
+    const clamped = clampJoystick(dx, dy)
+    const nextJumpTriggered =
+      state.jumpTriggered || clamped.y <= -JUMP_THRESHOLD
+
+    setMobileControl('left', clamped.x <= -MOVE_THRESHOLD)
+    setMobileControl('right', clamped.x >= MOVE_THRESHOLD)
+
+    if (!state.jumpTriggered && clamped.y <= -JUMP_THRESHOLD) {
+      pulseJump()
+    }
+
+    setJoystick({
+      ...state,
+      knob: clamped,
+      jumpTriggered:
+        nextJumpTriggered && clamped.y < -JUMP_RESET_THRESHOLD,
+    })
+  }
+
   return (
-    <div
-      className={cn(
-        'grid gap-3',
-        portraitMode
-          ? 'grid-cols-1'
-          : 'grid-cols-1 items-stretch md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.1fr)]',
-      )}
-    >
-      <div className="inferno-frame p-3 sm:p-4">
-        <div className="relative z-[1]">
-          <p className="panel-title">Move</p>
-          <div className="mt-3 grid grid-cols-3 gap-2.5">
-            <HoldButton
-              label="Left"
-              onHoldChange={(value) => setMobileControl('left', value)}
-              className="min-h-[76px] px-4 py-4"
-            />
-            <HoldButton
-              label="Jump"
-              onHoldChange={(value) => setMobileControl('jump', value)}
-              className="min-h-[76px] border-cyan-300/18 bg-cyan-500/10 px-4 py-4"
-            />
-            <HoldButton
-              label="Right"
-              onHoldChange={(value) => setMobileControl('right', value)}
-              className="min-h-[76px] px-4 py-4"
-            />
-          </div>
-        </div>
+    <div className="pointer-events-none absolute inset-0 z-20">
+      <div className="absolute left-3 top-3 right-3 flex items-start justify-end">
+        <TapActionButton
+          label={status === 'paused' ? 'Resume' : 'Pause'}
+          onClick={() => togglePause()}
+          className="min-h-[42px] min-w-[42px] px-2 py-2 text-[9px]"
+        />
       </div>
 
-      <div className="inferno-frame p-3 sm:p-4">
-        <div className="relative z-[1]">
-          <p className="panel-title">Combat</p>
-          <div className="mt-3 grid grid-cols-2 gap-2.5">
-            <HoldButton
-              label="Shoot"
-              onHoldChange={(value) => setMobileControl('shoot', value)}
-              className="col-span-2 min-h-[84px] border-orange-300/20 bg-orange-500/16 px-4 py-4 text-sm"
-            />
+      <div
+        className={cn(
+          'absolute bottom-[calc(18px+var(--safe-bottom))] left-3 touch-none overflow-hidden rounded-[30px]',
+          portraitMode ? 'top-[42%] right-[50%]' : 'top-[54%] right-[52%]',
+        )}
+        onPointerDown={(event) => {
+          event.preventDefault()
+          event.currentTarget.setPointerCapture(event.pointerId)
+          const origin = getLocalPoint(event)
+          setJoystick({
+            pointerId: event.pointerId,
+            origin,
+            knob: { x: 0, y: 0 },
+            jumpTriggered: false,
+          })
+          resetMovement()
+        }}
+        onPointerMove={(event) => {
+          if (!joystick || event.pointerId !== joystick.pointerId) {
+            return
+          }
 
-            <button
-              type="button"
-              className="action-button min-h-[68px] rounded-[18px] px-4 py-4 text-xs font-black uppercase tracking-[0.16em]"
-              disabled={!grenadeUnlocked}
-              onClick={() => pulseAction('grenade')}
-            >
-              Grenade
-            </button>
-            <button
-              type="button"
-              className="action-button min-h-[68px] rounded-[18px] px-4 py-4 text-xs font-black uppercase tracking-[0.16em]"
-              onClick={() => pulseAction('ability')}
-            >
-              Ability
-            </button>
-            <button
-              type="button"
-              className="action-button min-h-[68px] rounded-[18px] px-4 py-4 text-xs font-black uppercase tracking-[0.16em]"
-              onClick={() => pulseAction('heal')}
-            >
-              Heal
-            </button>
-            <button
-              type="button"
-              className="action-button min-h-[68px] rounded-[18px] px-4 py-4 text-xs font-black uppercase tracking-[0.16em]"
-              onClick={() => togglePause()}
-            >
-              {status === 'paused' ? 'Resume' : 'Pause'}
-            </button>
+          handleJoystickMove(event, joystick)
+        }}
+        onPointerUp={(event) => {
+          if (!joystick || event.pointerId !== joystick.pointerId) {
+            return
+          }
+
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId)
+          }
+
+          setJoystick(null)
+          resetMovement()
+        }}
+        onPointerCancel={(event) => {
+          if (!joystick || event.pointerId !== joystick.pointerId) {
+            return
+          }
+
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId)
+          }
+
+          setJoystick(null)
+          resetMovement()
+        }}
+      >
+        {joystickStyle ? (
+          <>
+            <div
+              className="absolute h-[116px] w-[116px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/12 bg-black/28 shadow-[0_0_26px_rgba(0,0,0,0.22)] backdrop-blur-[2px]"
+              style={joystickStyle.base}
+            />
+            <div
+              className="absolute h-[56px] w-[56px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-orange-300/28 bg-orange-500/18 shadow-[0_0_20px_rgba(255,97,34,0.22)] backdrop-blur"
+              style={joystickStyle.knob}
+            />
+          </>
+        ) : (
+          <div className="absolute bottom-5 left-3 flex h-[92px] w-[92px] items-center justify-center rounded-full border border-white/8 bg-black/12 text-[9px] font-black uppercase tracking-[0.14em] text-stone-300/70">
+            Move
           </div>
+        )}
+      </div>
+
+      <div
+        className={cn(
+          'absolute bottom-[calc(18px+var(--safe-bottom))] right-3 touch-none overflow-hidden rounded-[32px]',
+          portraitMode ? 'top-[36%] left-[52%]' : 'top-[42%] left-[58%]',
+        )}
+        onPointerDown={(event) => {
+          event.preventDefault()
+          event.currentTarget.setPointerCapture(event.pointerId)
+          setFire({
+            pointerId: event.pointerId,
+            point: getLocalPoint(event),
+          })
+          setMobileControl('shoot', true)
+        }}
+        onPointerMove={(event) => {
+          if (!fire || event.pointerId !== fire.pointerId) {
+            return
+          }
+
+          setFire({
+            pointerId: fire.pointerId,
+            point: getLocalPoint(event),
+          })
+        }}
+        onPointerUp={(event) => {
+          if (!fire || event.pointerId !== fire.pointerId) {
+            return
+          }
+
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId)
+          }
+
+          setFire(null)
+          setMobileControl('shoot', false)
+        }}
+        onPointerCancel={(event) => {
+          if (!fire || event.pointerId !== fire.pointerId) {
+            return
+          }
+
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId)
+          }
+
+          setFire(null)
+          setMobileControl('shoot', false)
+        }}
+      >
+        <div className="absolute bottom-4 right-3 flex h-[98px] w-[98px] items-center justify-center rounded-full border border-orange-300/10 bg-orange-500/10 text-[10px] font-black uppercase tracking-[0.16em] text-orange-100/72 backdrop-blur-[1px]">
+          Fire
         </div>
+
+        {fire ? (
+          <div
+            className="absolute h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-orange-200/22 bg-orange-500/18 shadow-[0_0_28px_rgba(255,103,32,0.2)]"
+            style={{ left: fire.point.x, top: fire.point.y }}
+          />
+        ) : null}
+      </div>
+
+      <div
+        className={cn(
+          'absolute right-3 flex flex-col items-end gap-2',
+          portraitMode ? 'bottom-[calc(132px+var(--safe-bottom))]' : 'bottom-[calc(126px+var(--safe-bottom))]',
+        )}
+      >
+        <TapActionButton
+          label="Gren"
+          disabled={!grenadeUnlocked}
+          onClick={() => pulseAction('grenade')}
+        />
+        <TapActionButton
+          label="Skill"
+          onClick={() => pulseAction('ability')}
+        />
+        <TapActionButton
+          label="Heal"
+          onClick={() => pulseAction('heal')}
+        />
       </div>
     </div>
   )

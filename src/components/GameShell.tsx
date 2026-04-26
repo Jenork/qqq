@@ -55,7 +55,7 @@ export function GameShell() {
     return () => mediaQuery.removeEventListener('change', sync)
   }, [])
 
-  const showMobileControlDeck = showTouchControls && (status === 'playing' || status === 'paused')
+  const showMobileControlDeck = showTouchControls && status === 'playing'
 
   return (
     <section className="panel inferno-subtle-grid relative w-full overflow-hidden rounded-[30px] border border-[#4a1912] bg-[#0d0504] shadow-[0_22px_52px_rgba(0,0,0,0.44)]">
@@ -65,9 +65,9 @@ export function GameShell() {
           className={cn(
             'game-canvas w-full max-w-full overflow-hidden bg-[#160603]',
             isMobileLandscape
-              ? 'aspect-[16/9] min-h-[40svh] max-h-[58svh]'
+              ? 'aspect-auto h-[calc(100svh-148px)] min-h-[360px] max-h-[calc(100svh-148px)]'
               : showTouchControls
-                ? 'aspect-[10/13] min-h-[56svh] max-h-[68svh]'
+                ? 'aspect-auto h-[calc(100svh-210px)] min-h-[56svh] max-h-[calc(100svh-210px)]'
                 : 'aspect-[10/13] min-h-[72svh] sm:aspect-[56/27] sm:min-h-0 lg:max-h-[82svh]',
           )}
         />
@@ -76,6 +76,7 @@ export function GameShell() {
         <div className="pointer-events-none absolute inset-[14px] border border-[#4e1d16]/60 [clip-path:polygon(0_14px,14px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-18px))]" />
 
         {status !== 'ready' ? <Hud /> : null}
+        {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} /> : null}
         <GameOverModal />
 
         {status === 'paused' ? (
@@ -126,18 +127,6 @@ export function GameShell() {
           </div>
         ) : null}
       </div>
-
-      {showTouchControls ? (
-        <div className="border-t border-[#4a1912] bg-[linear-gradient(180deg,rgba(16,8,8,0.98),rgba(8,5,6,0.98))] px-3 pb-[calc(12px+var(--safe-bottom))] pt-3 sm:px-4">
-          {isMobilePortrait ? (
-            <div className="inferno-chip mb-3 rounded-[18px] px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.16em] text-[#ffca93]">
-              Rotate to landscape for the full control deck.
-            </div>
-          ) : null}
-
-          {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} /> : null}
-        </div>
-      ) : null}
     </section>
   )
 }
