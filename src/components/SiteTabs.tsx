@@ -121,7 +121,7 @@ export function SiteTabs() {
                         }
                       }}
                       className={cn(
-                        'inferno-tab min-w-[128px] px-4 py-3 text-sm font-black uppercase tracking-[0.14em] transition-all',
+                        'inferno-tab min-w-0 px-3 py-3 text-[11px] font-black uppercase tracking-[0.14em] transition-all sm:min-w-[128px] sm:px-4 sm:text-sm',
                         active
                           ? 'inferno-tab-active'
                           : 'text-stone-300 hover:border-[#6d3121] hover:text-stone-100',

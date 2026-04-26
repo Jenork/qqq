@@ -1,5 +1,5 @@
 import { cookieStorage, createConfig, createStorage, http } from 'wagmi'
-import { injected } from 'wagmi/connectors'
+import { injected, walletConnect } from 'wagmi/connectors'
 import { BASE_CHAIN, BASE_RPC_URL } from '@/config/web3'
 
 type BrowserWalletProvider = {
@@ -48,38 +48,50 @@ function findOtherInjectedProvider(window?: Window) {
   )
 }
 
+const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim()
+
+const connectors = [
+  injected({
+    shimDisconnect: false,
+    target: {
+      id: 'metaMask',
+      name: 'MetaMask',
+      provider: (window?: unknown) => findMetaMaskProvider(window as Window | undefined),
+    },
+    unstable_shimAsyncInject: 2_000,
+  }),
+  injected({
+    shimDisconnect: false,
+    target: {
+      id: 'coinbaseWallet',
+      name: 'Coinbase Wallet',
+      provider: (window?: unknown) => findCoinbaseWalletProvider(window as Window | undefined),
+    },
+    unstable_shimAsyncInject: 2_000,
+  }),
+  ...(walletConnectProjectId
+    ? [
+        walletConnect({
+          projectId: walletConnectProjectId,
+          showQrModal: true,
+        }),
+      ]
+    : []),
+  injected({
+    shimDisconnect: false,
+    target: {
+      id: 'otherInjected',
+      name: 'Other Browser Wallet',
+      provider: (window?: unknown) => findOtherInjectedProvider(window as Window | undefined),
+    },
+    unstable_shimAsyncInject: 2_000,
+  }),
+] as const
+
 export const config = createConfig({
   chains: [BASE_CHAIN],
   multiInjectedProviderDiscovery: false,
-  connectors: [
-    injected({
-      shimDisconnect: false,
-      target: {
-        id: 'metaMask',
-        name: 'MetaMask',
-        provider: (window?: unknown) => findMetaMaskProvider(window as Window | undefined),
-      },
-      unstable_shimAsyncInject: 2_000,
-    }),
-    injected({
-      shimDisconnect: false,
-      target: {
-        id: 'coinbaseWallet',
-        name: 'Coinbase Wallet',
-        provider: (window?: unknown) => findCoinbaseWalletProvider(window as Window | undefined),
-      },
-      unstable_shimAsyncInject: 2_000,
-    }),
-    injected({
-      shimDisconnect: false,
-      target: {
-        id: 'otherInjected',
-        name: 'Other Browser Wallet',
-        provider: (window?: unknown) => findOtherInjectedProvider(window as Window | undefined),
-      },
-      unstable_shimAsyncInject: 2_000,
-    }),
-  ],
+  connectors,
   storage: createStorage({ storage: cookieStorage }),
   ssr: true,
   transports: {

@@ -5,6 +5,8 @@ import { useAccount, useChainId, useDisconnect, useReadContract, useSwitchChain 
 import { ConnectWallet } from '@/components/ConnectWallet'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
 import { BASE_CHAIN_ID, BASE_CHAIN_NAME, BASE_EXPLORER_URL } from '@/config/web3'
+import { useMobileViewport } from '@/hooks/useMobileViewport'
+import { cn } from '@/lib/cn'
 import { shortenAddress } from '@/lib/score'
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
@@ -60,6 +62,7 @@ export function OnchainPanel() {
   const [copied, setCopied] = useState(false)
   const [providerNames, setProviderNames] = useState<string[]>([])
   const dialogRef = useRef<HTMLElement | null>(null)
+  const { isMobileLandscape, isMobilePortrait } = useMobileViewport()
 
   const { data: bestScore } = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
@@ -166,7 +169,14 @@ export function OnchainPanel() {
         />
       ) : null}
 
-      <div className="fixed left-[calc(12px+var(--safe-left))] right-[calc(12px+var(--safe-right))] top-[calc(12px+var(--safe-top))] z-50 sm:left-auto sm:w-[360px]">
+      <div
+        className={cn(
+          'fixed top-[calc(12px+var(--safe-top))] z-50',
+          isMobileLandscape
+            ? 'right-[calc(12px+var(--safe-right))] w-[min(330px,calc(100vw-var(--safe-left)-var(--safe-right)-24px))]'
+            : 'left-[calc(12px+var(--safe-left))] right-[calc(12px+var(--safe-right))] sm:left-auto sm:w-[360px]',
+        )}
+      >
         {expanded ? (
           <section
             id="wallet-panel-dialog"
@@ -174,18 +184,28 @@ export function OnchainPanel() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="wallet-panel-title"
-            className="inferno-frame rounded-[26px] p-4"
+            className={cn(
+              'inferno-frame overflow-y-auto rounded-[26px] p-4',
+              isMobileLandscape
+                ? 'max-h-[calc(100svh-var(--safe-top)-24px)] rounded-[22px] p-3.5'
+                : isMobilePortrait
+                  ? 'max-h-[calc(100svh-var(--safe-top)-24px)]'
+                  : '',
+            )}
           >
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
                 <p id="wallet-panel-title" className="panel-title text-[#ffb78a]">Wallet</p>
-                <p className="mt-1 text-sm text-stone-300">
+                <p className={cn('mt-1 text-stone-300', isMobileLandscape ? 'text-xs' : 'text-sm')}>
                   {isConnected ? 'Connected wallet status' : 'Optional onchain layer'}
                 </p>
               </div>
               <button
                 type="button"
-                className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-stone-100"
+                className={cn(
+                  'inferno-chip rounded-full font-black uppercase tracking-[0.14em] text-stone-100',
+                  isMobileLandscape ? 'px-2.5 py-1.5 text-[10px]' : 'px-3 py-2 text-[11px]',
+                )}
                 onClick={() => setExpanded(false)}
               >
                 Close
@@ -219,10 +239,13 @@ export function OnchainPanel() {
                       </span>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className={cn('mt-3 grid gap-2', isMobileLandscape ? 'grid-cols-2' : 'grid-cols-2')}>
                       <button
                         type="button"
-                        className="action-button rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
+                        className={cn(
+                          'action-button rounded-2xl font-bold uppercase tracking-[0.14em]',
+                          isMobileLandscape ? 'px-3 py-2.5 text-xs' : 'px-4 py-3 text-sm',
+                        )}
                         onClick={() => void handleCopyAddress()}
                       >
                         {copied ? 'Copied' : 'Copy Address'}
@@ -231,13 +254,19 @@ export function OnchainPanel() {
                         href={explorerHref}
                         target="_blank"
                         rel="noreferrer"
-                        className="action-button flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
+                        className={cn(
+                          'action-button flex items-center justify-center rounded-2xl font-bold uppercase tracking-[0.14em]',
+                          isMobileLandscape ? 'px-3 py-2.5 text-xs' : 'px-4 py-3 text-sm',
+                        )}
                       >
                         Open BaseScan
                       </a>
                       <button
                         type="button"
-                        className="action-button col-span-2 rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
+                        className={cn(
+                          'action-button col-span-2 rounded-2xl font-bold uppercase tracking-[0.14em]',
+                          isMobileLandscape ? 'px-3 py-2.5 text-xs' : 'px-4 py-3 text-sm',
+                        )}
                         onClick={() => disconnect()}
                       >
                         Disconnect
@@ -278,11 +307,22 @@ export function OnchainPanel() {
             aria-haspopup="dialog"
             aria-expanded={expanded}
             aria-controls="wallet-panel-dialog"
-            className="wallet-trigger ml-auto flex items-center gap-3 rounded-[18px] px-4 py-3 text-left backdrop-blur"
+            className={cn(
+              'wallet-trigger ml-auto flex items-center gap-3 text-left backdrop-blur',
+              isMobileLandscape ? 'rounded-[16px] px-3 py-2.5' : 'rounded-[18px] px-4 py-3',
+            )}
             onClick={() => setExpanded(true)}
           >
             <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#34ff73] shadow-[0_0_12px_rgba(52,255,115,0.7)]" />
-            {isConnected ? <span className="text-sm font-black text-stone-100">{shortenAddress(address)}</span> : <span className="text-sm font-black text-stone-100">Wallet</span>}
+            {isConnected ? (
+              <span className={cn('font-black text-stone-100', isMobileLandscape ? 'text-[13px]' : 'text-sm')}>
+                {shortenAddress(address)}
+              </span>
+            ) : (
+              <span className={cn('font-black text-stone-100', isMobileLandscape ? 'text-[13px]' : 'text-sm')}>
+                Wallet
+              </span>
+            )}
           </button>
         )}
       </div>

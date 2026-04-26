@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import type Phaser from 'phaser'
 import { GameOverModal } from '@/components/GameOverModal'
 import { Hud } from '@/components/Hud'
+import { MobileGameControls } from '@/components/MobileGameControls'
 import { useGameStore } from '@/hooks/useGameStore'
+import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { cn } from '@/lib/cn'
 
 export function GameShell() {
@@ -14,6 +16,7 @@ export function GameShell() {
   const startRun = useGameStore((state) => state.startRun)
   const resumeRun = useGameStore((state) => state.resumeRun)
   const gameApiReady = useGameStore((state) => Boolean(state.gameApi))
+  const { showTouchControls, isMobileLandscape, isMobilePortrait } = useMobileViewport()
   const [desktopMode, setDesktopMode] = useState(false)
 
   useEffect(() => {
@@ -52,12 +55,21 @@ export function GameShell() {
     return () => mediaQuery.removeEventListener('change', sync)
   }, [])
 
+  const showMobileControlDeck = showTouchControls && (status === 'playing' || status === 'paused')
+
   return (
     <section className="panel inferno-subtle-grid relative w-full overflow-hidden rounded-[30px] border border-[#4a1912] bg-[#0d0504] shadow-[0_22px_52px_rgba(0,0,0,0.44)]">
       <div className="relative overflow-hidden bg-[#160603]">
         <div
           ref={containerRef}
-          className="game-canvas aspect-[10/13] min-h-[72svh] w-full max-w-full overflow-hidden bg-[#160603] sm:aspect-[56/27] sm:min-h-0 lg:max-h-[82svh]"
+          className={cn(
+            'game-canvas w-full max-w-full overflow-hidden bg-[#160603]',
+            isMobileLandscape
+              ? 'aspect-[16/9] min-h-[40svh] max-h-[58svh]'
+              : showTouchControls
+                ? 'aspect-[10/13] min-h-[56svh] max-h-[68svh]'
+                : 'aspect-[10/13] min-h-[72svh] sm:aspect-[56/27] sm:min-h-0 lg:max-h-[82svh]',
+          )}
         />
 
         <div className="pointer-events-none absolute inset-0 border border-[#762314]/40" />
@@ -114,6 +126,18 @@ export function GameShell() {
           </div>
         ) : null}
       </div>
+
+      {showTouchControls ? (
+        <div className="border-t border-[#4a1912] bg-[linear-gradient(180deg,rgba(16,8,8,0.98),rgba(8,5,6,0.98))] px-3 pb-[calc(12px+var(--safe-bottom))] pt-3 sm:px-4">
+          {isMobilePortrait ? (
+            <div className="inferno-chip mb-3 rounded-[18px] px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.16em] text-[#ffca93]">
+              Rotate to landscape for the full control deck.
+            </div>
+          ) : null}
+
+          {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} /> : null}
+        </div>
+      ) : null}
     </section>
   )
 }
