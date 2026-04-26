@@ -1,5 +1,5 @@
 import { cookieStorage, createConfig, createStorage, http } from 'wagmi'
-import { injected, walletConnect } from 'wagmi/connectors'
+import { coinbaseWallet, injected, metaMask, walletConnect } from 'wagmi/connectors'
 import { BASE_CHAIN, BASE_RPC_URL } from '@/config/web3'
 
 type BrowserWalletProvider = {
@@ -49,31 +49,29 @@ function findOtherInjectedProvider(window?: Window) {
 }
 
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim()
+const appName = 'Based DOOM'
 
 const connectors = [
-  injected({
-    shimDisconnect: false,
-    target: {
-      id: 'metaMask',
-      name: 'MetaMask',
-      provider: (window?: unknown) => findMetaMaskProvider(window as Window | undefined),
+  metaMask({
+    dappMetadata: {
+      name: appName,
     },
-    unstable_shimAsyncInject: 2_000,
   }),
-  injected({
-    shimDisconnect: false,
-    target: {
-      id: 'coinbaseWallet',
-      name: 'Coinbase Wallet',
-      provider: (window?: unknown) => findCoinbaseWalletProvider(window as Window | undefined),
-    },
-    unstable_shimAsyncInject: 2_000,
+  coinbaseWallet({
+    appName,
+    preference: 'all',
   }),
   ...(walletConnectProjectId
     ? [
         walletConnect({
           projectId: walletConnectProjectId,
           showQrModal: true,
+          metadata: {
+            name: appName,
+            description: 'Based DOOM on Base',
+            url: typeof window !== 'undefined' ? window.location.origin : 'https://baseddoom.app',
+            icons: [],
+          },
         }),
       ]
     : []),

@@ -4,11 +4,11 @@ import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { shortenAddress } from '@/lib/score'
 
 function getConnectorLabel(id: string, name: string) {
-  if (id === 'metaMask') {
+  if (id === 'metaMaskSDK') {
     return 'MetaMask'
   }
 
-  if (id === 'coinbaseWallet') {
+  if (id === 'coinbaseWalletSDK') {
     return 'Coinbase Wallet'
   }
 
@@ -37,7 +37,10 @@ export function ConnectWallet() {
       ),
   )
   const hasMobileWalletConnector = availableConnectors.some(
-    (connector) => connector.id === 'walletConnect',
+    (connector) =>
+      connector.id === 'walletConnect' ||
+      connector.id === 'metaMaskSDK' ||
+      connector.id === 'coinbaseWalletSDK',
   )
 
   if (isReconnecting) {
@@ -54,7 +57,7 @@ export function ConnectWallet() {
         <p className="panel-title text-[#ffb78a]">Connect Wallet</p>
         <p className="mt-2 text-sm text-stone-300">
           {hasMobileWalletConnector
-            ? 'Choose a browser or mobile wallet to save score and use onchain actions.'
+            ? 'Choose MetaMask, Coinbase Wallet, or WalletConnect for mobile and desktop onchain actions.'
             : 'Choose a browser wallet to save score and use onchain actions.'}
         </p>
         <div className="mt-4 flex flex-col gap-2">
