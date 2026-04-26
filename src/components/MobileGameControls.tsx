@@ -164,7 +164,7 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
 
       <div
         className={cn(
-          'absolute bottom-[calc(18px+var(--safe-bottom))] left-3 touch-none overflow-hidden rounded-[30px]',
+          'pointer-events-auto absolute bottom-[calc(18px+var(--safe-bottom))] left-3 touch-none overflow-hidden rounded-[30px]',
           portraitMode ? 'top-[42%] right-[50%]' : 'top-[54%] right-[52%]',
         )}
         onPointerDown={(event) => {
@@ -231,7 +231,7 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
 
       <div
         className={cn(
-          'absolute bottom-[calc(18px+var(--safe-bottom))] right-3 touch-none overflow-hidden rounded-[32px]',
+          'pointer-events-auto absolute bottom-[calc(18px+var(--safe-bottom))] right-3 touch-none overflow-hidden rounded-[32px]',
           portraitMode ? 'top-[36%] left-[52%]' : 'top-[42%] left-[58%]',
         )}
         onPointerDown={(event) => {
@@ -292,7 +292,7 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
 
       <div
         className={cn(
-          'absolute right-3 flex flex-col items-end gap-2',
+          'pointer-events-auto absolute right-3 flex flex-col items-end gap-2',
           portraitMode ? 'bottom-[calc(132px+var(--safe-bottom))]' : 'bottom-[calc(126px+var(--safe-bottom))]',
         )}
       >
