@@ -6,6 +6,7 @@ import { ConnectWallet } from '@/components/ConnectWallet'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
 import { BASE_CHAIN_ID, BASE_CHAIN_NAME, BASE_EXPLORER_URL } from '@/config/web3'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
+import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
 import { shortenAddress } from '@/lib/score'
 
@@ -62,7 +63,8 @@ export function OnchainPanel() {
   const [copied, setCopied] = useState(false)
   const [providerNames, setProviderNames] = useState<string[]>([])
   const dialogRef = useRef<HTMLElement | null>(null)
-  const { isMobileLandscape, isMobilePortrait } = useMobileViewport()
+  const status = useGameStore((state) => state.status)
+  const { showTouchControls, isMobileLandscape, isMobilePortrait } = useMobileViewport()
 
   const { data: bestScore } = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
@@ -135,6 +137,15 @@ export function OnchainPanel() {
     return () => dialog.removeEventListener('keydown', handleKeyDown)
   }, [expanded, isConnected, chainId, isSwitching, copied])
 
+  const hideMobileChrome =
+    showTouchControls && (status === 'playing' || status === 'paused')
+
+  useEffect(() => {
+    if (hideMobileChrome && expanded) {
+      setExpanded(false)
+    }
+  }, [expanded, hideMobileChrome])
+
   const explorerHref = useMemo(() => {
     if (!address) {
       return BASE_EXPLORER_URL
@@ -156,6 +167,10 @@ export function OnchainPanel() {
     } catch {
       setCopied(false)
     }
+  }
+
+  if (hideMobileChrome) {
+    return null
   }
 
   return (
