@@ -127,7 +127,7 @@ export function ConnectWallet() {
         <p className="mt-2 text-sm text-stone-300">
           {hasMobileWalletConnector
             ? showTouchControls
-              ? 'Use one of the app-based mobile wallet flows below.'
+              ? 'Use MetaMask, Coinbase Wallet, or WalletConnect for other mobile wallets.'
               : 'Choose MetaMask, Coinbase Wallet, or WalletConnect for onchain actions.'
             : 'Choose a browser wallet to save score and use onchain actions.'}
         </p>

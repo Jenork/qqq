@@ -292,22 +292,25 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
 
       <div
         className={cn(
-          'pointer-events-auto absolute right-3 flex flex-col items-end gap-2',
-          portraitMode ? 'bottom-[calc(132px+var(--safe-bottom))]' : 'bottom-[calc(126px+var(--safe-bottom))]',
+          'pointer-events-auto absolute bottom-[calc(20px+var(--safe-bottom))] left-1/2 flex -translate-x-1/2 items-center gap-2',
+          portraitMode ? 'bottom-[calc(20px+var(--safe-bottom))]' : 'bottom-[calc(22px+var(--safe-bottom))]',
         )}
       >
         <TapActionButton
           label="Gren"
           disabled={!grenadeUnlocked}
           onClick={() => pulseAction('grenade')}
+          className="min-h-[48px] min-w-[58px] px-3 py-2 text-[9px]"
         />
         <TapActionButton
           label="Skill"
           onClick={() => pulseAction('ability')}
+          className="min-h-[48px] min-w-[58px] px-3 py-2 text-[9px]"
         />
         <TapActionButton
           label="Heal"
           onClick={() => pulseAction('heal')}
+          className="min-h-[48px] min-w-[58px] px-3 py-2 text-[9px]"
         />
       </div>
     </div>
