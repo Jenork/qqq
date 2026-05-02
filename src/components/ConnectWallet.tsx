@@ -1,6 +1,7 @@
 'use client'
 
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { BASE_CHAIN_ID } from '@/config/web3'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { shortenAddress } from '@/lib/score'
 
@@ -142,7 +143,7 @@ export function ConnectWallet() {
               key={connector.uid}
               type="button"
               className="action-button retro-button px-4 py-3 text-left"
-              onClick={() => connect({ connector })}
+              onClick={() => connect({ connector, chainId: BASE_CHAIN_ID })}
               disabled={isConnecting}
             >
               <span className="flex items-start justify-between gap-3">

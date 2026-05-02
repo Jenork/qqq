@@ -63,6 +63,7 @@ export function OnchainPanel() {
   const [copied, setCopied] = useState(false)
   const [providerNames, setProviderNames] = useState<string[]>([])
   const dialogRef = useRef<HTMLElement | null>(null)
+  const autoSwitchAttemptRef = useRef<string | null>(null)
   const status = useGameStore((state) => state.status)
   const { showTouchControls, isMobileLandscape, isMobilePortrait } = useMobileViewport()
 
@@ -139,6 +140,38 @@ export function OnchainPanel() {
 
   const hideMobileChrome =
     showTouchControls && (status === 'playing' || status === 'paused')
+
+  useEffect(() => {
+    if (!showTouchControls || !isConnected || !address) {
+      autoSwitchAttemptRef.current = null
+      return
+    }
+
+    if (chainId === BASE_CHAIN_ID) {
+      autoSwitchAttemptRef.current = null
+      return
+    }
+
+    if (!chainId || isSwitching) {
+      return
+    }
+
+    const attemptKey = `${address}:${chainId}`
+
+    if (autoSwitchAttemptRef.current === attemptKey) {
+      return
+    }
+
+    autoSwitchAttemptRef.current = attemptKey
+    switchChain({ chainId: BASE_CHAIN_ID })
+  }, [
+    address,
+    chainId,
+    isConnected,
+    isSwitching,
+    showTouchControls,
+    switchChain,
+  ])
 
   useEffect(() => {
     if (hideMobileChrome && expanded) {
