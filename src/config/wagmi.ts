@@ -1,5 +1,6 @@
 import { cookieStorage, createConfig, createStorage, http } from 'wagmi'
 import { coinbaseWallet, injected, metaMask, walletConnect } from 'wagmi/connectors'
+import { BASE_BUILDER_DATA_SUFFIX } from '@/config/builderCode'
 import { BASE_CHAIN, BASE_RPC_URL } from '@/config/web3'
 
 type BrowserWalletProvider = {
@@ -90,6 +91,7 @@ export const config = createConfig({
   chains: [BASE_CHAIN],
   multiInjectedProviderDiscovery: false,
   connectors,
+  dataSuffix: BASE_BUILDER_DATA_SUFFIX,
   storage: createStorage({ storage: cookieStorage }),
   ssr: true,
   transports: {

@@ -27,6 +27,31 @@ function normalizeAddress(address?: string | null) {
   return address?.trim().toLowerCase() ?? ''
 }
 
+function isMobileDevice() {
+  if (typeof navigator === 'undefined') {
+    return false
+  }
+
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+}
+
+function getTelegramDeepLink(url: string) {
+  const trimmed = url.trim()
+
+  try {
+    const parsed = new URL(trimmed)
+    const username = parsed.pathname.replace(/^\/+/, '').split('/')[0]
+
+    if (!username) {
+      return null
+    }
+
+    return `tg://resolve?domain=${username}`
+  } catch {
+    return null
+  }
+}
+
 function sanitizeState(value: Partial<SocialMissionState> | null | undefined): SocialMissionState {
   return {
     twitterOpened: value?.twitterOpened === true,
@@ -161,7 +186,17 @@ export function useSocialMission() {
   }, [updateState])
 
   const openTelegram = useCallback(() => {
-    window.open(SOCIAL_TELEGRAM_URL, '_blank', 'noopener,noreferrer')
+    const telegramDeepLink = getTelegramDeepLink(SOCIAL_TELEGRAM_URL)
+
+    if (isMobileDevice() && telegramDeepLink) {
+      window.location.href = telegramDeepLink
+      window.setTimeout(() => {
+        window.open(SOCIAL_TELEGRAM_URL, '_blank', 'noopener,noreferrer')
+      }, 500)
+    } else {
+      window.open(SOCIAL_TELEGRAM_URL, '_blank', 'noopener,noreferrer')
+    }
+
     setError(null)
     updateState({ telegramOpened: true })
   }, [updateState])
