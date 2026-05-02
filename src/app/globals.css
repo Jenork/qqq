@@ -688,3 +688,27 @@ a:focus-visible,
     font-size: 0.72rem;
   }
 }
+
+@media (max-width: 767px) {
+  .doom-game-over {
+    font-size: clamp(2.1rem, 11vw, 3.1rem);
+    letter-spacing: 0.08em;
+    transform: perspective(320px) rotateX(8deg);
+  }
+
+  .game-over-sheet {
+    clip-path: polygon(0 14px, 14px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 18px));
+  }
+
+  .game-over-sheet .panel-state {
+    padding: 12px;
+  }
+
+  .table-shell {
+    padding: 8px;
+  }
+
+  .dashboard-actions {
+    gap: 6px;
+  }
+}

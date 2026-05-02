@@ -58,16 +58,21 @@ export function GameShell() {
   const showMobileControlDeck = showTouchControls && status === 'playing'
 
   return (
-    <section className="panel inferno-subtle-grid relative w-full overflow-hidden rounded-[30px] border border-[#4a1912] bg-[#0d0504] shadow-[0_22px_52px_rgba(0,0,0,0.44)]">
+    <section
+      className={cn(
+        'panel inferno-subtle-grid relative w-full overflow-hidden border border-[#4a1912] bg-[#0d0504] shadow-[0_22px_52px_rgba(0,0,0,0.44)]',
+        showTouchControls ? 'rounded-[22px]' : 'rounded-[30px]',
+      )}
+    >
       <div className="relative overflow-hidden bg-[#160603]">
         <div
           ref={containerRef}
           className={cn(
             'game-canvas w-full max-w-full overflow-hidden bg-[#160603]',
             isMobileLandscape
-              ? 'aspect-auto h-[calc(100svh-148px)] min-h-[360px] max-h-[calc(100svh-148px)]'
+              ? 'aspect-auto h-[calc(100svh-116px)] min-h-[400px] max-h-[calc(100svh-116px)]'
               : showTouchControls
-                ? 'aspect-auto h-[calc(100svh-210px)] min-h-[56svh] max-h-[calc(100svh-210px)]'
+                ? 'aspect-auto h-[calc(100svh-182px)] min-h-[60svh] max-h-[calc(100svh-182px)]'
                 : 'aspect-[10/13] min-h-[72svh] sm:aspect-[56/27] sm:min-h-0 lg:max-h-[82svh]',
           )}
         />

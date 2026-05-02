@@ -13,6 +13,8 @@ import {
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
 import { BASE_CHAIN_ID, BASE_CHAIN_NAME } from '@/config/web3'
 import { useGameStore } from '@/hooks/useGameStore'
+import { useMobileViewport } from '@/hooks/useMobileViewport'
+import { cn } from '@/lib/cn'
 import { getDisplayErrorMessage } from '@/lib/missions'
 import { bigintToNumber, formatScore, isNewBestScore } from '@/lib/score'
 
@@ -26,6 +28,7 @@ export function GameOverModal() {
   const status = useGameStore((state) => state.status)
   const pendingScore = useGameStore((state) => state.pendingScore)
   const restartRun = useGameStore((state) => state.restartRun)
+  const { showTouchControls, isMobileLandscape } = useMobileViewport()
 
   const { data: bestScore, refetch: refetchBest } = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
@@ -123,21 +126,31 @@ export function GameOverModal() {
         aria-modal="true"
         aria-labelledby="game-over-title"
         aria-describedby="game-over-summary"
-        className="inferno-frame w-full max-w-[440px] rounded-[1.8rem] p-5 sm:max-w-[760px] sm:rounded-[2rem] sm:p-6"
+        className={cn(
+          'inferno-frame game-over-sheet w-full rounded-[1.8rem] p-5 sm:max-w-[760px] sm:rounded-[2rem] sm:p-6',
+          showTouchControls
+            ? isMobileLandscape
+              ? 'max-w-[640px] max-h-[90svh] overflow-y-auto p-4'
+              : 'max-h-[92svh] overflow-y-auto rounded-[1.6rem] p-4'
+            : 'max-w-[440px]',
+        )}
       >
-        <div className="grid gap-5 sm:grid-cols-[240px_1fr] sm:items-stretch">
-          <div className="inferno-frame flex min-h-[220px] items-end justify-center rounded-[24px] bg-[radial-gradient(circle_at_50%_18%,rgba(255,102,34,0.24),transparent_44%),linear-gradient(180deg,rgba(22,8,8,0.96),rgba(10,6,8,0.98))] p-4">
+        <div className={cn('grid gap-5', showTouchControls ? 'grid-cols-1' : 'sm:grid-cols-[240px_1fr] sm:items-stretch')}>
+          <div className={cn('inferno-frame flex items-end justify-center rounded-[24px] bg-[radial-gradient(circle_at_50%_18%,rgba(255,102,34,0.24),transparent_44%),linear-gradient(180deg,rgba(22,8,8,0.96),rgba(10,6,8,0.98))] p-4', showTouchControls ? 'min-h-[132px]' : 'min-h-[220px]')}>
             <img
               src="/sprites/player-marine-armored.png"
               alt=""
-              className="h-full max-h-[190px] w-auto object-contain [image-rendering:pixelated] drop-shadow-[0_0_30px_rgba(255,102,34,0.18)]"
+              className={cn(
+                'h-full w-auto object-contain [image-rendering:pixelated] drop-shadow-[0_0_30px_rgba(255,102,34,0.18)]',
+                showTouchControls ? 'max-h-[108px]' : 'max-h-[190px]',
+              )}
             />
           </div>
 
           <div>
-            <div className="mt-2 text-center sm:text-left">
+            <div className={cn('mt-2', showTouchControls ? 'text-center' : 'text-center sm:text-left')}>
               <h2 id="game-over-title" className="doom-game-over text-center sm:text-left">Run Terminated</h2>
-              <div id="game-over-summary" className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              <div id="game-over-summary" className={cn('mt-3 flex flex-wrap items-center gap-2', showTouchControls ? 'justify-center' : 'justify-center sm:justify-start')}>
                 <span className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-[#ffbf7b]">
                   Final {formatScore(pendingScore)}
                 </span>
@@ -160,6 +173,7 @@ export function GameOverModal() {
             <div className="mt-5 grid gap-2 rounded-[22px] border border-[#3f1714] bg-[linear-gradient(180deg,rgba(18,8,8,0.92),rgba(10,6,8,0.96))] px-4 py-4 text-sm text-stone-200">
               <p className="flex items-center justify-between gap-3"><span className="text-stone-400">Final score</span><span className="font-black text-[#ffbf6c]">{formatScore(pendingScore)}</span></p>
               <p className="flex items-center justify-between gap-3"><span className="text-stone-400">Best score</span><span className="font-black text-stone-50">{formatScore(storedBestScore)}</span></p>
+              <p className="flex items-center justify-between gap-3"><span className="text-stone-400">Run status</span><span className="font-black text-stone-50">{canSubmitScore ? 'New best attempt' : 'Practice run'}</span></p>
             </div>
           </div>
         </div>
@@ -187,7 +201,7 @@ export function GameOverModal() {
             </button>
           ) : null}
 
-          <div className="grid gap-3 sm:grid-cols-[1.3fr_1fr]">
+          <div className={cn('grid gap-3', showTouchControls ? 'grid-cols-1' : 'sm:grid-cols-[1.3fr_1fr]')}>
             <button
               type="button"
               className="action-button rounded-2xl px-4 py-4 text-sm font-bold uppercase tracking-[0.14em]"
