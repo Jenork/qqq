@@ -1,10 +1,17 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { numberToHex } from 'viem'
 import { useAccount, useChainId, useDisconnect, useReadContract, useSwitchChain } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
-import { BASE_CHAIN_ID, BASE_CHAIN_NAME, BASE_EXPLORER_URL } from '@/config/web3'
+import {
+  BASE_CHAIN,
+  BASE_CHAIN_ID,
+  BASE_CHAIN_NAME,
+  BASE_EXPLORER_URL,
+  BASE_RPC_URL,
+} from '@/config/web3'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
@@ -22,6 +29,14 @@ type BrowserWalletProvider = {
 
 type BrowserWalletWindow = Window & {
   ethereum?: BrowserWalletProvider
+}
+
+type SwitchableProvider = {
+  request(args: { method: string; params?: unknown[] }): Promise<unknown>
+}
+
+type ProviderRpcErrorLike = Error & {
+  code?: number
 }
 
 function getProviderNames() {
@@ -58,7 +73,10 @@ export function OnchainPanel() {
   const { address, connector, isConnected } = useAccount()
   const { disconnect } = useDisconnect()
   const chainId = useChainId()
-  const { switchChain, isPending: isSwitching } = useSwitchChain()
+  const {
+    switchChainAsync,
+    isPending: isSwitching,
+  } = useSwitchChain()
   const [expanded, setExpanded] = useState(false)
   const [copied, setCopied] = useState(false)
   const [providerNames, setProviderNames] = useState<string[]>([])
@@ -141,6 +159,57 @@ export function OnchainPanel() {
   const hideMobileChrome =
     showTouchControls && (status === 'playing' || status === 'paused')
 
+  const requestBaseChainOnProvider = useCallback(async () => {
+    const provider = (await connector?.getProvider?.().catch(() => null)) as
+      | SwitchableProvider
+      | null
+
+    if (!provider?.request) {
+      return false
+    }
+
+    try {
+      await provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: numberToHex(BASE_CHAIN_ID) }],
+      })
+      return true
+    } catch (error) {
+      const switchError = error as ProviderRpcErrorLike
+
+      if (switchError.code !== 4902) {
+        return false
+      }
+    }
+
+    try {
+      await provider.request({
+        method: 'wallet_addEthereumChain',
+        params: [
+          {
+            chainId: numberToHex(BASE_CHAIN_ID),
+            chainName: BASE_CHAIN_NAME,
+            nativeCurrency: BASE_CHAIN.nativeCurrency,
+            rpcUrls: [BASE_RPC_URL],
+            blockExplorerUrls: [BASE_EXPLORER_URL],
+          },
+        ],
+      })
+      return true
+    } catch {
+      return false
+    }
+  }, [connector])
+
+  const handleSwitchToBase = useCallback(async () => {
+    try {
+      await switchChainAsync({ chainId: BASE_CHAIN_ID })
+      return
+    } catch {
+      await requestBaseChainOnProvider()
+    }
+  }, [requestBaseChainOnProvider, switchChainAsync])
+
   useEffect(() => {
     if (!showTouchControls || !isConnected || !address) {
       autoSwitchAttemptRef.current = null
@@ -163,14 +232,15 @@ export function OnchainPanel() {
     }
 
     autoSwitchAttemptRef.current = attemptKey
-    switchChain({ chainId: BASE_CHAIN_ID })
+    void handleSwitchToBase()
   }, [
     address,
     chainId,
+    connector,
+    handleSwitchToBase,
     isConnected,
     isSwitching,
     showTouchControls,
-    switchChain,
   ])
 
   useEffect(() => {
@@ -326,7 +396,7 @@ export function OnchainPanel() {
                     <button
                       type="button"
                       className="action-button w-full rounded-full border-white/10 bg-white/6 px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
-                      onClick={() => switchChain({ chainId: BASE_CHAIN_ID })}
+                      onClick={() => void handleSwitchToBase()}
                     >
                       {isSwitching ? 'Switching...' : `Switch to ${BASE_CHAIN_NAME}`}
                     </button>
