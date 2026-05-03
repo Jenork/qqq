@@ -670,6 +670,29 @@ a:focus-visible,
     0 14px 34px rgba(0, 0, 0, 0.34);
 }
 
+.mobile-fullscreen-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  width: 100vw;
+  height: 100dvh;
+  border-radius: 0;
+  border: 0;
+  background: #0d0504;
+  clip-path: none;
+}
+
+.mobile-fullscreen-shell::before,
+.mobile-fullscreen-shell::after {
+  display: none;
+}
+
+.mobile-fullscreen-shell:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  background: #0d0504;
+}
+
 @media (max-width: 1023px) {
   .dashboard-header {
     flex-direction: column;

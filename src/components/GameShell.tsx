@@ -10,6 +10,7 @@ import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { cn } from '@/lib/cn'
 
 export function GameShell() {
+  const shellRef = useRef<HTMLElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const gameRef = useRef<Phaser.Game | null>(null)
   const status = useGameStore((state) => state.status)
@@ -18,6 +19,8 @@ export function GameShell() {
   const gameApiReady = useGameStore((state) => Boolean(state.gameApi))
   const { showTouchControls, isMobileLandscape, isMobilePortrait } = useMobileViewport()
   const [desktopMode, setDesktopMode] = useState(false)
+  const [mobileFullscreen, setMobileFullscreen] = useState(false)
+  const [mobileFullscreenDismissed, setMobileFullscreenDismissed] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -55,13 +58,61 @@ export function GameShell() {
     return () => mediaQuery.removeEventListener('change', sync)
   }, [])
 
+  useEffect(() => {
+    const syncFullscreen = () => {
+      setMobileFullscreen(document.fullscreenElement === shellRef.current)
+    }
+
+    document.addEventListener('fullscreenchange', syncFullscreen)
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen)
+  }, [])
+
   const showMobileControlDeck = showTouchControls && status === 'playing'
+  const shouldUseMobileFullscreen =
+    showTouchControls &&
+    !mobileFullscreenDismissed &&
+    (mobileFullscreen || status === 'playing' || status === 'paused' || status === 'gameover')
+
+  const enterMobileFullscreen = async () => {
+    if (!showTouchControls) {
+      return
+    }
+
+    setMobileFullscreenDismissed(false)
+    setMobileFullscreen(true)
+
+    try {
+      await shellRef.current?.requestFullscreen?.()
+    } catch {
+      // CSS fullscreen fallback keeps the arena usable on mobile browsers without element fullscreen support.
+    }
+  }
+
+  const exitMobileFullscreen = async () => {
+    setMobileFullscreenDismissed(true)
+    setMobileFullscreen(false)
+
+    if (document.fullscreenElement === shellRef.current) {
+      try {
+        await document.exitFullscreen()
+      } catch {
+        // Browser already left fullscreen or blocked the request.
+      }
+    }
+  }
+
+  const handleStartRun = async () => {
+    await enterMobileFullscreen()
+    startRun()
+  }
 
   return (
     <section
+      ref={shellRef}
       className={cn(
         'panel inferno-subtle-grid relative w-full overflow-hidden border border-[#4a1912] bg-[#0d0504] shadow-[0_22px_52px_rgba(0,0,0,0.44)]',
         showTouchControls ? 'rounded-[22px]' : 'rounded-[30px]',
+        shouldUseMobileFullscreen ? 'mobile-fullscreen-shell' : '',
       )}
     >
       <div className="relative overflow-hidden bg-[#160603]">
@@ -69,7 +120,9 @@ export function GameShell() {
           ref={containerRef}
           className={cn(
             'game-canvas w-full max-w-full overflow-hidden bg-[#160603]',
-            isMobileLandscape
+            shouldUseMobileFullscreen
+              ? 'aspect-auto h-[100dvh] min-h-[100dvh] max-h-[100dvh]'
+              : isMobileLandscape
               ? 'aspect-auto h-[calc(100svh-116px)] min-h-[400px] max-h-[calc(100svh-116px)]'
               : showTouchControls
                 ? 'aspect-auto h-[calc(100svh-182px)] min-h-[60svh] max-h-[calc(100svh-182px)]'
@@ -96,6 +149,15 @@ export function GameShell() {
               >
                 Resume
               </button>
+              {showTouchControls ? (
+                <button
+                  type="button"
+                  onClick={() => void exitMobileFullscreen()}
+                  className="action-button mt-3 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-[0.16em]"
+                >
+                  Exit Fullscreen
+                </button>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -119,7 +181,7 @@ export function GameShell() {
               <h1 className="inferno-heading mt-1 text-2xl font-black sm:text-3xl">Based DOOM</h1>
               <button
                 type="button"
-                onClick={() => startRun()}
+                onClick={() => void handleStartRun()}
                 disabled={!gameApiReady}
                 className={cn(
                   'action-button retro-button mt-4 px-5 py-3.5 text-sm font-black uppercase tracking-[0.18em]',
