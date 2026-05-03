@@ -292,8 +292,10 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
 
       <div
         className={cn(
-          'pointer-events-auto absolute bottom-[calc(20px+var(--safe-bottom))] left-1/2 flex -translate-x-1/2 items-center gap-2',
-          portraitMode ? 'bottom-[calc(20px+var(--safe-bottom))]' : 'bottom-[calc(22px+var(--safe-bottom))]',
+          'pointer-events-auto absolute flex items-center gap-2',
+          portraitMode
+            ? 'bottom-[calc(20px+var(--safe-bottom))] left-[44%] -translate-x-1/2'
+            : 'bottom-[calc(24px+var(--safe-bottom))] left-[40%] -translate-x-1/2',
         )}
       >
         <TapActionButton

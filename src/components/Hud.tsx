@@ -72,37 +72,37 @@ export function Hud() {
     return (
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-1.5">
         <div className="pointer-events-auto flex flex-col gap-1.5">
-          <div className="flex items-start gap-1.5">
-            <div className="inferno-frame flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5">
-              <div className="relative z-[1] flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[14px] border border-[#7d2416] bg-[radial-gradient(circle_at_50%_25%,rgba(255,114,41,0.22),rgba(28,8,8,0.98)_68%)] shadow-[inset_0_0_18px_rgba(255,86,22,0.18)]">
+          <div className="flex items-start gap-1">
+            <div className="inferno-frame flex min-w-0 flex-[1.2] items-center gap-1.5 px-2 py-1.5">
+              <div className="relative z-[1] flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[12px] border border-[#7d2416] bg-[radial-gradient(circle_at_50%_25%,rgba(255,114,41,0.22),rgba(28,8,8,0.98)_68%)] shadow-[inset_0_0_18px_rgba(255,86,22,0.18)]">
                 <img
                   src={armoredRewardActive ? '/ui/helmet-armored.png' : '/ui/helmet-base.png'}
                   alt="Marine portrait"
-                  className="h-[30px] w-[30px] scale-[2] object-contain [image-rendering:auto]"
+                  className="h-[24px] w-[24px] scale-[1.85] object-contain [image-rendering:auto]"
                 />
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[8px] font-black uppercase tracking-[0.14em] text-[#ffb47f]">HP</span>
-                  <span className="text-[11px] font-black text-[#ffe1ba]">
+                  <span className="text-[7px] font-black uppercase tracking-[0.12em] text-[#ffb47f]">HP</span>
+                  <span className="text-[10px] font-black text-[#ffe1ba]">
                     {Math.ceil(hp)}/{maxHp}
                   </span>
                 </div>
-                <div className="mt-0.5 h-2 overflow-hidden rounded-[4px] border border-[#7b2115] bg-black/50">
+                <div className="mt-0.5 h-1.5 overflow-hidden rounded-[4px] border border-[#7b2115] bg-black/50">
                   <div
                     className="h-full bg-[linear-gradient(90deg,#b50b07_0%,#ff5f1e_62%,#ffc45e_100%)] transition-all"
                     style={{ width: `${hpPercent}%` }}
                   />
                 </div>
 
-                <div className="mt-1 flex items-center justify-between gap-2">
-                  <span className="text-[8px] font-black uppercase tracking-[0.14em] text-[#77dfff]">Armor</span>
-                  <span className="text-[11px] font-black text-[#b3f0ff]">
+                <div className="mt-0.5 flex items-center justify-between gap-2">
+                  <span className="text-[7px] font-black uppercase tracking-[0.12em] text-[#77dfff]">Armor</span>
+                  <span className="text-[10px] font-black text-[#b3f0ff]">
                     {armor}/{maxArmor || 0}
                   </span>
                 </div>
-                <div className="mt-0.5 h-1.5 overflow-hidden rounded-[4px] border border-cyan-400/18 bg-black/50">
+                <div className="mt-0.5 h-1 overflow-hidden rounded-[4px] border border-cyan-400/18 bg-black/50">
                   <div
                     className="h-full bg-[linear-gradient(90deg,#0b5d83_0%,#28b8db_100%)] transition-all"
                     style={{ width: `${maxArmor > 0 ? (armor / maxArmor) * 100 : 0}%` }}
@@ -111,27 +111,27 @@ export function Hud() {
               </div>
             </div>
 
+            <div className="grid flex-[1.8] grid-cols-5 gap-1">
+              {mobileStatusEntries.map((entry) => (
+                <div key={entry.label} className="inferno-frame px-1 py-1 text-center">
+                  <div className="relative z-[1] text-[6px] font-black uppercase tracking-[0.12em] text-[#ffb37e]">
+                    {entry.label}
+                  </div>
+                  <div className={cn('relative z-[1] mt-0.5 text-[10px] font-black', entry.tone)}>
+                    {entry.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <button
               type="button"
-              className="action-button shrink-0 rounded-2xl px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em]"
+              className="action-button shrink-0 rounded-2xl px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.12em]"
               disabled={status === 'ready' || status === 'gameover'}
               onClick={() => togglePause()}
             >
-              {status === 'paused' ? 'Resume' : 'Pause'}
+              {status === 'paused' ? 'Run' : 'Pause'}
             </button>
-          </div>
-
-          <div className="grid grid-cols-5 gap-1">
-            {mobileStatusEntries.map((entry) => (
-              <div key={entry.label} className="inferno-frame px-1.5 py-1 text-center">
-                <div className="relative z-[1] text-[7px] font-black uppercase tracking-[0.14em] text-[#ffb37e]">
-                  {entry.label}
-                </div>
-                <div className={cn('relative z-[1] mt-0.5 text-[12px] font-black', entry.tone)}>
-                  {entry.value}
-                </div>
-              </div>
-            ))}
           </div>
 
           {activeMessage ? (
