@@ -1,4 +1,4 @@
-import { getWaveTemplate, type EnemyType, type WaveTemplate } from '@/config/game'
+import { getWaveTemplate, isBossWave, type EnemyType, type WaveTemplate } from '@/config/game'
 
 type WaveUpdate = {
   spawnType?: EnemyType
@@ -32,6 +32,7 @@ export class WaveDirector {
   private spawnBurstCount = 0
   private burstSize = 2
   private burstPauseMs = 0
+  private bossSpawned = false
 
   start(time: number) {
     this.active = true
@@ -50,16 +51,20 @@ export class WaveDirector {
     this.awaitingAdvance = false
     this.advanceAt = 0
     this.spawnBurstCount = 0
+    this.bossSpawned = false
   }
 
   prepareWave(wave: number, time: number): WaveUpdate {
     this.wave = wave
     this.template = getWaveTemplate(wave)
-    this.spawnsRemaining = this.template.totalSpawns
+    const bossWave = isBossWave(wave)
+
+    this.spawnsRemaining = bossWave ? 0 : this.template.totalSpawns
     this.spawnBurstCount = 0
+    this.bossSpawned = false
     this.burstSize = wave >= 7 ? 5 : wave >= 4 ? 4 : 3
     this.burstPauseMs = Math.min(720, 220 + wave * 42)
-    this.nextSpawnAt = time + this.template.pauseBeforeMs + Math.min(420, wave * 44)
+    this.nextSpawnAt = time + this.template.pauseBeforeMs + (bossWave ? 0 : Math.min(420, wave * 44))
     this.awaitingAdvance = false
     this.advanceAt = 0
 
@@ -71,6 +76,19 @@ export class WaveDirector {
   update(time: number, aliveEnemies: number): WaveUpdate {
     if (!this.active) {
       return {}
+    }
+
+    if (isBossWave(this.wave)) {
+      if (!this.bossSpawned) {
+        if (time < this.nextSpawnAt) {
+          return {}
+        }
+
+        this.bossSpawned = true
+        return {
+          spawnType: 'boss',
+        }
+      }
     }
 
     if (this.spawnsRemaining > 0 && time >= this.nextSpawnAt) {

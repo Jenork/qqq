@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser'
 import {
   ARENA_BOUNDS,
+  ARENA_SIZE,
   ENEMY_CONFIG,
   SCORE_CONFIG,
   SPRITE_TUNING,
@@ -17,7 +18,10 @@ export function createArenaEnemy(options: {
 }) {
   const { scene, type, wave, template } = options
   const base = ENEMY_CONFIG[type]
-  const x = Phaser.Math.Between(ARENA_BOUNDS.enemySpawnMinX, ARENA_BOUNDS.enemySpawnMaxX)
+  const x =
+    type === 'boss'
+      ? ARENA_SIZE.width - 170
+      : Phaser.Math.Between(ARENA_BOUNDS.enemySpawnMinX, ARENA_BOUNDS.enemySpawnMaxX)
   const y =
     type === 'ranged'
       ? ARENA_BOUNDS.floorY - SPRITE_TUNING.enemies.ranged.hoverBaseOffset
