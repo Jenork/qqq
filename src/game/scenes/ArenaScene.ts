@@ -40,6 +40,7 @@ export class ArenaScene extends Phaser.Scene {
   private grenades!: Phaser.Physics.Arcade.Group
   private runDirector = new ArenaRunDirector()
   private ambientFlames: Phaser.GameObjects.Rectangle[] = []
+  private bossNameplate: Phaser.GameObjects.Text | null = null
   private playerBaseY = ARENA_BOUNDS.floorY + SPRITE_TUNING.player.floorOffset
   private running = false
   private paused = false
@@ -231,6 +232,8 @@ export class ArenaScene extends Phaser.Scene {
     this.playerBullets.clear(true, true)
     this.enemyBullets.clear(true, true)
     this.grenades.clear(true, true)
+    this.bossNameplate?.destroy()
+    this.bossNameplate = null
   }
 
   update(time: number) {
@@ -339,6 +342,7 @@ export class ArenaScene extends Phaser.Scene {
   private updateAmbientAnimation(time: number) {
     applyPlayerPresentation(this.player, time)
     this.player.refreshVisualState(time)
+    this.updateBossNameplate()
 
     this.ambientFlames.forEach((flame, index) => {
       const phase = time / (120 + index * 20)
@@ -866,6 +870,58 @@ export class ArenaScene extends Phaser.Scene {
       template: this.runDirector.template,
     })
     this.enemies.add(enemy)
+
+    if (type === 'boss') {
+      this.activateBossEntrance(enemy)
+    }
+  }
+
+  private activateBossEntrance(enemy: Enemy) {
+    enemy.attackReadyAt = this.time.now + 1400
+    enemy.bossShockwaveReadyAt = this.time.now + 2600
+
+    this.bossNameplate?.destroy()
+    this.bossNameplate = this.add
+      .text(enemy.x, enemy.y - 210, 'BOSS', {
+        color: '#dffbff',
+        fontFamily: 'Arial Black, Trebuchet MS, sans-serif',
+        fontSize: '24px',
+        stroke: '#06344f',
+        strokeThickness: 5,
+      })
+      .setOrigin(0.5)
+      .setDepth(20)
+
+    useGameStore.setState({
+      bossHp: enemy.hp,
+      bossMaxHp: enemy.maxHp,
+      activeMessage: `BOSS WAVE ${this.runDirector.wave}: CORE BREACH`,
+    })
+    this.cameras.main.flash(180, 93, 231, 255)
+    this.cameras.main.shake(180, 0.0032)
+    this.addImpact(enemy.x, enemy.y - 110, 0x72e7ff, 58)
+    this.playSfx('heavy-charge')
+  }
+
+  private updateBossNameplate() {
+    if (!this.bossNameplate) {
+      return
+    }
+
+    const boss = this.enemies.children
+      .getArray()
+      .find((child): child is Enemy => {
+        const enemy = child as Enemy
+        return enemy.active && enemy.enemyType === 'boss'
+      })
+
+    if (!boss) {
+      this.bossNameplate.destroy()
+      this.bossNameplate = null
+      return
+    }
+
+    this.bossNameplate.setPosition(boss.x, boss.y - 210 + Math.sin(this.time.now / 130) * 4)
   }
 
   private hitEnemy(enemy: Enemy, damage: number) {
@@ -892,6 +948,10 @@ export class ArenaScene extends Phaser.Scene {
 
     this.addImpact(enemy.x, enemy.y, 0xffd48a)
     this.cameras.main.shake(isBoss ? 220 : 75, isBoss ? 0.0042 : 0.0016)
+    if (isBoss) {
+      this.bossNameplate?.destroy()
+      this.bossNameplate = null
+    }
     enemy.destroy()
     const store = useGameStore.getState()
     useGameStore.setState({

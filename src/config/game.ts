@@ -261,7 +261,7 @@ export function getWaveTemplate(wave: number): WaveTemplate {
 
     return {
       number: wave,
-      pauseBeforeMs: 2600,
+      pauseBeforeMs: 900,
       spawnDelayMs: 1000,
       totalSpawns: 1,
       weights: [{ type: 'boss', weight: 1 }],
