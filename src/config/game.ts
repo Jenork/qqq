@@ -1,13 +1,13 @@
 export const ARENA_SIZE = {
-  width: 1120,
-  height: 540,
+  width: 1280,
+  height: 720,
 } as const
 
 export const ARENA_BOUNDS = {
-  floorY: 392,
-  playerSpawnX: 168,
+  floorY: 552,
+  playerSpawnX: 230,
   enemySpawnMinX: 760,
-  enemySpawnMaxX: 1080,
+  enemySpawnMaxX: 1160,
 } as const
 
 export const PLAYER_CONFIG = {

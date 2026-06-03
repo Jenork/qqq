@@ -29,7 +29,7 @@ import { ArenaRunDirector } from '@/game/systems/ArenaRunDirector'
 import { createArenaEnemy } from '@/game/systems/enemyFactory'
 
 export class ArenaScene extends Phaser.Scene {
-  private static readonly BACKGROUND_FLOOR_SOURCE_Y = 604
+  private static readonly BACKGROUND_FLOOR_SOURCE_Y = 704
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private keys!: Record<string, Phaser.Input.Keyboard.Key>
   private player!: Player
@@ -64,7 +64,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private buildArena() {
-    this.cameras.main.setBackgroundColor('#180502')
+    this.cameras.main.setBackgroundColor('#020713')
     this.cameras.main.setRoundPixels(true)
     this.physics.world.setBounds(0, 0, ARENA_SIZE.width, ARENA_SIZE.height)
 

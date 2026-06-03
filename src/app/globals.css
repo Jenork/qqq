@@ -261,7 +261,7 @@ a:focus-visible,
 }
 
 .game-canvas canvas {
-  image-rendering: pixelated;
+  image-rendering: auto;
 }
 
 .game-canvas,

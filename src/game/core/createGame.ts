@@ -10,7 +10,7 @@ export function createGame(parent: string | HTMLElement) {
     width: ARENA_SIZE.width,
     height: ARENA_SIZE.height,
     backgroundColor: '#08101f',
-    pixelArt: true,
+    pixelArt: false,
     physics: {
       default: 'arcade',
       arcade: {

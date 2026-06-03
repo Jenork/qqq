@@ -126,7 +126,7 @@ export function GameShell() {
               ? 'aspect-auto h-[calc(100svh-116px)] min-h-[400px] max-h-[calc(100svh-116px)]'
               : showTouchControls
                 ? 'aspect-auto h-[calc(100svh-182px)] min-h-[60svh] max-h-[calc(100svh-182px)]'
-                : 'aspect-[10/13] min-h-[72svh] sm:aspect-[56/27] sm:min-h-0 lg:max-h-[82svh]',
+                : 'aspect-[16/9] min-h-0 lg:max-h-[82svh]',
           )}
         />
 
