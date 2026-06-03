@@ -1,0 +1,8 @@
+interface:
+  display_name: "UX Auditor"
+  short_description: "Direct right-panel UX audits"
+  brand_color: "#0EA5E9"
+  default_prompt: "Use $ux-auditor to open this mini app or local UI directly in the Codex right panel, click through it visibly, and send the UX/UI audit report in chat only."
+
+policy:
+  allow_implicit_invocation: true
