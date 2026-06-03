@@ -5,6 +5,7 @@ import { numberToHex } from 'viem'
 import { useAccount, useChainId, useDisconnect, useReadContract, useSwitchChain } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
+import { CURRENT_SEASON_ID } from '@/config/season'
 import {
   BASE_CHAIN,
   BASE_CHAIN_ID,
@@ -88,8 +89,8 @@ export function OnchainPanel() {
   const { data: bestScore } = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
     abi: gameProgressAbi,
-    functionName: 'getBestScore',
-    args: [address ?? ZERO_ADDRESS],
+    functionName: 'getSeasonBestScore',
+    args: [BigInt(CURRENT_SEASON_ID), address ?? ZERO_ADDRESS],
     chainId: BASE_CHAIN_ID,
     query: {
       enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,

@@ -11,6 +11,7 @@ import {
   useWriteContract,
 } from 'wagmi'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
+import { CURRENT_SEASON_ID, CURRENT_SEASON_LABEL } from '@/config/season'
 import { BASE_CHAIN_ID, BASE_CHAIN_NAME } from '@/config/web3'
 import { useGameStore } from '@/hooks/useGameStore'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
@@ -33,8 +34,8 @@ export function GameOverModal() {
   const { data: bestScore, refetch: refetchBest } = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
     abi: gameProgressAbi,
-    functionName: 'getBestScore',
-    args: [address ?? ZERO_ADDRESS],
+    functionName: 'getSeasonBestScore',
+    args: [BigInt(CURRENT_SEASON_ID), address ?? ZERO_ADDRESS],
     chainId: BASE_CHAIN_ID,
     query: {
       enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
@@ -157,6 +158,9 @@ export function GameOverModal() {
                 <span className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-stone-100">
                   Best {formatScore(storedBestScore)}
                 </span>
+                <span className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-100">
+                  {CURRENT_SEASON_LABEL}
+                </span>
                 {canSubmitScore ? (
                   <span className="rounded-full border border-[#4de06c]/35 bg-[#16301a] px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-[#b5ffb7]">
                     New Best
@@ -231,8 +235,8 @@ export function GameOverModal() {
                 writeContract({
                   address: GAME_PROGRESS_ADDRESS,
                   abi: gameProgressAbi,
-                  functionName: 'submitScore',
-                  args: [BigInt(pendingScore)],
+                  functionName: 'submitSeasonScore',
+                  args: [BigInt(CURRENT_SEASON_ID), BigInt(pendingScore)],
                 })
               }}
             >
@@ -256,7 +260,7 @@ export function GameOverModal() {
 
           {!canSubmitScore ? (
             <div className="panel-state panel-state-muted text-sm text-slate-300">
-              Best score already saved. Onchain leaderboard stays unchanged.
+              {CURRENT_SEASON_LABEL} best score already saved. Onchain leaderboard stays unchanged.
             </div>
           ) : null}
         </div>

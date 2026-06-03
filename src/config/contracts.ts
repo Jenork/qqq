@@ -84,9 +84,36 @@ export const gameProgressAbi = [
   },
   {
     type: 'function',
+    name: 'submitCurrentSeasonScore',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'score', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'submitSeasonScore',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'seasonId', type: 'uint256' },
+      { name: 'score', type: 'uint256' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
     name: 'getBestScore',
     stateMutability: 'view',
     inputs: [{ name: 'player', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'getSeasonBestScore',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'seasonId', type: 'uint256' },
+      { name: 'player', type: 'address' },
+    ],
     outputs: [{ name: '', type: 'uint256' }],
   },
   {
@@ -98,9 +125,27 @@ export const gameProgressAbi = [
   },
   {
     type: 'function',
+    name: 'getSeasonPlayersCount',
+    stateMutability: 'view',
+    inputs: [{ name: 'seasonId', type: 'uint256' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
     name: 'getPlayersSlice',
     stateMutability: 'view',
     inputs: [
+      { name: 'start', type: 'uint256' },
+      { name: 'end', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'address[]' }],
+  },
+  {
+    type: 'function',
+    name: 'getSeasonPlayersSlice',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'seasonId', type: 'uint256' },
       { name: 'start', type: 'uint256' },
       { name: 'end', type: 'uint256' },
     ],
@@ -141,6 +186,17 @@ export const gameProgressAbi = [
     name: 'ScoreSubmitted',
     inputs: [
       { indexed: true, name: 'player', type: 'address' },
+      { indexed: false, name: 'submittedScore', type: 'uint256' },
+      { indexed: false, name: 'storedBestScore', type: 'uint256' },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'SeasonScoreSubmitted',
+    inputs: [
+      { indexed: true, name: 'player', type: 'address' },
+      { indexed: true, name: 'seasonId', type: 'uint256' },
       { indexed: false, name: 'submittedScore', type: 'uint256' },
       { indexed: false, name: 'storedBestScore', type: 'uint256' },
     ],

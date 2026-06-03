@@ -14,7 +14,9 @@ contract GameProgress {
     error CheckInUnavailable(uint256 nextAvailableAt);
     error ShotgunAlreadyUnlocked();
     error TokenTransferFailed();
+    error InvalidSeason();
 
+    uint256 public constant CURRENT_SEASON_ID = 2;
     uint256 public constant SHOTGUN_ITEM_ID = 2;
     uint256 public constant DAILY_CHECK_IN_INTERVAL = 1 days;
 
@@ -23,8 +25,11 @@ contract GameProgress {
     mapping(address => bool) public hasEntry;
     mapping(address => uint256) public lastCheckInAt;
     mapping(address => uint256) public checkInCount;
+    mapping(uint256 => mapping(address => uint256)) private seasonBestScore;
+    mapping(uint256 => mapping(address => bool)) private seasonHasEntry;
 
     address[] private players;
+    mapping(uint256 => address[]) private seasonPlayers;
 
     address public immutable usdcToken;
     address public immutable usdcRecipient;
@@ -32,6 +37,12 @@ contract GameProgress {
 
     event ItemClaimed(address indexed player, uint256 indexed itemId);
     event ScoreSubmitted(address indexed player, uint256 submittedScore, uint256 storedBestScore);
+    event SeasonScoreSubmitted(
+        address indexed player,
+        uint256 indexed seasonId,
+        uint256 submittedScore,
+        uint256 storedBestScore
+    );
     event DailyCheckedIn(address indexed player, uint256 timestamp, uint256 totalCount);
     event ShotgunPurchased(address indexed player, uint256 amount, address recipient);
 
@@ -116,8 +127,36 @@ contract GameProgress {
         emit ScoreSubmitted(msg.sender, score, storedBestScore);
     }
 
+    function submitCurrentSeasonScore(uint256 score) external {
+        submitSeasonScore(CURRENT_SEASON_ID, score);
+    }
+
+    function submitSeasonScore(uint256 seasonId, uint256 score) public {
+        if (seasonId == 0) {
+            revert InvalidSeason();
+        }
+
+        uint256 storedBestScore = seasonBestScore[seasonId][msg.sender];
+
+        if (!seasonHasEntry[seasonId][msg.sender]) {
+            seasonHasEntry[seasonId][msg.sender] = true;
+            seasonPlayers[seasonId].push(msg.sender);
+            seasonBestScore[seasonId][msg.sender] = score;
+            storedBestScore = score;
+        } else if (score > storedBestScore) {
+            seasonBestScore[seasonId][msg.sender] = score;
+            storedBestScore = score;
+        }
+
+        emit SeasonScoreSubmitted(msg.sender, seasonId, score, storedBestScore);
+    }
+
     function getBestScore(address player) external view returns (uint256) {
         return bestScore[player];
+    }
+
+    function getSeasonBestScore(uint256 seasonId, address player) external view returns (uint256) {
+        return seasonBestScore[seasonId][player];
     }
 
     function getLastCheckIn(address player) external view returns (uint256) {
@@ -132,6 +171,10 @@ contract GameProgress {
         return players.length;
     }
 
+    function getSeasonPlayersCount(uint256 seasonId) external view returns (uint256) {
+        return seasonPlayers[seasonId].length;
+    }
+
     function getPlayersSlice(uint256 start, uint256 end) external view returns (address[] memory slice) {
         if (start > end || end > players.length) {
             revert InvalidSlice();
@@ -140,6 +183,23 @@ contract GameProgress {
         slice = new address[](end - start);
         for (uint256 index = start; index < end; index++) {
             slice[index - start] = players[index];
+        }
+    }
+
+    function getSeasonPlayersSlice(
+        uint256 seasonId,
+        uint256 start,
+        uint256 end
+    ) external view returns (address[] memory slice) {
+        address[] storage storedPlayers = seasonPlayers[seasonId];
+
+        if (start > end || end > storedPlayers.length) {
+            revert InvalidSlice();
+        }
+
+        slice = new address[](end - start);
+        for (uint256 index = start; index < end; index++) {
+            slice[index - start] = storedPlayers[index];
         }
     }
 }

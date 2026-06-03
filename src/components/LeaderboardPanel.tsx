@@ -1,6 +1,7 @@
 'use client'
 
 import { useAccount } from 'wagmi'
+import { CURRENT_SEASON_LABEL } from '@/config/season'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { cn } from '@/lib/cn'
@@ -17,8 +18,8 @@ export function LeaderboardPanel() {
         <div className="dashboard-header mb-5">
           <div className="dashboard-heading">
             <p className="panel-title text-[#ffb78a]">Leaderboard</p>
-            <h3 className="monitor-title mt-1">Leaderboard</h3>
-            <p className="micro-copy mt-1">Top survivors</p>
+            <h3 className="monitor-title mt-1">{CURRENT_SEASON_LABEL} Leaderboard</h3>
+            <p className="micro-copy mt-1">Fresh season rankings. Season 1 scores are archived.</p>
           </div>
 
           <div className="dashboard-actions">

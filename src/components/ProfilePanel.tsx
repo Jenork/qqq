@@ -3,6 +3,7 @@
 import { useAccount, useChainId, useReadContract } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
+import { CURRENT_SEASON_ID, CURRENT_SEASON_LABEL } from '@/config/season'
 import { BASE_CHAIN_ID, BASE_CHAIN_NAME } from '@/config/web3'
 import { formatScore, shortenAddress } from '@/lib/score'
 
@@ -15,8 +16,8 @@ export function ProfilePanel() {
   const { data: bestScore } = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
     abi: gameProgressAbi,
-    functionName: 'getBestScore',
-    args: [address ?? ZERO_ADDRESS],
+    functionName: 'getSeasonBestScore',
+    args: [BigInt(CURRENT_SEASON_ID), address ?? ZERO_ADDRESS],
     chainId: BASE_CHAIN_ID,
     query: {
       enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
@@ -71,7 +72,7 @@ export function ProfilePanel() {
               </div>
 
               <div className="season-stat-card">
-                <span className="stats-row-label">Best Score</span>
+                <span className="stats-row-label">{CURRENT_SEASON_LABEL} Best</span>
                 <strong className="stats-row-value mt-2 block text-3xl">
                   {formatScore(bestScoreValue)}
                 </strong>

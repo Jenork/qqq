@@ -50,6 +50,29 @@ contract GameProgressTest {
         require(progress.getPlayersCount() == 1, "player should only be added once");
     }
 
+    function testSubmitSeasonScoreStoresBestOnlyForSeason() public {
+        progress.submitSeasonScore(2, 50);
+        progress.submitSeasonScore(2, 10);
+        progress.submitSeasonScore(2, 77);
+
+        require(progress.getSeasonBestScore(2, address(this)) == 77, "season best score mismatch");
+        require(progress.getBestScore(address(this)) == 0, "legacy best score should stay untouched");
+        require(progress.getSeasonPlayersCount(2) == 1, "season player should only be added once");
+    }
+
+    function testSeasonPlayersSliceReturnsSeasonEntries() public {
+        progress.submitSeasonScore(2, 5);
+
+        PlayerSubmitter other = new PlayerSubmitter(progress);
+        other.submitSeason(2, 11);
+
+        address[] memory slice = progress.getSeasonPlayersSlice(2, 0, 2);
+
+        require(slice.length == 2, "slice length mismatch");
+        require(slice[0] == address(this), "first season player mismatch");
+        require(slice[1] == address(other), "second season player mismatch");
+    }
+
     function testPlayersSliceReturnsStoredEntries() public {
         progress.submitScore(5);
 
@@ -83,6 +106,10 @@ contract PlayerSubmitter {
 
     function submit(uint256 score) external {
         progress.submitScore(score);
+    }
+
+    function submitSeason(uint256 seasonId, uint256 score) external {
+        progress.submitSeasonScore(seasonId, score);
     }
 }
 
