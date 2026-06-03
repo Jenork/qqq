@@ -27,6 +27,8 @@ contract GameProgress {
     mapping(address => uint256) public checkInCount;
     mapping(uint256 => mapping(address => uint256)) private seasonBestScore;
     mapping(uint256 => mapping(address => bool)) private seasonHasEntry;
+    mapping(uint256 => mapping(address => uint256)) private seasonLastCheckInAt;
+    mapping(uint256 => mapping(address => uint256)) private seasonCheckInCount;
 
     address[] private players;
     mapping(uint256 => address[]) private seasonPlayers;
@@ -44,6 +46,12 @@ contract GameProgress {
         uint256 storedBestScore
     );
     event DailyCheckedIn(address indexed player, uint256 timestamp, uint256 totalCount);
+    event SeasonDailyCheckedIn(
+        address indexed player,
+        uint256 indexed seasonId,
+        uint256 timestamp,
+        uint256 totalCount
+    );
     event ShotgunPurchased(address indexed player, uint256 amount, address recipient);
 
     constructor(address usdcToken_, address usdcRecipient_, uint256 shotgunPrice_) {
@@ -85,6 +93,26 @@ contract GameProgress {
         emit DailyCheckedIn(msg.sender, timestamp, checkInCount[msg.sender]);
     }
 
+    function dailyCurrentSeasonCheckIn() external {
+        dailySeasonCheckIn(CURRENT_SEASON_ID);
+    }
+
+    function dailySeasonCheckIn(uint256 seasonId) public {
+        if (seasonId == 0) {
+            revert InvalidSeason();
+        }
+
+        if (!canSeasonCheckIn(seasonId, msg.sender)) {
+            revert CheckInUnavailable(seasonLastCheckInAt[seasonId][msg.sender] + DAILY_CHECK_IN_INTERVAL);
+        }
+
+        uint256 timestamp = block.timestamp;
+        seasonLastCheckInAt[seasonId][msg.sender] = timestamp;
+        seasonCheckInCount[seasonId][msg.sender] += 1;
+
+        emit SeasonDailyCheckedIn(msg.sender, seasonId, timestamp, seasonCheckInCount[seasonId][msg.sender]);
+    }
+
     function purchaseShotgun() external {
         if (unlockedItems[msg.sender][SHOTGUN_ITEM_ID]) {
             revert ShotgunAlreadyUnlocked();
@@ -104,6 +132,11 @@ contract GameProgress {
 
     function canCheckIn(address player) public view returns (bool) {
         uint256 lastTimestamp = lastCheckInAt[player];
+        return lastTimestamp == 0 || block.timestamp >= lastTimestamp + DAILY_CHECK_IN_INTERVAL;
+    }
+
+    function canSeasonCheckIn(uint256 seasonId, address player) public view returns (bool) {
+        uint256 lastTimestamp = seasonLastCheckInAt[seasonId][player];
         return lastTimestamp == 0 || block.timestamp >= lastTimestamp + DAILY_CHECK_IN_INTERVAL;
     }
 
@@ -165,6 +198,14 @@ contract GameProgress {
 
     function getCheckInCount(address player) external view returns (uint256) {
         return checkInCount[player];
+    }
+
+    function getSeasonLastCheckIn(uint256 seasonId, address player) external view returns (uint256) {
+        return seasonLastCheckInAt[seasonId][player];
+    }
+
+    function getSeasonCheckInCount(uint256 seasonId, address player) external view returns (uint256) {
+        return seasonCheckInCount[seasonId][player];
     }
 
     function getPlayersCount() external view returns (uint256) {

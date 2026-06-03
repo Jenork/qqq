@@ -41,6 +41,24 @@ contract GameProgressTest {
         require(progress.canCheckIn(address(this)), "check-in should reopen after one day");
     }
 
+    function testSeasonDailyCheckInStoresSeparateCount() public {
+        progress.dailySeasonCheckIn(2);
+
+        require(!progress.canSeasonCheckIn(2, address(this)), "season check-in should be blocked for a day");
+        require(progress.getSeasonCheckInCount(2, address(this)) == 1, "season check-in count mismatch");
+        require(progress.getSeasonLastCheckIn(2, address(this)) > 0, "season timestamp should be stored");
+        require(progress.getCheckInCount(address(this)) == 0, "legacy check-in count should stay untouched");
+    }
+
+    function testSeasonDailyCheckInUnlocksAfterOneDay() public {
+        progress.dailySeasonCheckIn(2);
+        uint256 nextAvailableAt = progress.getSeasonLastCheckIn(2, address(this)) + progress.DAILY_CHECK_IN_INTERVAL();
+
+        vm.warp(nextAvailableAt);
+
+        require(progress.canSeasonCheckIn(2, address(this)), "season check-in should reopen after one day");
+    }
+
     function testSubmitScoreStoresBestOnly() public {
         progress.submitScore(50);
         progress.submitScore(10);

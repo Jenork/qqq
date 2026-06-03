@@ -27,8 +27,8 @@ export function ProfilePanel() {
   const { data: checkInCount } = useReadContract({
     address: GAME_PROGRESS_ADDRESS,
     abi: gameProgressAbi,
-    functionName: 'getCheckInCount',
-    args: [address ?? ZERO_ADDRESS],
+    functionName: 'getSeasonCheckInCount',
+    args: [BigInt(CURRENT_SEASON_ID), address ?? ZERO_ADDRESS],
     chainId: BASE_CHAIN_ID,
     query: {
       enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
@@ -79,7 +79,7 @@ export function ProfilePanel() {
               </div>
 
               <div className="season-stat-card">
-                <span className="stats-row-label">Check-ins</span>
+                <span className="stats-row-label">{CURRENT_SEASON_LABEL} Check-ins</span>
                 <strong className="stats-row-value mt-2 block text-3xl">
                   {formatScore(checkInValue)}
                 </strong>

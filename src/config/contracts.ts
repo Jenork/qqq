@@ -39,9 +39,33 @@ export const gameProgressAbi = [
   },
   {
     type: 'function',
+    name: 'dailyCurrentSeasonCheckIn',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'dailySeasonCheckIn',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'seasonId', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
     name: 'canCheckIn',
     stateMutability: 'view',
     inputs: [{ name: 'player', type: 'address' }],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'canSeasonCheckIn',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'seasonId', type: 'uint256' },
+      { name: 'player', type: 'address' },
+    ],
     outputs: [{ name: '', type: 'bool' }],
   },
   {
@@ -53,9 +77,29 @@ export const gameProgressAbi = [
   },
   {
     type: 'function',
+    name: 'getSeasonLastCheckIn',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'seasonId', type: 'uint256' },
+      { name: 'player', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
     name: 'getCheckInCount',
     stateMutability: 'view',
     inputs: [{ name: 'player', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'getSeasonCheckInCount',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'seasonId', type: 'uint256' },
+      { name: 'player', type: 'address' },
+    ],
     outputs: [{ name: '', type: 'uint256' }],
   },
   {
@@ -207,6 +251,17 @@ export const gameProgressAbi = [
     name: 'DailyCheckedIn',
     inputs: [
       { indexed: true, name: 'player', type: 'address' },
+      { indexed: false, name: 'timestamp', type: 'uint256' },
+      { indexed: false, name: 'totalCount', type: 'uint256' },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'SeasonDailyCheckedIn',
+    inputs: [
+      { indexed: true, name: 'player', type: 'address' },
+      { indexed: true, name: 'seasonId', type: 'uint256' },
       { indexed: false, name: 'timestamp', type: 'uint256' },
       { indexed: false, name: 'totalCount', type: 'uint256' },
     ],
