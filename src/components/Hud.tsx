@@ -50,7 +50,7 @@ export function Hud() {
   const compactHud = showTouchControls
 
   const desktopStatusEntries = [
-    { label: 'Grenade', value: grenadeLabel, icon: grenadeIcon, tone: 'text-[#ffb86e]' },
+    { label: 'Grenade', value: grenadeLabel, icon: grenadeIcon, tone: 'text-amber-200' },
     {
       label: 'Ability',
       value: abilityLabel,
@@ -61,9 +61,9 @@ export function Hud() {
   ]
 
   const mobileStatusEntries = [
-    { label: 'Score', value: String(score), tone: 'text-[#ff9c36]' },
-    { label: 'Wave', value: String(wave), tone: 'text-[#ff9c36]' },
-    { label: 'Gren', value: grenadeLabel, tone: 'text-[#ffb86e]' },
+    { label: 'Score', value: String(score), tone: 'text-amber-200' },
+    { label: 'Wave', value: String(wave), tone: 'text-amber-200' },
+    { label: 'Gren', value: grenadeLabel, tone: 'text-cyan-100' },
     { label: 'Skill', value: abilityLabel, tone: shieldRemaining > 0 ? 'text-cyan-100' : 'text-[#8ad5ff]' },
     { label: 'Heal', value: healLabel, tone: 'text-[#85ff78]' },
   ]
@@ -74,7 +74,7 @@ export function Hud() {
         <div className="pointer-events-auto flex flex-col gap-1.5">
           <div className="flex items-start gap-1">
             <div className="inferno-frame flex min-w-0 flex-[1.2] items-center gap-1.5 px-2 py-1.5">
-              <div className="relative z-[1] flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[12px] border border-[#7d2416] bg-[radial-gradient(circle_at_50%_25%,rgba(255,114,41,0.22),rgba(28,8,8,0.98)_68%)] shadow-[inset_0_0_18px_rgba(255,86,22,0.18)]">
+              <div className="relative z-[1] flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[12px] border border-cyan-300/18 bg-[radial-gradient(circle_at_50%_25%,rgba(73,202,255,0.18),rgba(3,12,24,0.98)_68%)] shadow-[inset_0_0_18px_rgba(65,196,255,0.16)]">
                 <img
                   src={armoredRewardActive ? '/ui/helmet-armored.png' : '/ui/helmet-base.png'}
                   alt="Marine portrait"
@@ -84,12 +84,12 @@ export function Hud() {
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[7px] font-black uppercase tracking-[0.12em] text-[#ffb47f]">HP</span>
-                  <span className="text-[10px] font-black text-[#ffe1ba]">
+                  <span className="text-[7px] font-black uppercase tracking-[0.12em] text-rose-200">HP</span>
+                  <span className="text-[10px] font-black text-rose-50">
                     {Math.ceil(hp)}/{maxHp}
                   </span>
                 </div>
-                <div className="mt-0.5 h-1.5 overflow-hidden rounded-[4px] border border-[#7b2115] bg-black/50">
+                <div className="mt-0.5 h-1.5 overflow-hidden rounded-[4px] border border-rose-300/18 bg-black/50">
                   <div
                     className="h-full bg-[linear-gradient(90deg,#b50b07_0%,#ff5f1e_62%,#ffc45e_100%)] transition-all"
                     style={{ width: `${hpPercent}%` }}
@@ -97,8 +97,8 @@ export function Hud() {
                 </div>
 
                 <div className="mt-0.5 flex items-center justify-between gap-2">
-                  <span className="text-[7px] font-black uppercase tracking-[0.12em] text-[#77dfff]">Armor</span>
-                  <span className="text-[10px] font-black text-[#b3f0ff]">
+                  <span className="text-[7px] font-black uppercase tracking-[0.12em] text-cyan-200">Armor</span>
+                  <span className="text-[10px] font-black text-cyan-50">
                     {armor}/{maxArmor || 0}
                   </span>
                 </div>
@@ -114,7 +114,7 @@ export function Hud() {
             <div className="grid flex-[1.8] grid-cols-5 gap-1">
               {mobileStatusEntries.map((entry) => (
                 <div key={entry.label} className="inferno-frame px-1 py-1 text-center">
-                  <div className="relative z-[1] text-[6px] font-black uppercase tracking-[0.12em] text-[#ffb37e]">
+                  <div className="relative z-[1] text-[6px] font-black uppercase tracking-[0.12em] text-cyan-100/80">
                     {entry.label}
                   </div>
                   <div className={cn('relative z-[1] mt-0.5 text-[10px] font-black', entry.tone)}>
@@ -137,10 +137,10 @@ export function Hud() {
           {activeMessage ? (
             <p
               className={cn(
-                'inferno-chip max-w-[240px] self-end rounded-full px-2 py-0.5 text-[7px] uppercase tracking-[0.12em]',
-                isWaveMessage
-                  ? 'font-black text-orange-50 shadow-[0_0_18px_rgba(255,145,63,0.18)]'
-                  : 'text-orange-100/80',
+                  'inferno-chip max-w-[240px] self-end rounded-full px-2 py-0.5 text-[7px] uppercase tracking-[0.12em]',
+                  isWaveMessage
+                    ? 'font-black text-cyan-50 shadow-[0_0_18px_rgba(65,196,255,0.18)]'
+                    : 'text-cyan-100/80',
               )}
             >
               {activeMessage}
@@ -157,7 +157,7 @@ export function Hud() {
         <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
           <div className="inferno-frame w-[min(100%,344px)] px-3 py-3">
             <div className="relative z-[1] flex items-center gap-3">
-              <div className="flex h-[62px] w-[62px] items-center justify-center rounded-[18px] border border-[#7d2416] bg-[radial-gradient(circle_at_50%_25%,rgba(255,114,41,0.22),rgba(28,8,8,0.98)_68%)] text-[10px] font-black uppercase tracking-[0.18em] text-[#ffcf9f] shadow-[inset_0_0_18px_rgba(255,86,22,0.18)]">
+              <div className="flex h-[62px] w-[62px] items-center justify-center rounded-[18px] border border-cyan-300/18 bg-[radial-gradient(circle_at_50%_25%,rgba(73,202,255,0.18),rgba(3,12,24,0.98)_68%)] text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100 shadow-[inset_0_0_18px_rgba(65,196,255,0.16)]">
                 <img
                   src={armoredRewardActive ? '/ui/helmet-armored.png' : '/ui/helmet-base.png'}
                   alt="Marine portrait"
@@ -167,10 +167,10 @@ export function Hud() {
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#ffb47f]">HP</span>
-                  <span className="text-sm font-black text-[#ffe1ba]">{Math.ceil(hp)}/{maxHp}</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-200">HP</span>
+                  <span className="text-sm font-black text-rose-50">{Math.ceil(hp)}/{maxHp}</span>
                 </div>
-                <div className="mt-1 h-3 overflow-hidden rounded-[4px] border border-[#7b2115] bg-black/50">
+                <div className="mt-1 h-3 overflow-hidden rounded-[4px] border border-rose-300/18 bg-black/50">
                   <div
                     className="h-full bg-[linear-gradient(90deg,#b50b07_0%,#ff5f1e_62%,#ffc45e_100%)] transition-all"
                     style={{ width: `${hpPercent}%` }}
@@ -178,8 +178,8 @@ export function Hud() {
                 </div>
 
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-[#77dfff]">Armor</span>
-                  <span className="text-sm font-black text-[#b3f0ff]">{armor}/{maxArmor || 0}</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-200">Armor</span>
+                  <span className="text-sm font-black text-cyan-50">{armor}/{maxArmor || 0}</span>
                 </div>
                 <div className="mt-1 h-2.5 overflow-hidden rounded-[4px] border border-cyan-400/18 bg-black/50">
                   <div
@@ -194,17 +194,17 @@ export function Hud() {
           <div className="flex max-w-[56%] flex-col items-end gap-2">
             <div className="grid grid-cols-[repeat(2,minmax(84px,1fr))] gap-2 sm:grid-cols-[repeat(5,minmax(82px,1fr))]">
               <div className="inferno-frame min-w-[82px] px-3 py-2 text-center">
-                <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-[#ffb37e]">Score</div>
-                <div className="relative z-[1] mt-1 text-2xl font-black text-[#ff9c36]">{score}</div>
+                <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/80">Score</div>
+                <div className="relative z-[1] mt-1 text-2xl font-black text-amber-200">{score}</div>
               </div>
               <div className="inferno-frame min-w-[82px] px-3 py-2 text-center">
-                <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-[#ffb37e]">Wave</div>
-                <div className="relative z-[1] mt-1 text-2xl font-black text-[#ff9c36]">{wave}</div>
+                <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/80">Wave</div>
+                <div className="relative z-[1] mt-1 text-2xl font-black text-amber-200">{wave}</div>
               </div>
 
               {desktopStatusEntries.map((entry) => (
                 <div key={entry.label} className="inferno-frame min-w-[82px] px-3 py-2 text-center">
-                  <div className="relative z-[1] flex items-center justify-center gap-1 text-[9px] font-black uppercase tracking-[0.16em] text-[#ffb37e]">
+                  <div className="relative z-[1] flex items-center justify-center gap-1 text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/80">
                     {entry.icon ? (
                       <img
                         src={entry.icon}
@@ -244,8 +244,8 @@ export function Hud() {
                 className={cn(
                   'inferno-chip max-w-[320px] rounded-full px-2.5 py-1 text-right uppercase tracking-[0.14em] sm:text-[9px]',
                   isWaveMessage
-                    ? 'text-[9px] font-black text-orange-50 shadow-[0_0_18px_rgba(255,145,63,0.18)]'
-                    : 'text-[8px] text-orange-100/80',
+                    ? 'text-[9px] font-black text-cyan-50 shadow-[0_0_18px_rgba(65,196,255,0.18)]'
+                    : 'text-[8px] text-cyan-100/80',
                 )}
               >
                 {activeMessage}

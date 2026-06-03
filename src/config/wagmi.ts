@@ -28,18 +28,6 @@ function getInjectedProviders(window?: Window) {
   return [ethereum]
 }
 
-function findMetaMaskProvider(window?: Window) {
-  return getInjectedProviders(window).find(
-    (provider: BrowserWalletProvider) => provider.isMetaMask && !provider.isCoinbaseWallet,
-  )
-}
-
-function findCoinbaseWalletProvider(window?: Window) {
-  return getInjectedProviders(window).find(
-    (provider: BrowserWalletProvider) => provider.isCoinbaseWallet,
-  )
-}
-
 function findOtherInjectedProvider(window?: Window) {
   return (
     getInjectedProviders(window).find(
@@ -50,7 +38,7 @@ function findOtherInjectedProvider(window?: Window) {
 }
 
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim()
-const appName = 'Based DOOM'
+const appName = 'BaseUp Survival'
 
 const connectors = [
   metaMask({
@@ -69,8 +57,8 @@ const connectors = [
           showQrModal: true,
           metadata: {
             name: appName,
-            description: 'Based DOOM on Base',
-            url: typeof window !== 'undefined' ? window.location.origin : 'https://baseddoom.app',
+            description: 'BaseUp Survival on Base',
+            url: typeof window !== 'undefined' ? window.location.origin : 'https://baseup-survival.app',
             icons: [],
           },
         }),

@@ -110,16 +110,16 @@ export function GameShell() {
     <section
       ref={shellRef}
       className={cn(
-        'panel inferno-subtle-grid relative w-full overflow-hidden border border-[#4a1912] bg-[#0d0504] shadow-[0_22px_52px_rgba(0,0,0,0.44)]',
+        'panel inferno-subtle-grid relative w-full overflow-hidden border border-cyan-300/15 bg-[#020713] shadow-[0_22px_52px_rgba(0,0,0,0.44)]',
         showTouchControls ? 'rounded-[22px]' : 'rounded-[30px]',
         shouldUseMobileFullscreen ? 'mobile-fullscreen-shell' : '',
       )}
     >
-      <div className="relative overflow-hidden bg-[#160603]">
+      <div className="relative overflow-hidden bg-[#020713]">
         <div
           ref={containerRef}
           className={cn(
-            'game-canvas w-full max-w-full overflow-hidden bg-[#160603]',
+            'game-canvas w-full max-w-full overflow-hidden bg-[#020713]',
             shouldUseMobileFullscreen
               ? 'aspect-auto h-[100dvh] min-h-[100dvh] max-h-[100dvh]'
               : isMobileLandscape
@@ -130,8 +130,8 @@ export function GameShell() {
           )}
         />
 
-        <div className="pointer-events-none absolute inset-0 border border-[#762314]/40" />
-        <div className="pointer-events-none absolute inset-[14px] border border-[#4e1d16]/60 [clip-path:polygon(0_14px,14px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-18px))]" />
+        <div className="pointer-events-none absolute inset-0 border border-cyan-300/20" />
+        <div className="pointer-events-none absolute inset-[14px] border border-cyan-300/15 [clip-path:polygon(0_14px,14px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-18px))]" />
 
         {status !== 'ready' ? <Hud /> : null}
         {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} /> : null}
@@ -175,10 +175,10 @@ export function GameShell() {
                 desktopMode ? 'max-w-sm text-left' : 'mx-auto w-full max-w-[290px] text-center',
               )}
             >
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-orange-200/80">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/80">
                 Arena ready
               </p>
-              <h1 className="inferno-heading mt-1 text-2xl font-black sm:text-3xl">Based DOOM</h1>
+              <h1 className="inferno-heading mt-1 text-2xl font-black sm:text-3xl">BaseUp S2</h1>
               <button
                 type="button"
                 onClick={() => void handleStartRun()}

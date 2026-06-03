@@ -735,3 +735,244 @@ a:focus-visible,
     gap: 6px;
   }
 }
+
+/* Season 2 sci-fi interface overrides. Existing inferno class names stay to avoid broad component churn. */
+:root {
+  --bg-0: #020713;
+  --bg-1: #07111f;
+  --bg-2: #0a172b;
+  --text: #eef7ff;
+  --muted: #8ca4bd;
+  --panel: linear-gradient(180deg, rgba(6, 16, 30, 0.94), rgba(2, 7, 16, 0.97));
+  --panel-border: rgba(92, 219, 255, 0.18);
+  --accent: #35d7ff;
+  --accent-strong: #79f2ff;
+  --accent-soft: rgba(53, 215, 255, 0.15);
+  --success: #76ffb2;
+  --danger: #ff557a;
+  --hud-green: #76ffb2;
+  --tech-red: #ff557a;
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% -12%, rgba(51, 148, 255, 0.22), transparent 30%),
+    radial-gradient(circle at 16% 14%, rgba(26, 220, 255, 0.12), transparent 22%),
+    radial-gradient(circle at 84% 18%, rgba(127, 99, 255, 0.12), transparent 24%),
+    linear-gradient(180deg, #020713 0%, #050b17 38%, #020612 100%);
+}
+
+body::before {
+  background:
+    linear-gradient(180deg, rgba(80, 210, 255, 0.045), transparent 18%, transparent 82%, rgba(80, 210, 255, 0.04)),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 92px,
+      rgba(80, 210, 255, 0.035) 92px,
+      rgba(80, 210, 255, 0.035) 93px
+    );
+  opacity: 0.75;
+}
+
+button:focus-visible,
+a:focus-visible,
+[role="tab"]:focus-visible {
+  outline-color: rgba(143, 238, 255, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(4, 14, 26, 0.98),
+    0 0 0 4px rgba(66, 211, 255, 0.22),
+    0 0 22px rgba(66, 211, 255, 0.24);
+}
+
+.panel {
+  background: var(--panel);
+  border-color: var(--panel-border);
+  box-shadow:
+    inset 0 0 0 1px rgba(133, 231, 255, 0.07),
+    0 18px 42px rgba(0, 0, 0, 0.44),
+    0 0 40px rgba(29, 126, 255, 0.06);
+}
+
+.panel::before {
+  background:
+    linear-gradient(90deg, rgba(83, 211, 255, 0.12), transparent 12%, transparent 88%, rgba(83, 211, 255, 0.12)),
+    linear-gradient(180deg, rgba(97, 170, 255, 0.08), transparent 22%, transparent 78%, rgba(56, 220, 255, 0.08));
+}
+
+.panel::after {
+  border-color: rgba(116, 224, 255, 0.11);
+}
+
+.panel-title {
+  color: #9ddff4;
+  text-shadow: 0 0 10px rgba(73, 210, 255, 0.18);
+}
+
+.inferno-heading,
+.arsenal-hero-title,
+.monitor-title {
+  color: #8ff0ff;
+  text-shadow:
+    0 0 16px rgba(62, 217, 255, 0.26),
+    0 2px 0 rgba(2, 24, 45, 0.95);
+}
+
+.inferno-frame {
+  border-color: rgba(84, 219, 255, 0.24);
+  background:
+    linear-gradient(180deg, rgba(7, 20, 37, 0.96), rgba(3, 9, 20, 0.98)),
+    radial-gradient(circle at top, rgba(65, 207, 255, 0.1), transparent 38%);
+  box-shadow:
+    inset 0 0 0 1px rgba(124, 226, 255, 0.08),
+    0 22px 40px rgba(0, 0, 0, 0.34),
+    0 0 28px rgba(25, 141, 255, 0.08);
+}
+
+.inferno-frame::before {
+  background:
+    linear-gradient(90deg, rgba(73, 202, 255, 0.16), transparent 10%, transparent 90%, rgba(73, 202, 255, 0.16)),
+    linear-gradient(180deg, rgba(82, 181, 255, 0.1), transparent 14%, transparent 86%, rgba(70, 222, 255, 0.08));
+}
+
+.inferno-frame::after {
+  border-color: rgba(104, 222, 255, 0.09);
+}
+
+.inferno-chip {
+  border-color: rgba(95, 221, 255, 0.2);
+  background: linear-gradient(180deg, rgba(9, 25, 43, 0.94), rgba(4, 11, 22, 0.98));
+  box-shadow: inset 0 0 0 1px rgba(125, 230, 255, 0.05);
+}
+
+.inferno-tab {
+  border-color: rgba(91, 217, 255, 0.16);
+  background: linear-gradient(180deg, rgba(8, 21, 38, 0.95), rgba(3, 10, 20, 0.98));
+}
+
+.inferno-tab-active {
+  border-color: rgba(121, 237, 255, 0.36);
+  background:
+    linear-gradient(180deg, rgba(12, 48, 76, 0.98), rgba(4, 18, 35, 0.98)),
+    radial-gradient(circle at 50% 0%, rgba(72, 217, 255, 0.2), transparent 44%);
+  color: #f1fbff;
+  box-shadow:
+    inset 0 -2px 0 rgba(106, 235, 255, 0.9),
+    0 0 28px rgba(65, 196, 255, 0.16);
+}
+
+.action-button {
+  border-color: rgba(102, 225, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(13, 46, 72, 0.98), rgba(5, 17, 32, 0.98)),
+    linear-gradient(90deg, rgba(80, 213, 255, 0.1), transparent 35%, transparent 65%, rgba(80, 213, 255, 0.1));
+  color: var(--text);
+}
+
+.action-button:hover:not(:disabled) {
+  border-color: rgba(143, 238, 255, 0.4);
+  box-shadow:
+    inset 0 0 0 1px rgba(131, 231, 255, 0.08),
+    0 0 22px rgba(65, 196, 255, 0.16);
+}
+
+.chrome-shell {
+  border-color: rgba(91, 217, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(6, 17, 32, 0.98), rgba(2, 8, 18, 0.98)),
+    radial-gradient(circle at top, rgba(56, 197, 255, 0.1), transparent 36%);
+  box-shadow:
+    inset 0 0 0 1px rgba(117, 224, 255, 0.06),
+    0 20px 44px rgba(0, 0, 0, 0.32);
+}
+
+.chrome-shell::before {
+  background:
+    linear-gradient(90deg, rgba(72, 205, 255, 0.13), transparent 8%, transparent 92%, rgba(72, 205, 255, 0.13)),
+    linear-gradient(180deg, rgba(96, 168, 255, 0.08), transparent 22%, transparent 78%, rgba(68, 222, 255, 0.07));
+}
+
+.doom-logo-wordmark {
+  color: #e7fbff;
+  text-shadow:
+    0 0 16px rgba(84, 219, 255, 0.28),
+    0 2px 0 #0c3f64,
+    0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+.doom-logo-sub {
+  color: #74eaff;
+}
+
+.arsenal-hero-copy,
+.micro-copy {
+  color: #89a9c7;
+}
+
+.mission-card-title {
+  color: #b7f5ff;
+}
+
+.mission-poster {
+  border-color: rgba(101, 220, 255, 0.18);
+  background:
+    radial-gradient(circle at 50% 16%, rgba(67, 197, 255, 0.26), transparent 42%),
+    linear-gradient(180deg, rgba(7, 25, 45, 0.96), rgba(3, 9, 19, 0.98));
+  box-shadow: inset 0 0 0 1px rgba(131, 230, 255, 0.06);
+}
+
+.mission-poster::before {
+  border-color: rgba(103, 223, 255, 0.09);
+}
+
+.mission-poster-label {
+  border-color: rgba(112, 225, 255, 0.24);
+  background: rgba(4, 12, 24, 0.78);
+  color: #e5fbff;
+}
+
+.table-shell {
+  border-color: rgba(91, 217, 255, 0.2);
+  background: linear-gradient(180deg, rgba(5, 17, 31, 0.98), rgba(2, 8, 17, 0.98));
+}
+
+.table-shell::before {
+  background:
+    linear-gradient(180deg, rgba(72, 205, 255, 0.06), transparent 16%, transparent 84%, rgba(72, 205, 255, 0.06)),
+    repeating-linear-gradient(0deg, transparent 0, transparent 43px, rgba(84, 217, 255, 0.03) 43px, rgba(84, 217, 255, 0.03) 44px);
+}
+
+.rank-medal {
+  border-color: rgba(129, 235, 255, 0.35);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(217, 250, 255, 0.42), transparent 28%),
+    linear-gradient(180deg, rgba(22, 85, 123, 0.96), rgba(5, 28, 50, 0.98));
+  color: #dffbff;
+  box-shadow: 0 0 16px rgba(76, 216, 255, 0.13);
+}
+
+.wallet-trigger {
+  border-color: rgba(91, 217, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(5, 18, 34, 0.98), rgba(2, 8, 18, 0.98)),
+    radial-gradient(circle at top, rgba(82, 255, 187, 0.1), transparent 34%);
+}
+
+.mobile-fullscreen-shell,
+.mobile-fullscreen-shell:fullscreen {
+  background: #020713;
+}
+
+.season-stat-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(92, 219, 255, 0.18);
+  border-radius: 18px;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(89, 211, 255, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(7, 22, 39, 0.94), rgba(3, 10, 20, 0.98));
+  box-shadow:
+    inset 0 0 0 1px rgba(133, 231, 255, 0.06),
+    0 16px 34px rgba(0, 0, 0, 0.22);
+}

@@ -17,7 +17,7 @@ const config: Config = {
       },
       backgroundImage: {
         'doom-grid':
-          'radial-gradient(circle at center, rgba(255,107,61,0.18) 0, rgba(255,107,61,0) 42%), linear-gradient(180deg, rgba(6,10,19,0.88), rgba(4,7,14,0.98))',
+          'radial-gradient(circle at center, rgba(53,215,255,0.16) 0, rgba(53,215,255,0) 44%), linear-gradient(180deg, rgba(3,10,22,0.9), rgba(2,7,15,0.98))',
       },
     },
   },
