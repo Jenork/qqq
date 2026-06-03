@@ -33,6 +33,10 @@ const ENEMY_BASE_TEXTURES: Record<EnemyType, SpriteAsset> = {
     key: 'enemy-heavy-base',
     path: '/sprites/enemy-heavy.png',
   },
+  boss: {
+    key: 'enemy-boss-placeholder',
+    path: '/sprites/enemy-heavy.png',
+  },
 }
 
 export const SPRITE_ASSET_MANIFEST: SpriteAsset[] = [

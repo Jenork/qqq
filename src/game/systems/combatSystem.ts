@@ -5,6 +5,7 @@ import {
   PLAYER_CONFIG,
   SPRITE_TUNING,
   WEAPON_TUNING,
+  BOSS_CONFIG,
   type WeaponId,
 } from '@/config/game'
 import type { Enemy } from '@/game/entities/Enemy'
@@ -24,6 +25,7 @@ export type EnemyStep = {
   xVelocity: number
   y?: number
   shouldFire: boolean
+  shouldShockwave?: boolean
 }
 
 export function buildPlayerVolley(options: {
@@ -88,11 +90,14 @@ export function buildEnemyProjectile(options: {
 }): ProjectileSpec {
   const { enemy, player } = options
   const direction = player.x >= enemy.x ? 1 : -1
-  const heavyShot = enemy.enemyType === 'heavy'
-  const x = enemy.x + direction * (heavyShot ? 26 : 22)
+  const heavyShot = enemy.enemyType === 'heavy' || enemy.enemyType === 'boss'
+  const bossShot = enemy.enemyType === 'boss'
+  const x = enemy.x + direction * (bossShot ? 34 : heavyShot ? 26 : 22)
   const y =
     enemy.enemyType === 'ranged'
       ? enemy.y - SPRITE_TUNING.enemies.ranged.projectileOffsetY
+      : enemy.enemyType === 'boss'
+        ? enemy.y - 112
       : enemy.y - 76
   const vector = new Phaser.Math.Vector2(player.x - enemy.x, player.y - enemy.y)
     .normalize()
@@ -161,5 +166,21 @@ export function resolveHeavyEnemyStep(enemy: Enemy, playerX: number, time: numbe
     xVelocity,
     y: ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.heavy.floorOffset,
     shouldFire: distance <= enemy.preferredDistance && time >= enemy.attackReadyAt,
+  }
+}
+
+export function resolveBossEnemyStep(enemy: Enemy, playerX: number, time: number): EnemyStep {
+  const delta = playerX - enemy.x
+  const distance = Math.abs(delta)
+  const xVelocity =
+    distance < enemy.preferredDistance - 36
+      ? 0
+      : Math.sign(delta) * enemy.getEffectiveSpeed()
+
+  return {
+    xVelocity,
+    y: ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.boss.floorOffset,
+    shouldFire: distance <= enemy.preferredDistance + 120 && time >= enemy.attackReadyAt,
+    shouldShockwave: distance <= BOSS_CONFIG.shockwaveRange && time >= enemy.bossShockwaveReadyAt,
   }
 }

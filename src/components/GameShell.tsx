@@ -135,6 +135,13 @@ export function GameShell() {
 
         {status !== 'ready' ? <Hud /> : null}
         {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} /> : null}
+        {showTouchControls && isMobilePortrait && status !== 'ready' ? (
+          <div className="pointer-events-none absolute left-1/2 top-[calc(10px+var(--safe-top))] z-30 -translate-x-1/2">
+            <div className="inferno-chip rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-50 shadow-[0_0_18px_rgba(65,196,255,0.16)]">
+              Rotate for full arena
+            </div>
+          </div>
+        ) : null}
         <GameOverModal />
 
         {status === 'paused' ? (

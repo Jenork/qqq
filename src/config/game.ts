@@ -87,6 +87,14 @@ export const SPRITE_TUNING = {
       bodyOffsetX: 112,
       bodyOffsetY: 132,
     },
+    boss: {
+      scale: 0.52,
+      floorOffset: 20,
+      bodyWidth: 210,
+      bodyHeight: 204,
+      bodyOffsetX: 104,
+      bodyOffsetY: 118,
+    },
   },
 } as const
 
@@ -97,13 +105,31 @@ export const SCORE_CONFIG = {
   meleeKill: 20,
   rangedKill: 30,
   heavyKill: 55,
+  bossKill: 320,
 } as const
 
 export const UI_COOLDOWNS = {
   messageFadeMs: 1200,
 } as const
 
-export type EnemyType = 'melee' | 'ranged' | 'heavy'
+export const BOSS_WAVE_INTERVAL = 10
+
+export const BOSS_CONFIG = {
+  summonCount: 2,
+  summonPhasePercents: [0.6, 0.3],
+  projectileTelegraphMs: 640,
+  shockwaveTelegraphMs: 760,
+  shockwaveCooldownMs: 4800,
+  shockwaveRange: 430,
+  shockwaveDamage: 1,
+  shockwaveAirEvadeHeight: 86,
+} as const
+
+export function isBossWave(wave: number) {
+  return wave > 0 && wave % BOSS_WAVE_INTERVAL === 0
+}
+
+export type EnemyType = 'melee' | 'ranged' | 'heavy' | 'boss'
 export type WeaponId = 'pistol' | 'shotgun' | 'burst-rifle'
 export type GrenadeId = 'frag-grenade' | 'fire-grenade'
 export type AbilityId = 'shield' | 'dash' | 'rage' | 'slow-field'
@@ -142,6 +168,15 @@ export const ENEMY_CONFIG: Record<EnemyType, EnemyTuning> = {
     preferredDistance: 360,
     projectileDamage: 2,
     projectileSpeed: 150,
+  },
+  boss: {
+    hp: 42,
+    damage: 1,
+    speed: 24,
+    rangedCooldownMs: 2800,
+    preferredDistance: 410,
+    projectileDamage: 2,
+    projectileSpeed: 118,
   },
 }
 
@@ -221,6 +256,21 @@ export const WAVE_TEMPLATES: WaveTemplate[] = [
 ]
 
 export function getWaveTemplate(wave: number): WaveTemplate {
+  if (isBossWave(wave)) {
+    const bossTier = Math.max(1, wave / BOSS_WAVE_INTERVAL)
+
+    return {
+      number: wave,
+      pauseBeforeMs: 2600,
+      spawnDelayMs: 1000,
+      totalSpawns: 1,
+      weights: [{ type: 'boss', weight: 1 }],
+      hpScale: 1 + (bossTier - 1) * 0.28,
+      damageScale: 1 + (bossTier - 1) * 0.08,
+      speedScale: 1 + (bossTier - 1) * 0.04,
+    }
+  }
+
   const found = WAVE_TEMPLATES.find((entry) => entry.number === wave)
 
   if (found) {

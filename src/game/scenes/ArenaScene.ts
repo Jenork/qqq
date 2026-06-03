@@ -2,6 +2,7 @@ import * as Phaser from 'phaser'
 import {
   ARENA_BOUNDS,
   ARENA_SIZE,
+  BOSS_CONFIG,
   PLAYER_CONFIG,
   SCORE_CONFIG,
   SPRITE_TUNING,
@@ -16,6 +17,7 @@ import { Grenade } from '@/game/projectiles/Grenade'
 import {
   buildEnemyProjectile,
   buildPlayerVolley,
+  resolveBossEnemyStep,
   resolveHeavyEnemyStep,
   resolveHealAmount,
   resolveMeleeEnemyStep,
@@ -298,7 +300,27 @@ export class ArenaScene extends Phaser.Scene {
       healCooldownRemaining: Math.max(0, this.player.lastHealAt + PLAYER_CONFIG.healCooldownMs - time),
       shieldRemaining: Math.max(0, this.player.shieldUntil - time),
       healCharges: this.player.healCharges,
+      ...this.getBossHudState(),
     })
+  }
+
+  private getBossHudState() {
+    let bossHp = 0
+    let bossMaxHp = 0
+
+    this.enemies.children.each((child) => {
+      const enemy = child as Enemy
+
+      if (!enemy.active || enemy.enemyType !== 'boss') {
+        return true
+      }
+
+      bossHp = enemy.hp
+      bossMaxHp = enemy.maxHp
+      return false
+    })
+
+    return { bossHp, bossMaxHp }
   }
 
   private syncRewardArmorBonus() {
@@ -587,7 +609,41 @@ export class ArenaScene extends Phaser.Scene {
       enemy.setVelocityY(0)
       enemy.refreshVisualState(time)
 
-      if (enemy.enemyType === 'ranged') {
+      if (enemy.enemyType === 'boss') {
+        const step = resolveBossEnemyStep(enemy, playerX, time)
+        enemy.setY(step.y ?? enemy.y)
+        let velocityX = step.xVelocity
+
+        if (enemy.bossShockwaveWindupUntil > time) {
+          velocityX = 0
+        } else if (enemy.bossShockwaveWindupUntil > 0 && time >= enemy.bossShockwaveWindupUntil) {
+          enemy.bossShockwaveWindupUntil = 0
+          enemy.bossShockwaveReadyAt = time + BOSS_CONFIG.shockwaveCooldownMs
+          velocityX = 0
+          this.releaseBossShockwave(enemy)
+        } else if (step.shouldShockwave) {
+          velocityX = 0
+          this.startBossShockwaveWindup(enemy, time)
+        } else {
+          if (!step.shouldFire && enemy.attackWindupUntil > 0) {
+            enemy.attackWindupUntil = 0
+          }
+
+          if (enemy.attackWindupUntil > time) {
+            velocityX = 0
+          } else if (enemy.attackWindupUntil > 0 && time >= enemy.attackWindupUntil) {
+            enemy.attackWindupUntil = 0
+            enemy.attackReadyAt = time + enemy.rangedCooldownMs
+            velocityX = 0
+            this.fireEnemyProjectile(enemy)
+          } else if (step.shouldFire) {
+            velocityX = 0
+            this.startEnemyWindup(enemy, time, BOSS_CONFIG.projectileTelegraphMs)
+          }
+        }
+
+        enemy.setVelocityX(velocityX)
+      } else if (enemy.enemyType === 'ranged') {
         const step = resolveRangedEnemyStep(enemy, playerX, time)
         enemy.setY(step.y ?? enemy.y)
         let velocityX = step.xVelocity
@@ -673,7 +729,8 @@ export class ArenaScene extends Phaser.Scene {
       enemy,
       player: this.player,
     })
-    const heavyShot = enemy.enemyType === 'heavy'
+    const heavyShot = enemy.enemyType === 'heavy' || enemy.enemyType === 'boss'
+    const bossShot = enemy.enemyType === 'boss'
     const bullet = this.enemyBullets.get(shot.x, shot.y, 'enemy-bullet') as Bullet | null
 
     if (!bullet) {
@@ -691,7 +748,10 @@ export class ArenaScene extends Phaser.Scene {
     bullet.fire(shot.x, shot.y, shot.velocityX, shot.velocityY, shot.damage, 'enemy', shot.maxDistance)
     bullet.setAngle(shot.angle)
 
-    if (heavyShot) {
+    if (bossShot) {
+      bullet.setScale(1.45)
+      body?.setSize(34, 34, true)
+    } else if (heavyShot) {
       bullet.setScale(1.05)
       body?.setSize(24, 24, true)
     } else {
@@ -771,7 +831,10 @@ export class ArenaScene extends Phaser.Scene {
 
     if (runtimeUpdate.storePatch) {
       if (runtimeUpdate.storePatch.activeMessage) {
-        if (/cleared/i.test(runtimeUpdate.storePatch.activeMessage)) {
+        if (/boss/i.test(runtimeUpdate.storePatch.activeMessage) && /inbound|incoming/i.test(runtimeUpdate.storePatch.activeMessage)) {
+          this.cameras.main.flash(140, 93, 231, 255)
+          this.playSfx('heavy-charge')
+        } else if (/cleared/i.test(runtimeUpdate.storePatch.activeMessage)) {
           this.cameras.main.flash(100, 255, 187, 71)
           this.playSfx('wave-clear')
         } else if (/inbound|incoming/i.test(runtimeUpdate.storePatch.activeMessage)) {
@@ -807,23 +870,80 @@ export class ArenaScene extends Phaser.Scene {
 
   private hitEnemy(enemy: Enemy, damage: number) {
     const hp = enemy.takeDamage(this.time.now, damage)
+    const isBoss = enemy.enemyType === 'boss'
     this.playSfx(hp > 0 ? 'enemy-hit' : 'enemy-death')
-    this.addImpact(enemy.x, enemy.y - 32, hp > 0 ? 0xffa366 : 0xffd48a, hp > 0 ? 12 : 20)
+    this.addImpact(
+      enemy.x,
+      enemy.y - (isBoss ? 92 : 32),
+      hp > 0 ? (isBoss ? 0x8fefff : 0xffa366) : 0xffd48a,
+      hp > 0 ? (isBoss ? 18 : 12) : isBoss ? 34 : 20,
+    )
 
     if (hp > 0) {
+      if (isBoss) {
+        this.handleBossPhaseSummons(enemy)
+        useGameStore.getState().setHudState({ bossHp: enemy.hp, bossMaxHp: enemy.maxHp })
+      }
+
       this.cameras.main.shake(40, 0.0009)
       enemy.setVelocityX(enemy.body?.velocity.x ? enemy.body.velocity.x * 0.72 : 0)
       return
     }
 
     this.addImpact(enemy.x, enemy.y, 0xffd48a)
-    this.cameras.main.shake(75, 0.0016)
+    this.cameras.main.shake(isBoss ? 220 : 75, isBoss ? 0.0042 : 0.0016)
     enemy.destroy()
     const store = useGameStore.getState()
     useGameStore.setState({
       score: store.score + enemy.scoreValue,
       kills: store.kills + 1,
+      ...(isBoss ? { bossHp: 0, bossMaxHp: 0, activeMessage: `BOSS ${this.runDirector.wave} DOWN  +${enemy.scoreValue}` } : null),
     })
+  }
+
+  private handleBossPhaseSummons(enemy: Enemy) {
+    const hpPercent = enemy.hp / enemy.maxHp
+    const shouldSummon60 = hpPercent <= BOSS_CONFIG.summonPhasePercents[0] && !enemy.bossSummonedAt60
+    const shouldSummon30 = hpPercent <= BOSS_CONFIG.summonPhasePercents[1] && !enemy.bossSummonedAt30
+
+    if (!shouldSummon60 && !shouldSummon30) {
+      return
+    }
+
+    if (shouldSummon60) {
+      enemy.bossSummonedAt60 = true
+    }
+
+    if (shouldSummon30) {
+      enemy.bossSummonedAt30 = true
+    }
+
+    enemy.damageFlashUntil = this.time.now + 420
+    this.cameras.main.shake(120, 0.0022)
+    this.addImpact(enemy.x, enemy.y - 120, 0x8fefff, 42)
+    this.summonBossAdds(enemy)
+    useGameStore.getState().setMessage('Boss reinforcements deployed.')
+  }
+
+  private summonBossAdds(boss: Enemy) {
+    const offsets = [-92, 92]
+
+    for (let index = 0; index < BOSS_CONFIG.summonCount; index += 1) {
+      const enemy = createArenaEnemy({
+        scene: this,
+        type: 'melee',
+        wave: this.runDirector.wave,
+        template: this.runDirector.template,
+      })
+      const offset = offsets[index % offsets.length] + Math.floor(index / offsets.length) * 44
+      const x = Phaser.Math.Clamp(boss.x + offset, ARENA_BOUNDS.enemySpawnMinX - 80, ARENA_SIZE.width - 60)
+
+      enemy.setX(x)
+      enemy.setY(ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.melee.floorOffset)
+      enemy.setBaseTint(0x9defff)
+      enemy.attackReadyAt = this.time.now + 700
+      this.enemies.add(enemy)
+    }
   }
 
   private explodeGrenade(grenade: Grenade) {
@@ -853,7 +973,12 @@ export class ArenaScene extends Phaser.Scene {
 
     affectedEnemies.forEach((enemy) => {
       if (enemy.active) {
-        this.hitEnemy(enemy, enemy.hp)
+        const grenadeDamage =
+          enemy.enemyType === 'boss'
+            ? Math.max(6, Math.round(enemy.maxHp * 0.18))
+            : enemy.hp
+
+        this.hitEnemy(enemy, grenadeDamage)
       }
     })
 
@@ -880,6 +1005,48 @@ export class ArenaScene extends Phaser.Scene {
 
     if (typeof maybeShutdown.exploded === 'boolean') {
       maybeShutdown.exploded = false
+    }
+  }
+
+  private startBossShockwaveWindup(enemy: Enemy, time: number) {
+    if (time < enemy.bossShockwaveReadyAt || enemy.bossShockwaveWindupUntil > time) {
+      return
+    }
+
+    enemy.lastAttackAt = time
+    enemy.bossShockwaveWindupUntil = time + BOSS_CONFIG.shockwaveTelegraphMs
+    this.addImpact(enemy.x, ARENA_BOUNDS.floorY - 12, 0x72e7ff, 34)
+    this.playSfx('heavy-charge')
+    useGameStore.getState().setMessage('Boss shockwave charging.')
+  }
+
+  private releaseBossShockwave(enemy: Enemy) {
+    enemy.lastAttackAt = this.time.now
+    this.playSfx('boss-shockwave')
+    this.cameras.main.shake(170, 0.0034)
+
+    const wave = this.add.rectangle(
+      ARENA_SIZE.width / 2,
+      ARENA_BOUNDS.floorY - 10,
+      ARENA_SIZE.width,
+      18,
+      0x72e7ff,
+      0.34,
+    )
+    wave.setDepth(5)
+    this.tweens.add({
+      targets: wave,
+      alpha: 0,
+      scaleY: 4.5,
+      duration: 260,
+      onComplete: () => wave.destroy(),
+    })
+
+    const distance = Math.abs(this.player.x - enemy.x)
+    const playerAboveShockwave = this.player.y < ARENA_BOUNDS.floorY - BOSS_CONFIG.shockwaveAirEvadeHeight
+
+    if (distance <= BOSS_CONFIG.shockwaveRange && !playerAboveShockwave) {
+      this.damagePlayer(BOSS_CONFIG.shockwaveDamage, enemy.x)
     }
   }
 
@@ -964,11 +1131,11 @@ export class ArenaScene extends Phaser.Scene {
     enemy.attackWindupUntil = time + durationMs
     this.addImpact(
       enemy.x,
-      enemy.enemyType === 'ranged' ? enemy.y - 54 : enemy.y - 44,
-      enemy.enemyType === 'heavy' ? 0xff7d4d : 0xffb066,
-      enemy.enemyType === 'heavy' ? 16 : 10,
+      enemy.enemyType === 'ranged' ? enemy.y - 54 : enemy.enemyType === 'boss' ? enemy.y - 104 : enemy.y - 44,
+      enemy.enemyType === 'boss' ? 0x72e7ff : enemy.enemyType === 'heavy' ? 0xff7d4d : 0xffb066,
+      enemy.enemyType === 'boss' ? 24 : enemy.enemyType === 'heavy' ? 16 : 10,
     )
-    this.playSfx(enemy.enemyType === 'heavy' ? 'heavy-charge' : 'enemy-charge')
+    this.playSfx(enemy.enemyType === 'heavy' || enemy.enemyType === 'boss' ? 'heavy-charge' : 'enemy-charge')
   }
 
   private emitProjectileTrail(projectile: Bullet, time: number) {
@@ -1002,6 +1169,7 @@ export class ArenaScene extends Phaser.Scene {
       | 'shotgun-shot'
       | 'enemy-shot'
       | 'heavy-shot'
+      | 'boss-shockwave'
       | 'enemy-charge'
       | 'heavy-charge'
       | 'enemy-hit'
@@ -1072,6 +1240,10 @@ export class ArenaScene extends Phaser.Scene {
         break
       case 'heavy-shot':
         pulse(140, 180, { type: 'sawtooth', endFrequency: 58, volume: 0.034 })
+        break
+      case 'boss-shockwave':
+        pulse(72, 260, { type: 'sawtooth', endFrequency: 34, volume: 0.045 })
+        pulse(520, 120, { type: 'triangle', endFrequency: 180, volume: 0.018 })
         break
       case 'enemy-charge':
         pulse(180, 120, { type: 'triangle', endFrequency: 260, volume: 0.018 })

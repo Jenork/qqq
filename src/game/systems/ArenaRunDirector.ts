@@ -1,4 +1,4 @@
-import { PLAYER_CONFIG, SCORE_CONFIG } from '@/config/game'
+import { isBossWave, PLAYER_CONFIG, SCORE_CONFIG } from '@/config/game'
 import { WaveDirector } from '@/game/systems/WaveDirector'
 
 type RunStatePatch = {
@@ -15,6 +15,8 @@ type RunStatePatch = {
   healCooldownRemaining: number
   shieldRemaining: number
   healCharges: number
+  bossHp: number
+  bossMaxHp: number
   pendingScore: number
   activeMessage: string | null
 }
@@ -64,6 +66,8 @@ export class ArenaRunDirector {
       healCooldownRemaining: 0,
       shieldRemaining: 0,
       healCharges: PLAYER_CONFIG.healCharges + bonusHealCharges,
+      bossHp: 0,
+      bossMaxHp: 0,
       pendingScore: 0,
       activeMessage: startImmediately ? 'WAVE 1 INCOMING' : null,
     }
@@ -77,10 +81,14 @@ export class ArenaRunDirector {
     }
 
     if (event.waveCleared) {
+      const clearBonus = isBossWave(event.waveCleared)
+        ? SCORE_CONFIG.waveClearBonus + Math.round(SCORE_CONFIG.bossKill * 0.25)
+        : SCORE_CONFIG.waveClearBonus
+
       return {
         storePatch: {
-          score: currentScore + SCORE_CONFIG.waveClearBonus,
-          activeMessage: `WAVE ${event.waveCleared} CLEARED  +${SCORE_CONFIG.waveClearBonus}`,
+          score: currentScore + clearBonus,
+          activeMessage: `${isBossWave(event.waveCleared) ? 'BOSS' : 'WAVE'} ${event.waveCleared} CLEARED  +${clearBonus}`,
         },
       }
     }
@@ -89,7 +97,9 @@ export class ArenaRunDirector {
       return {
         storePatch: {
           wave: event.waveStarted,
-          activeMessage: `WAVE ${event.waveStarted} INBOUND`,
+          activeMessage: isBossWave(event.waveStarted)
+            ? `BOSS WAVE ${event.waveStarted} INBOUND`
+            : `WAVE ${event.waveStarted} INBOUND`,
         },
       }
     }

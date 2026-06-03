@@ -10,6 +10,10 @@ import type { Enemy } from '@/game/entities/Enemy'
 import type { Player } from '@/game/entities/Player'
 
 function getEnemyBaseScale(type: EnemyType) {
+  if (type === 'boss') {
+    return SPRITE_TUNING.enemies.boss.scale
+  }
+
   if (type === 'ranged') {
     return SPRITE_TUNING.enemies.ranged.scale
   }
@@ -151,7 +155,12 @@ export function applyEnemyPresentation(enemy: Enemy, time: number) {
   let angle = 0
 
   if (state === 'advance') {
-    if (enemy.enemyType === 'heavy') {
+    if (enemy.enemyType === 'boss') {
+      const stompPower = Math.abs(stomp)
+      scaleX += stompPower * 0.024
+      scaleY -= stompPower * 0.016
+      angle = facing * (1.2 + stomp * 2.2)
+    } else if (enemy.enemyType === 'heavy') {
       const stompPower = Math.abs(stomp)
       scaleX += stompPower * 0.018
       scaleY -= stompPower * 0.014
@@ -167,7 +176,11 @@ export function applyEnemyPresentation(enemy: Enemy, time: number) {
       angle = facing * (2.4 + stomp * 3.6)
     }
   } else if (state === 'attack') {
-    if (enemy.enemyType === 'heavy') {
+    if (enemy.enemyType === 'boss') {
+      scaleX += attackPower * 0.038
+      scaleY -= attackPower * 0.022
+      angle = facing * (8.2 * attackPower)
+    } else if (enemy.enemyType === 'heavy') {
       scaleX += attackPower * 0.03
       scaleY -= attackPower * 0.018
       angle = facing * (9.5 * attackPower)
@@ -191,6 +204,8 @@ export function applyEnemyPresentation(enemy: Enemy, time: number) {
 
     if (enemy.enemyType === 'ranged') {
       angle = idleWave * 1.3
+    } else if (enemy.enemyType === 'boss') {
+      angle = idleWave * 0.5
     } else if (enemy.enemyType === 'heavy') {
       angle = idleWave * 0.7
     } else {

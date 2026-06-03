@@ -21,7 +21,9 @@ export function createArenaEnemy(options: {
   const y =
     type === 'ranged'
       ? ARENA_BOUNDS.floorY - SPRITE_TUNING.enemies.ranged.hoverBaseOffset
-      : type === 'heavy'
+      : type === 'boss'
+        ? ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.boss.floorOffset
+        : type === 'heavy'
         ? ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.heavy.floorOffset
         : ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.melee.floorOffset
 
@@ -38,12 +40,17 @@ export function createArenaEnemy(options: {
         ? SCORE_CONFIG.meleeKill
         : type === 'ranged'
           ? SCORE_CONFIG.rangedKill
-          : SCORE_CONFIG.heavyKill,
+          : type === 'heavy'
+            ? SCORE_CONFIG.heavyKill
+            : SCORE_CONFIG.bossKill,
   })
 
   enemy.setDepth(1)
 
-  if (type === 'heavy') {
+  if (type === 'boss') {
+    enemy.setScale(SPRITE_TUNING.enemies.boss.scale)
+    enemy.setDepth(2)
+  } else if (type === 'heavy') {
     enemy.setScale(SPRITE_TUNING.enemies.heavy.scale)
   } else if (type === 'ranged') {
     enemy.setScale(SPRITE_TUNING.enemies.ranged.scale)
@@ -51,8 +58,7 @@ export function createArenaEnemy(options: {
     enemy.setScale(SPRITE_TUNING.enemies.melee.scale)
   }
 
-  enemy.setBaseTint(wave >= 4 ? (type === 'heavy' ? 0xc289ff : 0xffb28f) : null)
+  enemy.setBaseTint(type === 'boss' ? 0x8fefff : wave >= 4 ? (type === 'heavy' ? 0xc289ff : 0xffb28f) : null)
 
   return enemy
 }
-

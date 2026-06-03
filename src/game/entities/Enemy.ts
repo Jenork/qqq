@@ -19,6 +19,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   activeSlowMultiplier = 1
   damageFlashUntil = 0
   baseTintColor: number | null = null
+  bossShockwaveReadyAt = 0
+  bossShockwaveWindupUntil = 0
+  bossSummonedAt60 = false
+  bossSummonedAt30 = false
 
   constructor(
     scene: Phaser.Scene,
@@ -65,9 +69,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     } else if (type === 'ranged') {
       this.setSize(SPRITE_TUNING.enemies.ranged.bodyWidth, SPRITE_TUNING.enemies.ranged.bodyHeight)
       this.setOffset(SPRITE_TUNING.enemies.ranged.bodyOffsetX, SPRITE_TUNING.enemies.ranged.bodyOffsetY)
-    } else {
+    } else if (type === 'heavy') {
       this.setSize(SPRITE_TUNING.enemies.heavy.bodyWidth, SPRITE_TUNING.enemies.heavy.bodyHeight)
       this.setOffset(SPRITE_TUNING.enemies.heavy.bodyOffsetX, SPRITE_TUNING.enemies.heavy.bodyOffsetY)
+    } else {
+      this.setSize(SPRITE_TUNING.enemies.boss.bodyWidth, SPRITE_TUNING.enemies.boss.bodyHeight)
+      this.setOffset(SPRITE_TUNING.enemies.boss.bodyOffsetX, SPRITE_TUNING.enemies.boss.bodyOffsetY)
     }
   }
 

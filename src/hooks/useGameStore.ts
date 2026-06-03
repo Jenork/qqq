@@ -41,6 +41,8 @@ type GameStore = {
   healCooldownRemaining: number
   shieldRemaining: number
   healCharges: number
+  bossHp: number
+  bossMaxHp: number
   activeMessage: string | null
   equippedWeapon: ItemId
   equippedGrenade: ItemId
@@ -78,6 +80,8 @@ type GameStore = {
         | 'healCooldownRemaining'
         | 'shieldRemaining'
         | 'healCharges'
+        | 'bossHp'
+        | 'bossMaxHp'
       >
     >,
   ) => void
@@ -135,6 +139,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   healCooldownRemaining: 0,
   shieldRemaining: 0,
   healCharges: PLAYER_CONFIG.healCharges,
+  bossHp: 0,
+  bossMaxHp: 0,
   activeMessage: null,
   equippedWeapon: INVENTORY_DEFAULTS.weapon,
   equippedGrenade: INVENTORY_DEFAULTS.grenade,
@@ -276,6 +282,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       healCooldownRemaining: 0,
       shieldRemaining: 0,
       healCharges: PLAYER_CONFIG.healCharges,
+      bossHp: 0,
+      bossMaxHp: 0,
       pendingScore: 0,
       activeMessage: null,
     }),

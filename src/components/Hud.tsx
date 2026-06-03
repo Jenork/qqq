@@ -1,7 +1,7 @@
 'use client'
 
 import { SOCIAL_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
-import { getItemIconPath } from '@/config/items'
+import { getItemById, getItemIconPath } from '@/config/items'
 import { useGameStore } from '@/hooks/useGameStore'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { cn } from '@/lib/cn'
@@ -27,6 +27,9 @@ export function Hud() {
   const healCooldownRemaining = useGameStore((state) => state.healCooldownRemaining)
   const shieldRemaining = useGameStore((state) => state.shieldRemaining)
   const healCharges = useGameStore((state) => state.healCharges)
+  const bossHp = useGameStore((state) => state.bossHp)
+  const bossMaxHp = useGameStore((state) => state.bossMaxHp)
+  const equippedWeapon = useGameStore((state) => state.equippedWeapon)
   const unlockedItemIds = useGameStore((state) => state.unlockedItemIds)
   const status = useGameStore((state) => state.status)
   const togglePause = useGameStore((state) => state.togglePause)
@@ -48,8 +51,14 @@ export function Hud() {
   const fireGrenadeUnlocked = unlockedItemIds.includes(SOCIAL_GRENADE_REWARD_ITEM_ID)
   const shotgunUnlocked = unlockedItemIds.includes('shotgun')
   const compactHud = showTouchControls
+  const weaponLabel = getItemById(equippedWeapon)?.label ?? 'Pistol'
+  const shortWeaponLabel =
+    equippedWeapon === 'shotgun' ? 'SG' : equippedWeapon === 'burst-rifle' ? 'BR' : 'PI'
+  const bossVisible = bossMaxHp > 0 && bossHp > 0
+  const bossHpPercent = bossVisible ? Math.max(0, Math.min(100, (bossHp / bossMaxHp) * 100)) : 0
 
   const desktopStatusEntries = [
+    { label: 'Weapon', value: weaponLabel, icon: null, tone: 'text-cyan-50' },
     { label: 'Grenade', value: grenadeLabel, icon: grenadeIcon, tone: 'text-amber-200' },
     {
       label: 'Ability',
@@ -63,6 +72,7 @@ export function Hud() {
   const mobileStatusEntries = [
     { label: 'Score', value: String(score), tone: 'text-amber-200' },
     { label: 'Wave', value: String(wave), tone: 'text-amber-200' },
+    { label: 'Wpn', value: shortWeaponLabel, tone: 'text-cyan-50' },
     { label: 'Gren', value: grenadeLabel, tone: 'text-cyan-100' },
     { label: 'Skill', value: abilityLabel, tone: shieldRemaining > 0 ? 'text-cyan-100' : 'text-[#8ad5ff]' },
     { label: 'Heal', value: healLabel, tone: 'text-[#85ff78]' },
@@ -111,7 +121,7 @@ export function Hud() {
               </div>
             </div>
 
-            <div className="grid flex-[1.8] grid-cols-5 gap-1">
+            <div className="grid flex-[1.8] grid-cols-6 gap-1">
               {mobileStatusEntries.map((entry) => (
                 <div key={entry.label} className="inferno-frame px-1 py-1 text-center">
                   <div className="relative z-[1] text-[6px] font-black uppercase tracking-[0.12em] text-cyan-100/80">
@@ -145,6 +155,23 @@ export function Hud() {
             >
               {activeMessage}
             </p>
+          ) : null}
+
+          {bossVisible ? (
+            <div className="inferno-frame self-center px-2 py-1.5">
+              <div className="relative z-[1] flex items-center justify-between gap-3">
+                <span className="text-[7px] font-black uppercase tracking-[0.12em] text-cyan-100">Boss</span>
+                <span className="text-[10px] font-black text-cyan-50">
+                  {bossHp}/{bossMaxHp}
+                </span>
+              </div>
+              <div className="relative z-[1] mt-1 h-1.5 overflow-hidden rounded-full border border-cyan-200/18 bg-black/50">
+                <div
+                  className="h-full bg-[linear-gradient(90deg,#1b8be0_0%,#72e7ff_70%,#e7fbff_100%)] transition-all"
+                  style={{ width: `${bossHpPercent}%` }}
+                />
+              </div>
+            </div>
           ) : null}
         </div>
       </div>
@@ -192,7 +219,7 @@ export function Hud() {
           </div>
 
           <div className="flex max-w-[56%] flex-col items-end gap-2">
-            <div className="grid grid-cols-[repeat(2,minmax(84px,1fr))] gap-2 sm:grid-cols-[repeat(5,minmax(82px,1fr))]">
+            <div className="grid grid-cols-[repeat(2,minmax(84px,1fr))] gap-2 sm:grid-cols-[repeat(6,minmax(76px,1fr))]">
               <div className="inferno-frame min-w-[82px] px-3 py-2 text-center">
                 <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/80">Score</div>
                 <div className="relative z-[1] mt-1 text-2xl font-black text-amber-200">{score}</div>
@@ -250,6 +277,23 @@ export function Hud() {
               >
                 {activeMessage}
               </p>
+            ) : null}
+
+            {bossVisible ? (
+              <div className="inferno-frame w-[min(100%,420px)] px-3 py-2">
+                <div className="relative z-[1] flex items-center justify-between gap-4">
+                  <span className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100">Boss Core</span>
+                  <span className="text-sm font-black text-cyan-50">
+                    {bossHp}/{bossMaxHp}
+                  </span>
+                </div>
+                <div className="relative z-[1] mt-1.5 h-2.5 overflow-hidden rounded-full border border-cyan-200/18 bg-black/50">
+                  <div
+                    className="h-full bg-[linear-gradient(90deg,#1b8be0_0%,#72e7ff_70%,#e7fbff_100%)] transition-all"
+                    style={{ width: `${bossHpPercent}%` }}
+                  />
+                </div>
+              </div>
             ) : null}
           </div>
         </div>
