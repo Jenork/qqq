@@ -15,8 +15,8 @@ import {
   gameProgressAbi,
   HAS_DAILY_CHECKIN_CONTRACT_ADDRESS,
 } from '@/config/contracts'
-import { CURRENT_SEASON_ID } from '@/config/season'
 import { BASE_CHAIN_ID } from '@/config/web3'
+import { useSeasonPlayerStats } from '@/hooks/useSeasonPlayerStats'
 import { getDisplayErrorMessage } from '@/lib/missions'
 
 export function useDailyCheckIn() {
@@ -24,6 +24,7 @@ export function useDailyCheckIn() {
   const chainId = useChainId()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const [error, setError] = useState<string | null>(null)
+  const seasonStats = useSeasonPlayerStats(address)
 
   const query = useReadContracts({
     allowFailure: false,
@@ -33,20 +34,14 @@ export function useDailyCheckIn() {
             {
               address: DAILY_CHECKIN_CONTRACT_ADDRESS,
               abi: gameProgressAbi,
-              functionName: 'canSeasonCheckIn',
-              args: [BigInt(CURRENT_SEASON_ID), address],
+              functionName: 'canCheckIn',
+              args: [address],
             },
             {
               address: DAILY_CHECKIN_CONTRACT_ADDRESS,
               abi: gameProgressAbi,
-              functionName: 'getSeasonLastCheckIn',
-              args: [BigInt(CURRENT_SEASON_ID), address],
-            },
-            {
-              address: DAILY_CHECKIN_CONTRACT_ADDRESS,
-              abi: gameProgressAbi,
-              functionName: 'getSeasonCheckInCount',
-              args: [BigInt(CURRENT_SEASON_ID), address],
+              functionName: 'getLastCheckIn',
+              args: [address],
             },
           ]
         : [],
@@ -57,10 +52,16 @@ export function useDailyCheckIn() {
   })
 
   const canCheckInNow = Boolean(query.data?.[0])
-  const lastCheckInAt = Number(query.data?.[1] ?? 0)
-  const totalCount = Number(query.data?.[2] ?? 0)
-  const seasonContractUnavailable = query.isError
-  const nextAvailableAt = lastCheckInAt > 0 ? lastCheckInAt * 1000 + DAILY_CHECK_IN_INTERVAL_MS : 0
+  const refetchCheckInState = query.refetch
+  const refetchSeasonStats = seasonStats.refetch
+  const contractLastCheckInAt = Number(query.data?.[1] ?? 0)
+  const lastCheckInAt = seasonStats.data?.lastCheckInAt ?? 0
+  const totalCount = seasonStats.data?.checkInCount ?? 0
+  const contractUnavailable = query.isError
+  const isCheckingAvailability =
+    isConnected && HAS_DAILY_CHECKIN_CONTRACT_ADDRESS && (query.isPending || seasonStats.isPending)
+  const nextAvailableAt =
+    contractLastCheckInAt > 0 ? contractLastCheckInAt * 1000 + DAILY_CHECK_IN_INTERVAL_MS : 0
   const rewardActive = Boolean(lastCheckInAt) && !canCheckInNow
 
   const { data: hash, error: writeError, isPending, writeContract } = useWriteContract()
@@ -78,11 +79,12 @@ export function useDailyCheckIn() {
     }
 
     setError(null)
-    void query.refetch()
-  }, [isSuccess, query])
+    void refetchCheckInState()
+    void refetchSeasonStats()
+  }, [isSuccess, refetchCheckInState, refetchSeasonStats])
 
   const status = useMemo(() => {
-    if (isPending || isConfirming || isSwitching) {
+    if (isPending || isConfirming || isSwitching || isCheckingAvailability) {
       return 'pending' as const
     }
 
@@ -90,7 +92,7 @@ export function useDailyCheckIn() {
       return 'error' as const
     }
 
-    if (seasonContractUnavailable) {
+    if (contractUnavailable) {
       return 'error' as const
     }
 
@@ -102,12 +104,22 @@ export function useDailyCheckIn() {
       return 'wrong-network' as const
     }
 
-    if (rewardActive) {
+    if (!canCheckInNow) {
       return 'already-claimed' as const
     }
 
     return 'available' as const
-  }, [chainId, error, isConfirming, isConnected, isPending, isSwitching, rewardActive, seasonContractUnavailable])
+  }, [
+    canCheckInNow,
+    chainId,
+    contractUnavailable,
+    error,
+    isCheckingAvailability,
+    isConfirming,
+    isConnected,
+    isPending,
+    isSwitching,
+  ])
 
   const actionLabel = useMemo(() => {
     if (!isConnected) {
@@ -126,16 +138,20 @@ export function useDailyCheckIn() {
       return 'Confirming'
     }
 
-    if (seasonContractUnavailable) {
-      return 'Season Contract Required'
+    if (isCheckingAvailability) {
+      return 'Loading'
     }
 
-    if (rewardActive) {
+    if (contractUnavailable) {
+      return 'Contract Unavailable'
+    }
+
+    if (!canCheckInNow) {
       return 'Checked In Today'
     }
 
     return 'Daily Check-in'
-  }, [chainId, isConfirming, isConnected, isPending, rewardActive, seasonContractUnavailable])
+  }, [canCheckInNow, chainId, contractUnavailable, isCheckingAvailability, isConfirming, isConnected, isPending])
 
   const run = async () => {
     if (!isConnected) {
@@ -160,8 +176,8 @@ export function useDailyCheckIn() {
       return
     }
 
-    if (seasonContractUnavailable) {
-      setError('Deploy the Season 2 GameProgress contract before daily check-in.')
+    if (contractUnavailable) {
+      setError('GameProgress contract is unavailable for daily check-in.')
       return
     }
 
@@ -175,8 +191,7 @@ export function useDailyCheckIn() {
       writeContract({
         address: DAILY_CHECKIN_CONTRACT_ADDRESS,
         abi: gameProgressAbi,
-        functionName: 'dailySeasonCheckIn',
-        args: [BigInt(CURRENT_SEASON_ID)],
+        functionName: 'dailyCheckIn',
       })
     } catch (switchError) {
       setError(getDisplayErrorMessage(switchError))

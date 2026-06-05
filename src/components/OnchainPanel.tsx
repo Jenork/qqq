@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { numberToHex } from 'viem'
-import { useAccount, useChainId, useDisconnect, useReadContract, useSwitchChain } from 'wagmi'
+import { useAccount, useChainId, useDisconnect, useSwitchChain } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
-import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
-import { CURRENT_SEASON_ID } from '@/config/season'
+import { HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
 import {
   BASE_CHAIN,
   BASE_CHAIN_ID,
@@ -15,10 +14,10 @@ import {
 } from '@/config/web3'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { useGameStore } from '@/hooks/useGameStore'
+import { useSeasonPlayerStats } from '@/hooks/useSeasonPlayerStats'
 import { cn } from '@/lib/cn'
 import { shortenAddress } from '@/lib/score'
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 const SHOW_WALLET_DEBUG = process.env.NEXT_PUBLIC_WALLET_DEBUG === 'true'
 
 type BrowserWalletProvider = {
@@ -85,17 +84,7 @@ export function OnchainPanel() {
   const autoSwitchAttemptRef = useRef<string | null>(null)
   const status = useGameStore((state) => state.status)
   const { showTouchControls, isMobileLandscape, isMobilePortrait } = useMobileViewport()
-
-  const { data: bestScore } = useReadContract({
-    address: GAME_PROGRESS_ADDRESS,
-    abi: gameProgressAbi,
-    functionName: 'getSeasonBestScore',
-    args: [BigInt(CURRENT_SEASON_ID), address ?? ZERO_ADDRESS],
-    chainId: BASE_CHAIN_ID,
-    query: {
-      enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
-    },
-  })
+  const seasonStats = useSeasonPlayerStats(address)
 
   useEffect(() => {
     if (!copied) {
@@ -257,7 +246,7 @@ export function OnchainPanel() {
 
     return `${BASE_EXPLORER_URL}/address/${address}`
   }, [address])
-  const bestScoreValue = bestScore ? Number(bestScore) : 0
+  const bestScoreValue = seasonStats.data?.bestScore ?? 0
   const isWrongNetwork = isConnected && chainId !== BASE_CHAIN_ID
 
   const handleCopyAddress = async () => {

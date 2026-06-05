@@ -1,42 +1,19 @@
 'use client'
 
-import { useAccount, useChainId, useReadContract } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
-import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
-import { CURRENT_SEASON_ID, CURRENT_SEASON_LABEL } from '@/config/season'
+import { HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
+import { CURRENT_SEASON_LABEL } from '@/config/season'
 import { BASE_CHAIN_ID, BASE_CHAIN_NAME } from '@/config/web3'
+import { useSeasonPlayerStats } from '@/hooks/useSeasonPlayerStats'
 import { formatScore, shortenAddress } from '@/lib/score'
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
 export function ProfilePanel() {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
-
-  const { data: bestScore } = useReadContract({
-    address: GAME_PROGRESS_ADDRESS,
-    abi: gameProgressAbi,
-    functionName: 'getSeasonBestScore',
-    args: [BigInt(CURRENT_SEASON_ID), address ?? ZERO_ADDRESS],
-    chainId: BASE_CHAIN_ID,
-    query: {
-      enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
-    },
-  })
-
-  const { data: checkInCount } = useReadContract({
-    address: GAME_PROGRESS_ADDRESS,
-    abi: gameProgressAbi,
-    functionName: 'getSeasonCheckInCount',
-    args: [BigInt(CURRENT_SEASON_ID), address ?? ZERO_ADDRESS],
-    chainId: BASE_CHAIN_ID,
-    query: {
-      enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
-    },
-  })
-
-  const bestScoreValue = bestScore ? Number(bestScore) : 0
-  const checkInValue = checkInCount ? Number(checkInCount) : 0
+  const seasonStats = useSeasonPlayerStats(address)
+  const bestScoreValue = seasonStats.data?.bestScore ?? 0
+  const checkInValue = seasonStats.data?.checkInCount ?? 0
 
   return (
     <section className="panel inferno-subtle-grid w-full rounded-[26px] p-4 sm:p-5 lg:p-6">

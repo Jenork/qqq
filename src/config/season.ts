@@ -1,6 +1,24 @@
-const parsedSeasonId = Number.parseInt(process.env.NEXT_PUBLIC_GAME_SEASON_ID ?? '2', 10)
+const DEFAULT_SEASON_START_BLOCK = 46_900_000n
 
-export const CURRENT_SEASON_ID =
-  Number.isFinite(parsedSeasonId) && parsedSeasonId > 0 ? parsedSeasonId : 2
+function parseBlockNumber(value: string | undefined, fallback: bigint) {
+  const normalized = value?.trim()
 
-export const CURRENT_SEASON_LABEL = `Season ${CURRENT_SEASON_ID}`
+  if (!normalized) {
+    return fallback
+  }
+
+  try {
+    const parsed = BigInt(normalized)
+    return parsed >= 0n ? parsed : fallback
+  } catch {
+    return fallback
+  }
+}
+
+export const CURRENT_SEASON_LABEL =
+  process.env.NEXT_PUBLIC_GAME_SEASON_LABEL?.trim() || 'Current Season'
+
+export const CURRENT_SEASON_START_BLOCK = parseBlockNumber(
+  process.env.NEXT_PUBLIC_GAME_SEASON_START_BLOCK,
+  DEFAULT_SEASON_START_BLOCK,
+)

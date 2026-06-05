@@ -73,6 +73,8 @@ Copy `.env.example` to `.env.local` and configure:
 - `NEXT_PUBLIC_BASE_CHAIN_ID=8453`
 - `NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org`
 - `NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL=` optional legacy fallback
+- `NEXT_PUBLIC_GAME_SEASON_LABEL=Season 2`
+- `NEXT_PUBLIC_GAME_SEASON_START_BLOCK=46900000`
 - `NEXT_PUBLIC_GAME_PROGRESS_ADDRESS=...`
 - `NEXT_PUBLIC_DAILY_CHECKIN_CONTRACT_ADDRESS=...`
 - `NEXT_PUBLIC_USDC_TOKEN_ADDRESS=...`
@@ -86,6 +88,7 @@ Notes:
 - If `NEXT_PUBLIC_DAILY_CHECKIN_CONTRACT_ADDRESS` is empty, the frontend falls back to `NEXT_PUBLIC_GAME_PROGRESS_ADDRESS`
 - `NEXT_PUBLIC_BASE_RPC_URL` is the main RPC used by the frontend config
 - `NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL` is kept only as a compatibility fallback
+- Season data uses the old `GameProgress` contract. The frontend calculates the active season from `ScoreSubmitted` and `DailyCheckedIn` events emitted at or after `NEXT_PUBLIC_GAME_SEASON_START_BLOCK`.
 
 ## Contract deploy environment variables
 
@@ -220,8 +223,10 @@ Then restart the frontend dev server.
 
 Current frontend wiring:
 
-- leaderboard reads use `NEXT_PUBLIC_GAME_PROGRESS_ADDRESS`
-- daily check-in reads/writes use `NEXT_PUBLIC_DAILY_CHECKIN_CONTRACT_ADDRESS`, with fallback to `NEXT_PUBLIC_GAME_PROGRESS_ADDRESS`
+- leaderboard reads `ScoreSubmitted` events from `NEXT_PUBLIC_GAME_PROGRESS_ADDRESS` after `NEXT_PUBLIC_GAME_SEASON_START_BLOCK`
+- score submit writes use the legacy `submitScore(uint256)` function
+- daily check-in stats read `DailyCheckedIn` events after `NEXT_PUBLIC_GAME_SEASON_START_BLOCK`
+- daily check-in writes use the legacy `dailyCheckIn()` function via `NEXT_PUBLIC_DAILY_CHECKIN_CONTRACT_ADDRESS`, with fallback to `NEXT_PUBLIC_GAME_PROGRESS_ADDRESS`
 - wallet flow still uses Base Mainnet only
 - wallet remains optional for core gameplay
 

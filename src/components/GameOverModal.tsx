@@ -5,21 +5,19 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   useAccount,
   useChainId,
-  useReadContract,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
-import { CURRENT_SEASON_ID, CURRENT_SEASON_LABEL } from '@/config/season'
+import { CURRENT_SEASON_LABEL } from '@/config/season'
 import { BASE_CHAIN_ID, BASE_CHAIN_NAME } from '@/config/web3'
 import { useGameStore } from '@/hooks/useGameStore'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
+import { useSeasonPlayerStats } from '@/hooks/useSeasonPlayerStats'
 import { cn } from '@/lib/cn'
 import { getDisplayErrorMessage } from '@/lib/missions'
-import { bigintToNumber, formatScore, isNewBestScore } from '@/lib/score'
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
+import { formatScore, isNewBestScore } from '@/lib/score'
 
 export function GameOverModal() {
   const queryClient = useQueryClient()
@@ -30,17 +28,8 @@ export function GameOverModal() {
   const pendingScore = useGameStore((state) => state.pendingScore)
   const restartRun = useGameStore((state) => state.restartRun)
   const { showTouchControls, isMobileLandscape } = useMobileViewport()
-
-  const { data: bestScore, refetch: refetchBest } = useReadContract({
-    address: GAME_PROGRESS_ADDRESS,
-    abi: gameProgressAbi,
-    functionName: 'getSeasonBestScore',
-    args: [BigInt(CURRENT_SEASON_ID), address ?? ZERO_ADDRESS],
-    chainId: BASE_CHAIN_ID,
-    query: {
-      enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
-    },
-  })
+  const seasonStats = useSeasonPlayerStats(address)
+  const refetchSeasonStats = seasonStats.refetch
 
   const [submitError, setSubmitError] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDivElement | null>(null)
@@ -53,9 +42,10 @@ export function GameOverModal() {
     }
 
     setSubmitError(null)
-    void refetchBest()
+    void refetchSeasonStats()
+    void queryClient.invalidateQueries({ queryKey: ['season-player-stats'] })
     void queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
-  }, [isSuccess, queryClient, refetchBest])
+  }, [isSuccess, queryClient, refetchSeasonStats])
 
   useEffect(() => {
     if (error) {
@@ -63,7 +53,7 @@ export function GameOverModal() {
     }
   }, [error])
 
-  const storedBestScore = bigintToNumber(bestScore)
+  const storedBestScore = seasonStats.data?.bestScore ?? 0
   const canSubmitScore = isNewBestScore(pendingScore, storedBestScore)
 
   useEffect(() => {
@@ -235,8 +225,8 @@ export function GameOverModal() {
                 writeContract({
                   address: GAME_PROGRESS_ADDRESS,
                   abi: gameProgressAbi,
-                  functionName: 'submitSeasonScore',
-                  args: [BigInt(CURRENT_SEASON_ID), BigInt(pendingScore)],
+                  functionName: 'submitScore',
+                  args: [BigInt(pendingScore)],
                 })
               }}
             >
