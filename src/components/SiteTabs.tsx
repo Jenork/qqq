@@ -107,7 +107,7 @@ export function SiteTabs() {
           <div className="relative z-[1] flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <div className="doom-logo">
-                <span className="doom-logo-wordmark">BaseUp</span>
+                <span className="doom-logo-wordmark">Based DooM</span>
                 <span className="doom-logo-sub">Season 2</span>
               </div>
             </div>

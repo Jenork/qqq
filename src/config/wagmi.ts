@@ -4,7 +4,7 @@ import { BASE_BUILDER_DATA_SUFFIX } from '@/config/builderCode'
 import { BASE_CHAIN, BASE_RPC_URL } from '@/config/web3'
 import { baseAccount } from '@/lib/baseAccountConnector'
 
-const appName = 'BaseUp Survival'
+const appName = 'Based DooM'
 
 const connectors = [
   baseAccount({
