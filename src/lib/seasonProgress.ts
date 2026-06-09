@@ -28,6 +28,9 @@ type SeasonEventClient = {
     address: Address
     abi: typeof gameProgressAbi
     eventName: 'ScoreSubmitted' | 'DailyCheckedIn'
+    args?: {
+      player?: Address
+    }
     fromBlock: bigint
     toBlock: bigint
   }): Promise<unknown[]>
@@ -50,7 +53,11 @@ function compareLeaderboardEntries(
   return left.address.localeCompare(right.address)
 }
 
-async function readEventLogs(client: SeasonEventClient, eventName: 'ScoreSubmitted' | 'DailyCheckedIn') {
+async function readEventLogs(
+  client: SeasonEventClient,
+  eventName: 'ScoreSubmitted' | 'DailyCheckedIn',
+  eventArgs?: { player?: Address },
+) {
   const latestBlock = await client.getBlockNumber()
 
   if (CURRENT_SEASON_START_BLOCK > latestBlock) {
@@ -69,6 +76,7 @@ async function readEventLogs(client: SeasonEventClient, eventName: 'ScoreSubmitt
       address: GAME_PROGRESS_ADDRESS,
       abi: gameProgressAbi,
       eventName,
+      args: eventArgs,
       fromBlock,
       toBlock: toBlock > latestBlock ? latestBlock : toBlock,
     })) as EventLog[]
@@ -114,8 +122,8 @@ export async function readSeasonLeaderboard(client: SeasonEventClient) {
 export async function readSeasonPlayerStats(client: SeasonEventClient, playerAddress: Address) {
   const normalizedPlayer = normalizeAddress(playerAddress)
   const [scoreLogs, checkInLogs] = await Promise.all([
-    readEventLogs(client, 'ScoreSubmitted'),
-    readEventLogs(client, 'DailyCheckedIn'),
+    readEventLogs(client, 'ScoreSubmitted', { player: playerAddress }),
+    readEventLogs(client, 'DailyCheckedIn', { player: playerAddress }),
   ])
 
   let bestScore = 0

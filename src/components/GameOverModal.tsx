@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import Image from 'next/image'
 import {
   useAccount,
   useChainId,
@@ -128,9 +129,11 @@ export function GameOverModal() {
       >
         <div className={cn('grid gap-5', showTouchControls ? 'grid-cols-1' : 'sm:grid-cols-[240px_1fr] sm:items-stretch')}>
           <div className={cn('inferno-frame flex items-end justify-center rounded-[24px] bg-[radial-gradient(circle_at_50%_18%,rgba(255,102,34,0.24),transparent_44%),linear-gradient(180deg,rgba(22,8,8,0.96),rgba(10,6,8,0.98))] p-4', showTouchControls ? 'min-h-[132px]' : 'min-h-[220px]')}>
-            <img
+            <Image
               src="/sprites/player-marine-armored.png"
               alt=""
+              width={512}
+              height={512}
               className={cn(
                 'h-full w-auto object-contain [image-rendering:pixelated] drop-shadow-[0_0_30px_rgba(255,102,34,0.18)]',
                 showTouchControls ? 'max-h-[108px]' : 'max-h-[190px]',

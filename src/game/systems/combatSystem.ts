@@ -99,9 +99,13 @@ export function buildEnemyProjectile(options: {
       : enemy.enemyType === 'boss'
         ? enemy.y - 112
       : enemy.y - 76
-  const vector = new Phaser.Math.Vector2(player.x - enemy.x, player.y - enemy.y)
-    .normalize()
-    .scale(enemy.projectileSpeed)
+  const vector = new Phaser.Math.Vector2(player.x - x, player.y - y)
+
+  if (vector.lengthSq() < 0.0001) {
+    vector.set(direction, 0)
+  }
+
+  vector.normalize().scale(enemy.projectileSpeed)
 
   return {
     x,

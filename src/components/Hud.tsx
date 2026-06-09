@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { SOCIAL_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { getItemById, getItemIconPath } from '@/config/items'
 import { useGameStore } from '@/hooks/useGameStore'
@@ -85,9 +86,11 @@ export function Hud() {
           <div className="flex items-start gap-1">
             <div className="inferno-frame flex min-w-0 flex-[1.2] items-center gap-1.5 px-2 py-1.5">
               <div className="relative z-[1] flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-[12px] border border-cyan-300/18 bg-[radial-gradient(circle_at_50%_25%,rgba(73,202,255,0.18),rgba(3,12,24,0.98)_68%)] shadow-[inset_0_0_18px_rgba(65,196,255,0.16)]">
-                <img
+                <Image
                   src={armoredRewardActive ? '/ui/helmet-armored.png' : '/ui/helmet-base.png'}
                   alt="Marine portrait"
+                  width={64}
+                  height={64}
                   className="h-[24px] w-[24px] scale-[1.85] object-contain [image-rendering:auto]"
                 />
               </div>
@@ -185,9 +188,11 @@ export function Hud() {
           <div className="inferno-frame w-[min(100%,344px)] px-3 py-3">
             <div className="relative z-[1] flex items-center gap-3">
               <div className="flex h-[62px] w-[62px] items-center justify-center rounded-[18px] border border-cyan-300/18 bg-[radial-gradient(circle_at_50%_25%,rgba(73,202,255,0.18),rgba(3,12,24,0.98)_68%)] text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100 shadow-[inset_0_0_18px_rgba(65,196,255,0.16)]">
-                <img
+                <Image
                   src={armoredRewardActive ? '/ui/helmet-armored.png' : '/ui/helmet-base.png'}
                   alt="Marine portrait"
+                  width={96}
+                  height={96}
                   className="h-[54px] w-[54px] scale-[3] object-contain [image-rendering:auto]"
                 />
               </div>
@@ -233,9 +238,11 @@ export function Hud() {
                 <div key={entry.label} className="inferno-frame min-w-[82px] px-3 py-2 text-center">
                   <div className="relative z-[1] flex items-center justify-center gap-1 text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/80">
                     {entry.icon ? (
-                      <img
+                      <Image
                         src={entry.icon}
                         alt=""
+                        width={24}
+                        height={24}
                         className="h-3.5 w-3.5 object-contain [image-rendering:pixelated]"
                       />
                     ) : null}

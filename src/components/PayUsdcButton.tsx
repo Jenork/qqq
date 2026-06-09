@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { useUsdcPayment } from '@/hooks/useUsdcPayment'
 import { RewardStatusBadge } from '@/components/RewardStatusBadge'
 import { USDC_PAYMENT_AMOUNT_USDC } from '@/config/tokens'
@@ -29,9 +30,11 @@ export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
         {imageFailed ? (
           <span className="mission-poster-label">Shotgun Reward</span>
         ) : (
-          <img
+          <Image
             src="/rewards/reward-shotgun.png"
             alt="Shotgun reward"
+            width={512}
+            height={512}
             className="h-full w-full object-contain p-4 [image-rendering:pixelated]"
             onError={() => setImageFailed(true)}
           />

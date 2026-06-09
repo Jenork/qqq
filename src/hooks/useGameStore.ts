@@ -18,6 +18,17 @@ type ActionTokens = {
 }
 
 const DISABLED_ITEM_IDS = ['burst-rifle'] as const satisfies ItemId[]
+const EMPTY_MOBILE_CONTROLS: ButtonState = {
+  left: false,
+  right: false,
+  jump: false,
+  shoot: false,
+}
+const EMPTY_ACTION_TOKENS: ActionTokens = {
+  grenade: 0,
+  ability: 0,
+  heal: 0,
+}
 
 type GameApi = {
   startRun: () => void
@@ -92,6 +103,7 @@ type GameStore = {
   setMobileControl: (key: keyof ButtonState, value: boolean) => void
   pulseAction: (key: keyof ActionTokens) => void
   consumeAction: (key: keyof ActionTokens) => number
+  resetInputState: () => void
   equipItem: (itemId: ItemId) => void
   setOnchainUnlocked: (itemIds: ItemId[]) => void
   setOffchainUnlocked: (itemIds: ItemId[]) => void
@@ -151,17 +163,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   offchainUnlockedItemIds: [],
   bonusHealCharges: 0,
   bonusArmorPoints: 0,
-  mobileControls: {
-    left: false,
-    right: false,
-    jump: false,
-    shoot: false,
-  },
-  actionTokens: {
-    grenade: 0,
-    ability: 0,
-    heal: 0,
-  },
+  mobileControls: { ...EMPTY_MOBILE_CONTROLS },
+  actionTokens: { ...EMPTY_ACTION_TOKENS },
   pendingScore: 0,
   gameApi: null,
   startRun: () => {
@@ -227,6 +230,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     return next
   },
+  resetInputState: () =>
+    set({
+      mobileControls: { ...EMPTY_MOBILE_CONTROLS },
+      actionTokens: { ...EMPTY_ACTION_TOKENS },
+    }),
   equipItem: (itemId) =>
     set((state) => {
       if (!state.unlockedItemIds.includes(itemId)) {
@@ -286,5 +294,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       bossMaxHp: 0,
       pendingScore: 0,
       activeMessage: null,
+      mobileControls: { ...EMPTY_MOBILE_CONTROLS },
+      actionTokens: { ...EMPTY_ACTION_TOKENS },
     }),
 }))

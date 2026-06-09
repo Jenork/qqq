@@ -214,6 +214,7 @@ export class ArenaScene extends Phaser.Scene {
       bonusArmorPoints: store.bonusArmorPoints,
     }
 
+    store.resetInputState()
     this.clearGroups()
     this.running = startImmediately
     this.paused = false
@@ -1167,8 +1168,10 @@ export class ArenaScene extends Phaser.Scene {
     this.gameOver = true
     this.player.setTint(0x5a6377)
     this.player.setVelocity(0, 0)
-    const finalScore = useGameStore.getState().score
-    useGameStore.getState().finishRun(finalScore)
+    const store = useGameStore.getState()
+    const finalScore = store.score
+    store.resetInputState()
+    store.finishRun(finalScore)
   }
 
   private addImpact(x: number, y: number, color: number, size = 26) {

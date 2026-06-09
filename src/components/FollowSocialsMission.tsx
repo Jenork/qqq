@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { useSocialMission } from '@/hooks/useSocialMission'
 import { RewardStatusBadge } from '@/components/RewardStatusBadge'
 import { cn } from '@/lib/cn'
@@ -13,7 +14,7 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
   const confirmLabel =
     mission.status === 'reward-active' || mission.status === 'confirmed'
       ? 'Success'
-        : 'Confirm Mission'
+      : 'Confirm Mission'
   const displayStatus =
     mission.status === 'reward-active' || mission.status === 'confirmed'
       ? 'success'
@@ -35,9 +36,11 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
         {imageFailed ? (
           <span className="mission-poster-label">Grenade Reward</span>
         ) : (
-          <img
+          <Image
             src="/rewards/reward-grenade.png"
             alt="Grenade reward"
+            width={512}
+            height={512}
             className="h-full w-full object-contain p-4 [image-rendering:pixelated]"
             onError={() => setImageFailed(true)}
           />

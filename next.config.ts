@@ -8,7 +8,15 @@ const nextConfig: NextConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
       '@react-native-async-storage/async-storage': false,
+      '@coinbase/wallet-sdk': false,
+      '@metamask/connect-evm': false,
+      '@metamask/sdk': false,
+      '@safe-global/safe-apps-provider': false,
+      '@safe-global/safe-apps-sdk': false,
+      '@walletconnect/ethereum-provider': false,
       'pino-pretty': false,
+      'porto': false,
+      'porto/internal': false,
     }
 
     return config

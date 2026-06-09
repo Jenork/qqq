@@ -1,6 +1,6 @@
 'use client'
 
-import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useState } from 'react'
+import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { SOCIAL_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
@@ -81,14 +81,15 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
   const togglePause = useGameStore((state) => state.togglePause)
   const [joystick, setJoystick] = useState<JoystickState | null>(null)
   const [fire, setFire] = useState<FireState | null>(null)
+  const jumpTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
     return () => {
-      const store = useGameStore.getState()
-      store.setMobileControl('left', false)
-      store.setMobileControl('right', false)
-      store.setMobileControl('jump', false)
-      store.setMobileControl('shoot', false)
+      if (jumpTimeoutRef.current !== null) {
+        window.clearTimeout(jumpTimeoutRef.current)
+      }
+
+      useGameStore.getState().resetInputState()
     }
   }, [])
 
@@ -121,8 +122,13 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
   const pulseJump = () => {
     setMobileControl('jump', true)
 
-    window.setTimeout(() => {
+    if (jumpTimeoutRef.current !== null) {
+      window.clearTimeout(jumpTimeoutRef.current)
+    }
+
+    jumpTimeoutRef.current = window.setTimeout(() => {
       useGameStore.getState().setMobileControl('jump', false)
+      jumpTimeoutRef.current = null
     }, 80)
   }
 

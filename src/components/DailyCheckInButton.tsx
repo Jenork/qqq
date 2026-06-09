@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { RewardStatusBadge } from '@/components/RewardStatusBadge'
 import type { useDailyCheckIn } from '@/hooks/useDailyCheckIn'
 import { cn } from '@/lib/cn'
@@ -51,9 +52,11 @@ export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }
         {imageFailed ? (
           <span className="mission-poster-label">Armor Reward</span>
         ) : (
-          <img
+          <Image
             src="/rewards/reward-armor.png"
             alt="Armor reward"
+            width={512}
+            height={512}
             className={cn('h-full w-full object-contain p-4 [image-rendering:pixelated]')}
             onError={() => setImageFailed(true)}
           />

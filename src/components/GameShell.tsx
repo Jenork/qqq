@@ -44,7 +44,9 @@ export function GameShell() {
       mounted = false
       gameRef.current?.destroy(true)
       gameRef.current = null
-      useGameStore.getState().registerGameApi(null)
+      const store = useGameStore.getState()
+      store.resetInputState()
+      store.registerGameApi(null)
     }
   }, [])
 
