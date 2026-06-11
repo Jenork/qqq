@@ -8,7 +8,6 @@ export function ArsenalPanel({ children }: { children?: ReactNode }) {
       <div className="mx-auto w-full max-w-[1100px]">
         <div className="dashboard-header dashboard-header-center mb-6">
           <div className="dashboard-heading arsenal-hero">
-            <p className="panel-title text-[#ffb78a]">Arsenal - Missions</p>
             <h3 className="arsenal-hero-title">Arsenal</h3>
             <p className="arsenal-hero-copy">Complete missions. Get rewards. Dominate.</p>
           </div>

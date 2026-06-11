@@ -184,9 +184,6 @@ export function GameShell() {
                 desktopMode ? 'max-w-sm text-left' : 'mx-auto w-full max-w-[290px] text-center',
               )}
             >
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-100/80">
-                Arena ready
-              </p>
               <h1 className="inferno-heading mt-1 text-2xl font-black sm:text-3xl">Based DooM</h1>
               <button
                 type="button"

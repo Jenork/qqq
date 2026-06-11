@@ -20,8 +20,6 @@ export function ProfilePanel() {
       <div className="mx-auto grid w-full max-w-[1100px] gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="dashboard-heading">
           <p className="panel-title">Profile</p>
-          <h3 className="monitor-title mt-1">Pilot Record</h3>
-          <p className="micro-copy mt-2">Wallet identity and season stats</p>
         </div>
 
         <div className="grid gap-4">
