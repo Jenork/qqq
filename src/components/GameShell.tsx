@@ -184,7 +184,6 @@ export function GameShell() {
                 desktopMode ? 'max-w-sm text-left' : 'mx-auto w-full max-w-[290px] text-center',
               )}
             >
-              <h1 className="inferno-heading mt-1 text-2xl font-black sm:text-3xl">Based DooM</h1>
               <button
                 type="button"
                 onClick={() => void handleStartRun()}
