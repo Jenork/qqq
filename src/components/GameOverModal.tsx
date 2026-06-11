@@ -11,7 +11,6 @@ import {
   useWriteContract,
 } from 'wagmi'
 import { GAME_PROGRESS_ADDRESS, gameProgressAbi, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
-import { CURRENT_SEASON_LABEL } from '@/config/season'
 import { BASE_CHAIN_ID, BASE_CHAIN_NAME } from '@/config/web3'
 import { useGameStore } from '@/hooks/useGameStore'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
@@ -143,16 +142,13 @@ export function GameOverModal() {
 
           <div>
             <div className={cn('mt-2', showTouchControls ? 'text-center' : 'text-center sm:text-left')}>
-              <h2 id="game-over-title" className="doom-game-over text-center sm:text-left">Run Terminated</h2>
+              <h2 id="game-over-title" className="doom-game-over text-center sm:text-left">GAME OVER</h2>
               <div id="game-over-summary" className={cn('mt-3 flex flex-wrap items-center gap-2', showTouchControls ? 'justify-center' : 'justify-center sm:justify-start')}>
                 <span className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-[#ffbf7b]">
                   Final {formatScore(pendingScore)}
                 </span>
                 <span className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-stone-100">
                   Best {formatScore(storedBestScore)}
-                </span>
-                <span className="inferno-chip rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-cyan-100">
-                  {CURRENT_SEASON_LABEL}
                 </span>
                 {canSubmitScore ? (
                   <span className="rounded-full border border-[#4de06c]/35 bg-[#16301a] px-3 py-2 text-[11px] font-black uppercase tracking-[0.14em] text-[#b5ffb7]">
@@ -165,12 +161,6 @@ export function GameOverModal() {
                   </span>
                 ) : null}
               </div>
-            </div>
-
-            <div className="mt-5 grid gap-2 rounded-[22px] border border-[#3f1714] bg-[linear-gradient(180deg,rgba(18,8,8,0.92),rgba(10,6,8,0.96))] px-4 py-4 text-sm text-stone-200">
-              <p className="flex items-center justify-between gap-3"><span className="text-stone-400">Final score</span><span className="font-black text-[#ffbf6c]">{formatScore(pendingScore)}</span></p>
-              <p className="flex items-center justify-between gap-3"><span className="text-stone-400">Best score</span><span className="font-black text-stone-50">{formatScore(storedBestScore)}</span></p>
-              <p className="flex items-center justify-between gap-3"><span className="text-stone-400">Run status</span><span className="font-black text-stone-50">{canSubmitScore ? 'New best attempt' : 'Practice run'}</span></p>
             </div>
           </div>
         </div>
@@ -251,11 +241,6 @@ export function GameOverModal() {
             </div>
           ) : null}
 
-          {!canSubmitScore ? (
-            <div className="panel-state panel-state-muted text-sm text-slate-300">
-              {CURRENT_SEASON_LABEL} best score already saved. Onchain leaderboard stays unchanged.
-            </div>
-          ) : null}
         </div>
       </div>
     </div>
