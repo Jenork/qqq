@@ -70,14 +70,14 @@ export const SPRITE_TUNING = {
       bodyOffsetY: 140,
     },
     ranged: {
-      scale: 0.36,
+      scale: 0.252,
       hoverBaseOffset: 92,
       hoverAmplitude: 5,
       bodyWidth: 300,
       bodyHeight: 215,
       bodyOffsetX: 70,
       bodyOffsetY: 145,
-      projectileOffsetY: 66,
+      projectileOffsetY: 46,
     },
     heavy: {
       scale: 0.3,
