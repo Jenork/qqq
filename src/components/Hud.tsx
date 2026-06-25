@@ -91,7 +91,7 @@ export function Hud() {
                   alt="Marine portrait"
                   width={64}
                   height={64}
-                  className="h-[24px] w-[24px] scale-[2.6] object-contain [image-rendering:auto]"
+                  className="h-[24px] w-[24px] scale-[1.8] object-contain [image-rendering:auto]"
                 />
               </div>
 
@@ -193,7 +193,7 @@ export function Hud() {
                   alt="Marine portrait"
                   width={96}
                   height={96}
-                  className="h-[54px] w-[54px] scale-[4.2] object-contain [image-rendering:auto]"
+                  className="h-[54px] w-[54px] scale-[2.9] object-contain [image-rendering:auto]"
                 />
               </div>
 
