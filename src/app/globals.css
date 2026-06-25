@@ -477,7 +477,7 @@ a:focus-visible,
 .mission-poster {
   position: relative;
   overflow: hidden;
-  min-height: 132px;
+  min-height: 168px;
   border: 1px solid rgba(255, 96, 28, 0.18);
   background:
     radial-gradient(circle at 50% 16%, rgba(255, 116, 38, 0.28), transparent 42%),
@@ -520,6 +520,15 @@ a:focus-visible,
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: #ffe2bd;
+}
+
+.mission-poster-art {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  object-position: center bottom;
 }
 
 .mission-poster-glow-orange {

@@ -55,9 +55,10 @@ export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }
           <Image
             src="/rewards/reward-shotgun.png"
             alt="Shotgun reward"
-            width={512}
-            height={512}
-            className={cn('h-full w-full object-contain p-4 [image-rendering:pixelated]')}
+            width={610}
+            height={629}
+            sizes="(min-width: 1024px) 280px, (min-width: 640px) 42vw, 88vw"
+            className={cn('mission-poster-art px-4 pt-2 pb-1 [image-rendering:auto]')}
             onError={() => setImageFailed(true)}
           />
         )}

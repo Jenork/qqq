@@ -50,7 +50,7 @@ export const SPRITE_TUNING = {
     scale: 0.39,
     bobScaleX: 0.006,
     bobScaleY: 0.002,
-    floorOffset: 17,
+    floorOffset: 10,
     bodyWidth: 178,
     bodyHeight: 226,
     bodyOffsetX: 104,
