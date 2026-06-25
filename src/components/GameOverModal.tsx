@@ -129,7 +129,7 @@ export function GameOverModal() {
         <div className={cn('grid gap-5', showTouchControls ? 'grid-cols-1' : 'sm:grid-cols-[240px_1fr] sm:items-stretch')}>
           <div className={cn('inferno-frame flex items-end justify-center rounded-[24px] bg-[radial-gradient(circle_at_50%_18%,rgba(255,102,34,0.24),transparent_44%),linear-gradient(180deg,rgba(22,8,8,0.96),rgba(10,6,8,0.98))] p-4', showTouchControls ? 'min-h-[132px]' : 'min-h-[220px]')}>
             <Image
-              src="/sprites/player-marine-armored.png"
+              src="/sprites/player-marine-dead.png"
               alt=""
               width={512}
               height={512}

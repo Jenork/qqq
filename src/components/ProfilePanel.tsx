@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useAccount, useChainId } from 'wagmi'
 import { ConnectWallet } from '@/components/ConnectWallet'
 import { HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
@@ -18,8 +19,21 @@ export function ProfilePanel() {
   return (
     <section className="panel inferno-subtle-grid w-full rounded-[26px] p-4 sm:p-5 lg:p-6">
       <div className="mx-auto grid w-full max-w-[1100px] gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="dashboard-heading">
-          <p className="panel-title">Profile</p>
+        <div className="grid gap-4">
+          <div className="dashboard-heading">
+            <p className="panel-title">Profile</p>
+          </div>
+
+          <div className="inferno-frame flex min-h-[280px] items-end justify-center overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_50%_18%,rgba(73,202,255,0.18),transparent_44%),linear-gradient(180deg,rgba(7,20,37,0.96),rgba(3,9,20,0.98))] px-4 pt-4">
+            <Image
+              src="/sprites/profile-marine.png"
+              alt="Marine profile art"
+              width={832}
+              height={823}
+              sizes="(min-width: 1024px) 360px, 70vw"
+              className="h-auto max-h-[360px] w-full max-w-[360px] object-contain object-bottom [image-rendering:auto]"
+            />
+          </div>
         </div>
 
         <div className="grid gap-4">
