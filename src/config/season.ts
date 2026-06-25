@@ -1,4 +1,4 @@
-const DEFAULT_SEASON_START_BLOCK = 46_900_000n
+const DEFAULT_SEASON_START_BLOCK = 47_772_727n
 
 function parseBlockNumber(value: string | undefined, fallback: bigint) {
   const normalized = value?.trim()
