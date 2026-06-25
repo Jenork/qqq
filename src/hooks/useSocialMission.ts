@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { SOCIAL_GRENADE_REWARD_ITEM_ID, SOCIAL_TWITTER_URL, SOCIAL_TELEGRAM_URL } from '@/config/missions'
-import { useGameStore } from '@/hooks/useGameStore'
+import { SOCIAL_TWITTER_URL, SOCIAL_TELEGRAM_URL } from '@/config/missions'
 
 const STORAGE_KEY = 'baseup-social-mission-v1'
 const EVENT_NAME = 'baseup-social-mission-updated'
@@ -100,9 +99,6 @@ export function useSocialMission() {
   const normalizedAddress = normalizeAddress(address)
   const [state, setState] = useState<SocialMissionState>(DEFAULT_STATE)
   const [error, setError] = useState<string | null>(null)
-  const grenadeRewardActive = useGameStore((store) =>
-    store.offchainUnlockedItemIds.includes(SOCIAL_GRENADE_REWARD_ITEM_ID),
-  )
 
   useEffect(() => {
     const sync = () => {
@@ -222,12 +218,8 @@ export function useSocialMission() {
   }, [normalizedAddress, state.confirmedAt, state.telegramOpened, state.twitterOpened, updateState])
 
   const status = useMemo(() => {
-    if (state.confirmedAt && grenadeRewardActive) {
-      return 'reward-active' as const
-    }
-
     if (state.confirmedAt) {
-      return 'confirmed' as const
+      return 'reward-active' as const
     }
 
     if (state.twitterOpened || state.telegramOpened) {
@@ -235,7 +227,7 @@ export function useSocialMission() {
     }
 
     return 'not-started' as const
-  }, [grenadeRewardActive, state.confirmedAt, state.telegramOpened, state.twitterOpened])
+  }, [state.confirmedAt, state.telegramOpened, state.twitterOpened])
 
   return {
     twitterOpened: state.twitterOpened,
@@ -243,7 +235,6 @@ export function useSocialMission() {
     confirmedAt: state.confirmedAt,
     status,
     rewardActive: Boolean(state.confirmedAt),
-    grenadeRewardActive,
     error,
     openTwitter,
     openTelegram,

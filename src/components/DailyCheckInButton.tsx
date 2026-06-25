@@ -42,7 +42,7 @@ export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }
       <div className="mission-card-head">
         <div className="mission-card-copy">
           <p className="panel-title text-[#ffb78a]">Onchain</p>
-          <h4 className="mission-card-title">Armor</h4>
+          <h4 className="mission-card-title">Shotgun</h4>
           <p className="micro-copy">Daily check-in once every 24 hours</p>
         </div>
         {showBadge ? <RewardStatusBadge status={displayStatus} /> : null}
@@ -50,11 +50,11 @@ export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }
 
       <div className={cn('mission-poster mission-poster-glow-orange rounded-[24px]', completedCard ? 'mission-poster-complete' : '')}>
         {imageFailed ? (
-          <span className="mission-poster-label">Armor Reward</span>
+          <span className="mission-poster-label">Shotgun Reward</span>
         ) : (
           <Image
-            src="/rewards/reward-armor.png"
-            alt="Armor reward"
+            src="/rewards/reward-shotgun.png"
+            alt="Shotgun reward"
             width={512}
             height={512}
             className={cn('h-full w-full object-contain p-4 [image-rendering:pixelated]')}
@@ -64,7 +64,7 @@ export function DailyCheckInButton({ mission }: { mission: DailyCheckInMission }
       </div>
 
       <div className={cn('stats-strip relative z-[1]', completedCard ? 'stats-strip-complete' : '')}>
-        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">Bonus Armor</span></p>
+        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">{mission.rewardActive ? 'Shotgun Unlocked' : 'Shotgun Locked'}</span></p>
         <p className="stats-row"><span className="stats-row-label">Next</span><span className="stats-row-value">{availabilityText}</span></p>
         <p className="stats-row"><span className="stats-row-label">Total</span><span className="stats-row-value">{mission.totalCount}</span></p>
       </div>

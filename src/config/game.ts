@@ -47,18 +47,18 @@ export const PLAYER_CONFIG = {
 
 export const SPRITE_TUNING = {
   player: {
-    scale: 0.34,
+    scale: 0.39,
     bobScaleX: 0.006,
     bobScaleY: 0.002,
-    floorOffset: 10,
+    floorOffset: 17,
     bodyWidth: 178,
     bodyHeight: 226,
     bodyOffsetX: 104,
     bodyOffsetY: 126,
-    muzzleOffsetX: 36,
-    muzzleOffsetY: 74,
-    grenadeOffsetX: 22,
-    grenadeOffsetY: 58,
+    muzzleOffsetX: 41,
+    muzzleOffsetY: 84,
+    grenadeOffsetX: 25,
+    grenadeOffsetY: 66,
   },
   enemies: {
     melee: {

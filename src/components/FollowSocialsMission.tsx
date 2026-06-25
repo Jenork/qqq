@@ -11,22 +11,16 @@ type SocialMission = ReturnType<typeof useSocialMission>
 export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
   const [imageFailed, setImageFailed] = useState(false)
   const confirmDisabled = mission.rewardActive
-  const confirmLabel =
-    mission.status === 'reward-active' || mission.status === 'confirmed'
-      ? 'Success'
-      : 'Confirm Mission'
-  const displayStatus =
-    mission.status === 'reward-active' || mission.status === 'confirmed'
-      ? 'success'
-      : mission.status
-  const completedCard = mission.rewardActive || mission.status === 'confirmed'
+  const confirmLabel = mission.status === 'reward-active' ? 'Success' : 'Confirm Mission'
+  const displayStatus = mission.status === 'reward-active' ? 'success' : mission.status
+  const completedCard = mission.rewardActive
 
   return (
     <article className={cn('inferno-frame mission-card rounded-[28px] p-5', completedCard ? 'mission-card-complete' : '')}>
       <div className="mission-card-head">
         <div className="mission-card-copy">
           <p className="panel-title text-[#ffb78a]">Offchain</p>
-          <h4 className="mission-card-title">Grenade</h4>
+          <h4 className="mission-card-title">Armor</h4>
           <p className="micro-copy">Follow Twitter and Telegram</p>
         </div>
         <RewardStatusBadge status={displayStatus} />
@@ -34,11 +28,11 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
 
       <div className={cn('mission-poster mission-poster-glow-blue rounded-[24px]', completedCard ? 'mission-poster-complete' : '')}>
         {imageFailed ? (
-          <span className="mission-poster-label">Grenade Reward</span>
+          <span className="mission-poster-label">Armor Reward</span>
         ) : (
           <Image
-            src="/rewards/reward-grenade.png"
-            alt="Grenade reward"
+            src="/rewards/reward-armor.png"
+            alt="Armor reward"
             width={512}
             height={512}
             className="h-full w-full object-contain p-4 [image-rendering:pixelated]"
@@ -48,7 +42,7 @@ export function FollowSocialsMission({ mission }: { mission: SocialMission }) {
       </div>
 
       <div className={cn('stats-strip relative z-[1]', completedCard ? 'stats-strip-complete' : '')}>
-        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">{mission.grenadeRewardActive ? 'Grenade Unlocked' : 'Grenade Locked'}</span></p>
+        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">{mission.rewardActive ? 'Bonus Armor Active' : 'Bonus Armor Locked'}</span></p>
         <p className="stats-row"><span className="stats-row-label">Twitter</span><span className="stats-row-value">{mission.twitterOpened ? 'Opened' : 'Pending'}</span></p>
         <p className="stats-row"><span className="stats-row-label">Telegram</span><span className="stats-row-value">{mission.telegramOpened ? 'Opened' : 'Pending'}</span></p>
       </div>

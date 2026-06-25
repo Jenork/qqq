@@ -1,7 +1,7 @@
 'use client'
 
 import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
-import { SOCIAL_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
+import { USDC_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
 
@@ -94,7 +94,7 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
   }, [])
 
   const grenadeUnlocked =
-    unlockedItemIds.includes('frag-grenade') || unlockedItemIds.includes(SOCIAL_GRENADE_REWARD_ITEM_ID)
+    unlockedItemIds.includes('frag-grenade') || unlockedItemIds.includes(USDC_GRENADE_REWARD_ITEM_ID)
 
   const joystickStyle = useMemo(() => {
     if (!joystick) {

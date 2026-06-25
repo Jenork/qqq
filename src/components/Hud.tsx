@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { SOCIAL_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
+import { USDC_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { getItemById, getItemIconPath } from '@/config/items'
 import { useGameStore } from '@/hooks/useGameStore'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
@@ -37,7 +37,7 @@ export function Hud() {
   const { showTouchControls } = useMobileViewport()
 
   const grenadeUnlocked =
-    unlockedItemIds.includes('frag-grenade') || unlockedItemIds.includes(SOCIAL_GRENADE_REWARD_ITEM_ID)
+    unlockedItemIds.includes('frag-grenade') || unlockedItemIds.includes(USDC_GRENADE_REWARD_ITEM_ID)
   const hpPercent = Math.max(0, Math.min(100, (hp / maxHp) * 100))
   const grenadeLabel = grenadeUnlocked ? formatCooldown(grenadeCooldownRemaining) : 'Locked'
   const abilityLabel =
@@ -49,7 +49,7 @@ export function Hud() {
   const healIcon = getItemIconPath('medkit')
   const isWaveMessage = Boolean(activeMessage && /wave/i.test(activeMessage))
   const armoredRewardActive = maxArmor > 0
-  const fireGrenadeUnlocked = unlockedItemIds.includes(SOCIAL_GRENADE_REWARD_ITEM_ID)
+  const fireGrenadeUnlocked = unlockedItemIds.includes(USDC_GRENADE_REWARD_ITEM_ID)
   const shotgunUnlocked = unlockedItemIds.includes('shotgun')
   const compactHud = showTouchControls
   const weaponLabel = getItemById(equippedWeapon)?.label ?? 'Pistol'

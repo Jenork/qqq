@@ -20,7 +20,7 @@ export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
       <div className="mission-card-head">
         <div className="mission-card-copy">
           <p className="panel-title text-[#ffb78a]">Onchain</p>
-          <h4 className="mission-card-title">Shotgun</h4>
+          <h4 className="mission-card-title">Grenade</h4>
           <p className="micro-copy">Pay {USDC_PAYMENT_AMOUNT_USDC} USDC</p>
         </div>
         {showBadge ? <RewardStatusBadge status={mission.status} /> : null}
@@ -28,11 +28,11 @@ export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
 
       <div className={cn('mission-poster mission-poster-glow-green rounded-[24px]', completedCard ? 'mission-poster-complete' : '')}>
         {imageFailed ? (
-          <span className="mission-poster-label">Shotgun Reward</span>
+          <span className="mission-poster-label">Grenade Reward</span>
         ) : (
           <Image
-            src="/rewards/reward-shotgun.png"
-            alt="Shotgun reward"
+            src="/rewards/reward-grenade.png"
+            alt="Grenade reward"
             width={512}
             height={512}
             className="h-full w-full object-contain p-4 [image-rendering:pixelated]"
@@ -42,9 +42,9 @@ export function PayUsdcButton({ mission }: { mission: UsdcMission }) {
       </div>
 
       <div className={cn('stats-strip relative z-[1]', completedCard ? 'stats-strip-complete' : '')}>
-        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">Shotgun Unlock</span></p>
+        <p className="stats-row"><span className="stats-row-label">Reward</span><span className="stats-row-value">Grenade Unlock</span></p>
         <p className="stats-row"><span className="stats-row-label">Amount</span><span className="stats-row-value">{USDC_PAYMENT_AMOUNT_USDC} USDC</span></p>
-        <p className="stats-row"><span className="stats-row-label">Shotgun</span><span className="stats-row-value">{mission.shotgunUnlocked ? 'Unlocked' : 'Locked'}</span></p>
+        <p className="stats-row"><span className="stats-row-label">Grenade</span><span className="stats-row-value">{mission.grenadeUnlocked ? 'Unlocked' : 'Locked'}</span></p>
       </div>
 
       <div className="mission-actions">
