@@ -36,7 +36,7 @@ type SeasonEventClient = {
   }): Promise<unknown[]>
 }
 
-const LOG_CHUNK_SIZE = 50_000n
+const LOG_CHUNK_SIZE = 10_000n
 
 function normalizeAddress(address?: string | null) {
   return address?.toLowerCase() ?? ''
