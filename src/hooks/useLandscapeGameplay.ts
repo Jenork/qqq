@@ -107,11 +107,12 @@ export function useLandscapeGameplay({
     if (enabled) {
       setImmersiveDomState(true)
       window.scrollTo(0, 1)
+      void lockOrientation()
       return
     }
 
     void exitImmersive()
-  }, [enabled, exitImmersive])
+  }, [enabled, exitImmersive, lockOrientation])
 
   useEffect(
     () => () => {

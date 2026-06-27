@@ -25,7 +25,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
     shellRef,
     enabled: mobileGameplayActive,
   })
-  const portraitGameplayFallback = immersiveActive && isMobilePortrait
+  const showPortraitRotationGuard = showTouchControls && immersiveActive && isMobilePortrait && status !== 'ready'
 
   useEffect(() => {
     let mounted = true
@@ -88,7 +88,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
     }
   }, [immersiveActive, isActive, isMobileLandscape, isMobilePortrait, showTouchControls, status])
 
-  const showMobileControlDeck = showTouchControls && status === 'playing'
+  const showMobileControlDeck = showTouchControls && status === 'playing' && !showPortraitRotationGuard
 
   const handleStartRun = async () => {
     await enterImmersive()
@@ -104,13 +104,11 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
         immersiveActive ? 'mobile-fullscreen-shell' : '',
       )}
     >
-      <div className={cn('relative overflow-hidden bg-[#020713]', portraitGameplayFallback && 'mobile-rotated-stage')}>
+      <div className="relative overflow-hidden bg-[#020713]">
         <div
           className={cn(
             'relative flex w-full items-center justify-center overflow-hidden bg-[#020713]',
-            portraitGameplayFallback
-              ? 'h-full w-full min-h-0 px-[calc(4px+var(--safe-top))] pr-[calc(4px+var(--safe-bottom))] pt-[calc(42px+var(--safe-left))] pb-[calc(88px+var(--safe-right))]'
-              : immersiveActive
+            immersiveActive
               ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(4px+var(--safe-left))] pr-[calc(4px+var(--safe-right))] pt-[calc(42px+var(--safe-top))] pb-[calc(88px+var(--safe-bottom))]'
               : isMobileLandscape
                 ? 'h-[calc(100svh-116px)] min-h-[400px] max-h-[calc(100svh-116px)] px-2 pt-11 pb-20'
@@ -133,10 +131,21 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
 
         {status !== 'ready' ? <Hud /> : null}
         {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} /> : null}
-        {showTouchControls && isMobilePortrait && status !== 'ready' && !portraitGameplayFallback ? (
+        {showTouchControls && isMobilePortrait && status !== 'ready' && !showPortraitRotationGuard ? (
           <div className="pointer-events-none absolute left-1/2 top-[calc(10px+var(--safe-top))] z-30 -translate-x-1/2">
             <div className="inferno-chip rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-50 shadow-[0_0_18px_rgba(65,196,255,0.16)]">
               Rotate for full arena
+            </div>
+          </div>
+        ) : null}
+        {showPortraitRotationGuard ? (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#020713]/96 p-5">
+            <div className="inferno-frame w-full max-w-[320px] px-5 py-6 text-center">
+              <p className="panel-title">Landscape Required</p>
+              <h2 className="inferno-heading mt-2 text-2xl font-black uppercase">Rotate Device</h2>
+              <p className="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-cyan-100/82">
+                The Base App did not switch orientation automatically. Turn the phone sideways to continue the run.
+              </p>
             </div>
           </div>
         ) : null}

@@ -708,18 +708,6 @@ a:focus-visible,
   display: none;
 }
 
-.mobile-rotated-stage {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 100dvh;
-  height: 100vw;
-  max-width: 100dvh;
-  max-height: 100vw;
-  transform: translate(-50%, -50%) rotate(90deg);
-  transform-origin: center;
-}
-
 .mobile-fullscreen-shell:fullscreen {
   width: 100vw;
   height: 100vh;
