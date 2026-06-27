@@ -25,6 +25,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
     shellRef,
     enabled: mobileGameplayActive,
   })
+  const portraitGameplayFallback = immersiveActive && isMobilePortrait
 
   useEffect(() => {
     let mounted = true
@@ -103,11 +104,13 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
         immersiveActive ? 'mobile-fullscreen-shell' : '',
       )}
     >
-      <div className="relative overflow-hidden bg-[#020713]">
+      <div className={cn('relative overflow-hidden bg-[#020713]', portraitGameplayFallback && 'mobile-rotated-stage')}>
         <div
           className={cn(
             'relative flex w-full items-center justify-center overflow-hidden bg-[#020713]',
-            immersiveActive
+            portraitGameplayFallback
+              ? 'h-full w-full min-h-0 px-[calc(4px+var(--safe-top))] pr-[calc(4px+var(--safe-bottom))] pt-[calc(42px+var(--safe-left))] pb-[calc(88px+var(--safe-right))]'
+              : immersiveActive
               ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(4px+var(--safe-left))] pr-[calc(4px+var(--safe-right))] pt-[calc(42px+var(--safe-top))] pb-[calc(88px+var(--safe-bottom))]'
               : isMobileLandscape
                 ? 'h-[calc(100svh-116px)] min-h-[400px] max-h-[calc(100svh-116px)] px-2 pt-11 pb-20'
@@ -130,7 +133,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
 
         {status !== 'ready' ? <Hud /> : null}
         {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} /> : null}
-        {showTouchControls && isMobilePortrait && status !== 'ready' ? (
+        {showTouchControls && isMobilePortrait && status !== 'ready' && !portraitGameplayFallback ? (
           <div className="pointer-events-none absolute left-1/2 top-[calc(10px+var(--safe-top))] z-30 -translate-x-1/2">
             <div className="inferno-chip rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-50 shadow-[0_0_18px_rgba(65,196,255,0.16)]">
               Rotate for full arena
