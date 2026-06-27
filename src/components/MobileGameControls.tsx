@@ -3,6 +3,7 @@
 import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { USDC_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { useGameStore } from '@/hooks/useGameStore'
+import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { cn } from '@/lib/cn'
 
 const JOYSTICK_RADIUS = 46
@@ -81,9 +82,11 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
   const setMobileControl = useGameStore((state) => state.setMobileControl)
   const pulseAction = useGameStore((state) => state.pulseAction)
   const togglePause = useGameStore((state) => state.togglePause)
+  const { isMobileLandscape } = useMobileViewport()
   const [joystick, setJoystick] = useState<JoystickState | null>(null)
   const [fire, setFire] = useState<FireState | null>(null)
   const jumpTimeoutRef = useRef<number | null>(null)
+  const compactLandscapeControls = !portraitMode && isMobileLandscape
 
   useEffect(() => {
     return () => {
@@ -160,18 +163,20 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
-      <div className="absolute right-[calc(8px+var(--safe-right))] top-[calc(40px+var(--safe-top))] flex items-start justify-end">
-        <TapActionButton
-          label={status === 'paused' ? 'Resume' : 'Pause'}
-          onClick={() => togglePause()}
-          className="min-h-[38px] min-w-[38px] px-2 py-2 text-[8px]"
-        />
-      </div>
+      {!compactLandscapeControls ? (
+        <div className="absolute right-[calc(8px+var(--safe-right))] top-[calc(40px+var(--safe-top))] flex items-start justify-end">
+          <TapActionButton
+            label={status === 'paused' ? 'Resume' : 'Pause'}
+            onClick={() => togglePause()}
+            className="min-h-[38px] min-w-[38px] px-2 py-2 text-[8px]"
+          />
+        </div>
+      ) : null}
 
       <div
         className={cn(
           'pointer-events-auto absolute left-[calc(8px+var(--safe-left))] bottom-[calc(10px+var(--safe-bottom))] touch-none overflow-hidden rounded-[28px]',
-          portraitMode ? 'h-[118px] w-[118px]' : 'h-[108px] w-[108px]',
+          compactLandscapeControls ? 'h-[88px] w-[88px] left-[calc(6px+var(--safe-left))] bottom-[calc(8px+var(--safe-bottom))]' : portraitMode ? 'h-[118px] w-[118px]' : 'h-[108px] w-[108px]',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -229,25 +234,31 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
             />
           </>
         ) : (
-          <div className="absolute bottom-2.5 left-2.5 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-100/10 bg-black/12 text-[8px] font-black uppercase tracking-[0.12em] text-slate-300/70">
+          <div className={cn(
+            'absolute bottom-2.5 left-2.5 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-100/10 bg-black/12 text-[8px] font-black uppercase tracking-[0.12em] text-slate-300/70',
+            compactLandscapeControls && 'bottom-1.5 left-1.5 h-[66px] w-[66px] text-[7px]',
+          )}>
             Move
           </div>
         )}
       </div>
 
-      <div className="pointer-events-auto absolute left-[calc(18px+var(--safe-left))] bottom-[calc(110px+var(--safe-bottom))]">
+      <div className={cn(
+        'pointer-events-auto absolute left-[calc(18px+var(--safe-left))] bottom-[calc(110px+var(--safe-bottom))]',
+        compactLandscapeControls && 'left-[calc(12px+var(--safe-left))] bottom-[calc(90px+var(--safe-bottom))]',
+      )}>
         <TapActionButton
           label="Gren"
           disabled={!grenadeUnlocked}
           onClick={() => pulseAction('grenade')}
-          className="min-h-[38px] min-w-[44px] px-2 py-2 text-[8px]"
+          className={cn('min-h-[38px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[30px] min-w-[34px] px-1.5 py-1 text-[7px]')}
         />
       </div>
 
       <div
         className={cn(
           'pointer-events-auto absolute right-[calc(8px+var(--safe-right))] bottom-[calc(12px+var(--safe-bottom))] touch-none overflow-hidden rounded-[30px]',
-          portraitMode ? 'h-[112px] w-[112px]' : 'h-[98px] w-[98px]',
+          compactLandscapeControls ? 'right-[calc(6px+var(--safe-right))] bottom-[calc(8px+var(--safe-bottom))] h-[84px] w-[84px]' : portraitMode ? 'h-[112px] w-[112px]' : 'h-[98px] w-[98px]',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -293,13 +304,19 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
           setMobileControl('shoot', false)
         }}
       >
-        <div className="absolute bottom-2 right-2 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-300/12 bg-cyan-500/10 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-100/72 backdrop-blur-[1px]">
+        <div className={cn(
+          'absolute bottom-2 right-2 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-300/12 bg-cyan-500/10 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-100/72 backdrop-blur-[1px]',
+          compactLandscapeControls && 'bottom-1.5 right-1.5 h-[68px] w-[68px] text-[8px]',
+        )}>
           Fire
         </div>
 
         {fire ? (
           <div
-            className="absolute h-[62px] w-[62px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/24 bg-cyan-500/18 shadow-[0_0_24px_rgba(65,196,255,0.22)]"
+            className={cn(
+              'absolute h-[62px] w-[62px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/24 bg-cyan-500/18 shadow-[0_0_24px_rgba(65,196,255,0.22)]',
+              compactLandscapeControls && 'h-[52px] w-[52px]',
+            )}
             style={{ left: fire.point.x, top: fire.point.y }}
           />
         ) : null}
@@ -310,18 +327,20 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
           'pointer-events-auto absolute flex flex-col gap-2',
           portraitMode
             ? 'right-[calc(90px+var(--safe-right))] bottom-[calc(28px+var(--safe-bottom))]'
-            : 'right-[calc(96px+var(--safe-right))] bottom-[calc(16px+var(--safe-bottom))]',
+            : compactLandscapeControls
+              ? 'right-[calc(74px+var(--safe-right))] bottom-[calc(10px+var(--safe-bottom))] gap-1.5'
+              : 'right-[calc(96px+var(--safe-right))] bottom-[calc(16px+var(--safe-bottom))]',
         )}
       >
         <TapActionButton
           label="Skill"
           onClick={() => pulseAction('ability')}
-          className="min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]"
+          className={cn('min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[34px] min-w-[38px] px-1.5 py-1.5 text-[7px]')}
         />
         <TapActionButton
           label="Heal"
           onClick={() => pulseAction('heal')}
-          className="min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]"
+          className={cn('min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[34px] min-w-[38px] px-1.5 py-1.5 text-[7px]')}
         />
       </div>
     </div>

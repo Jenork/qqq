@@ -53,6 +53,7 @@ export function Hud() {
   const fireGrenadeUnlocked = unlockedItemIds.includes(USDC_GRENADE_REWARD_ITEM_ID)
   const shotgunUnlocked = unlockedItemIds.includes('shotgun')
   const compactHud = showTouchControls
+  const compactLandscapeHud = compactHud && isMobileLandscape
   const weaponLabel = getItemById(equippedWeapon)?.label ?? 'Pistol'
   const shortWeaponLabel =
     equippedWeapon === 'shotgun' ? 'SG' : equippedWeapon === 'burst-rifle' ? 'BR' : 'PI'
@@ -85,40 +86,56 @@ export function Hud() {
 
   if (compactHud) {
     return (
-      <div className="pointer-events-none absolute left-[calc(4px+var(--safe-left))] right-[calc(4px+var(--safe-right))] top-[calc(4px+var(--safe-top))] z-20 flex flex-col gap-1">
-        <div className="pointer-events-auto flex items-stretch gap-1">
-          <div className="inferno-frame flex min-w-0 flex-[1.2] items-center gap-1.5 px-2 py-1.5">
-            <div className="relative z-[1] flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[10px] border border-cyan-300/18 bg-[radial-gradient(circle_at_50%_25%,rgba(73,202,255,0.18),rgba(3,12,24,0.98)_68%)] shadow-[inset_0_0_18px_rgba(65,196,255,0.16)]">
+      <div className={cn(
+        'pointer-events-none absolute left-[calc(4px+var(--safe-left))] right-[calc(4px+var(--safe-right))] top-[calc(4px+var(--safe-top))] z-20 flex flex-col gap-1',
+        compactLandscapeHud && 'left-[calc(6px+var(--safe-left))] right-[calc(6px+var(--safe-right))] top-[calc(3px+var(--safe-top))]',
+      )}>
+        <div className={cn('pointer-events-auto flex items-stretch gap-1', compactLandscapeHud && 'gap-0.5')}>
+          <div className={cn(
+            'inferno-frame flex min-w-0 flex-[1.2] items-center gap-1.5 px-2 py-1.5',
+            compactLandscapeHud && 'max-w-[48%] flex-[1.05] gap-1 px-1.5 py-1',
+          )}>
+            <div className={cn(
+              'relative z-[1] flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[10px] border border-cyan-300/18 bg-[radial-gradient(circle_at_50%_25%,rgba(73,202,255,0.18),rgba(3,12,24,0.98)_68%)] shadow-[inset_0_0_18px_rgba(65,196,255,0.16)]',
+              compactLandscapeHud && 'h-[24px] w-[24px] rounded-[8px]',
+            )}>
               <Image
                 src={armoredRewardActive ? '/ui/helmet-armored.png' : '/ui/helmet-base.png'}
                 alt="Marine portrait"
                 width={64}
                 height={64}
-                className="h-[22px] w-[22px] scale-[1.65] object-contain [image-rendering:auto]"
+                className={cn(
+                  'h-[22px] w-[22px] scale-[1.65] object-contain [image-rendering:auto]',
+                  compactLandscapeHud && 'h-[18px] w-[18px] scale-[1.45]',
+                )}
               />
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-[7px] font-black uppercase tracking-[0.1em] text-rose-200">HP</span>
-                <span className="text-[9px] font-black text-rose-50">
+              <div className={cn('flex items-center justify-between gap-1.5', compactLandscapeHud && 'gap-1')}>
+                <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-rose-200', compactLandscapeHud && 'text-[6px]')}>
+                  HP
+                </span>
+                <span className={cn('text-[9px] font-black text-rose-50', compactLandscapeHud && 'text-[8px]')}>
                   {Math.ceil(hp)}/{maxHp}
                 </span>
               </div>
-              <div className="mt-0.5 h-1.5 overflow-hidden rounded-[4px] border border-rose-300/18 bg-black/50">
+              <div className={cn('mt-0.5 h-1.5 overflow-hidden rounded-[4px] border border-rose-300/18 bg-black/50', compactLandscapeHud && 'h-1')}>
                 <div
                   className="h-full bg-[linear-gradient(90deg,#b50b07_0%,#ff5f1e_62%,#ffc45e_100%)] transition-all"
                   style={{ width: `${hpPercent}%` }}
                 />
               </div>
 
-              <div className="mt-0.5 flex items-center justify-between gap-1.5">
-                <span className="text-[7px] font-black uppercase tracking-[0.1em] text-cyan-200">Armor</span>
-                <span className="text-[9px] font-black text-cyan-50">
+              <div className={cn('mt-0.5 flex items-center justify-between gap-1.5', compactLandscapeHud && 'gap-1')}>
+                <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-cyan-200', compactLandscapeHud && 'text-[6px]')}>
+                  Armor
+                </span>
+                <span className={cn('text-[9px] font-black text-cyan-50', compactLandscapeHud && 'text-[8px]')}>
                   {armor}/{maxArmor || 0}
                 </span>
               </div>
-              <div className="mt-0.5 h-1 overflow-hidden rounded-[4px] border border-cyan-400/18 bg-black/50">
+              <div className={cn('mt-0.5 h-1 overflow-hidden rounded-[4px] border border-cyan-400/18 bg-black/50', compactLandscapeHud && 'h-[3px]')}>
                 <div
                   className="h-full bg-[linear-gradient(90deg,#0b5d83_0%,#28b8db_100%)] transition-all"
                   style={{ width: `${armorPercent}%` }}
@@ -130,15 +147,15 @@ export function Hud() {
           <div
             className={cn(
               'grid min-w-0 flex-1 gap-1',
-              isMobileLandscape ? 'grid-cols-7' : 'grid-cols-4',
+              compactLandscapeHud ? 'grid-cols-7 gap-0.5' : isMobileLandscape ? 'grid-cols-7' : 'grid-cols-4',
             )}
           >
             {mobileStatusEntries.map((entry) => (
-              <div key={entry.label} className="inferno-frame min-w-0 px-1 py-1 text-center">
-                <div className="relative z-[1] truncate text-[6px] font-black uppercase tracking-[0.1em] text-cyan-100/80">
+              <div key={entry.label} className={cn('inferno-frame min-w-0 px-1 py-1 text-center', compactLandscapeHud && 'px-0.5 py-0.5')}>
+                <div className={cn('relative z-[1] truncate text-[6px] font-black uppercase tracking-[0.1em] text-cyan-100/80', compactLandscapeHud && 'text-[5px]')}>
                   {entry.label}
                 </div>
-                <div className={cn('relative z-[1] mt-0.5 truncate text-[9px] font-black', entry.tone)}>
+                <div className={cn('relative z-[1] mt-0.5 truncate text-[9px] font-black', entry.tone, compactLandscapeHud && 'mt-0 text-[8px]')}>
                   {entry.value}
                 </div>
               </div>
@@ -147,7 +164,10 @@ export function Hud() {
 
           <button
             type="button"
-            className="action-button shrink-0 rounded-2xl px-2 py-1.5 text-[8px] font-black uppercase tracking-[0.1em]"
+            className={cn(
+              'action-button shrink-0 rounded-2xl px-2 py-1.5 text-[8px] font-black uppercase tracking-[0.1em]',
+              compactLandscapeHud && 'min-w-[52px] px-1.5 py-1 text-[7px]',
+            )}
             disabled={status === 'ready' || status === 'gameover'}
             onClick={() => togglePause()}
           >
@@ -159,6 +179,7 @@ export function Hud() {
           <p
             className={cn(
               'pointer-events-none self-center rounded-full px-2 py-0.5 text-[7px] uppercase tracking-[0.1em]',
+              compactLandscapeHud && 'max-w-[180px] px-1.5 text-[6px]',
               isWaveMessage
                 ? 'inferno-chip font-black text-cyan-50 shadow-[0_0_14px_rgba(65,196,255,0.18)]'
                 : 'text-cyan-100/82',
@@ -169,14 +190,14 @@ export function Hud() {
         ) : null}
 
         {bossVisible ? (
-          <div className="inferno-frame pointer-events-none mx-auto w-[min(100%,260px)] px-2 py-1">
+          <div className={cn('inferno-frame pointer-events-none mx-auto w-[min(100%,260px)] px-2 py-1', compactLandscapeHud && 'w-[min(100%,220px)] px-1.5 py-0.5')}>
             <div className="relative z-[1] flex items-center justify-between gap-2">
-              <span className="text-[7px] font-black uppercase tracking-[0.1em] text-cyan-100">Boss</span>
-              <span className="text-[9px] font-black text-cyan-50">
+              <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-cyan-100', compactLandscapeHud && 'text-[6px]')}>Boss</span>
+              <span className={cn('text-[9px] font-black text-cyan-50', compactLandscapeHud && 'text-[8px]')}>
                 {bossHp}/{bossMaxHp}
               </span>
             </div>
-            <div className="relative z-[1] mt-1 h-1.5 overflow-hidden rounded-full border border-cyan-200/18 bg-black/50">
+            <div className={cn('relative z-[1] mt-1 h-1.5 overflow-hidden rounded-full border border-cyan-200/18 bg-black/50', compactLandscapeHud && 'mt-0.5 h-1')}>
               <div
                 className="h-full bg-[linear-gradient(90deg,#1b8be0_0%,#72e7ff_70%,#e7fbff_100%)] transition-all"
                 style={{ width: `${bossHpPercent}%` }}
