@@ -6,10 +6,11 @@ import { GameOverModal } from '@/components/GameOverModal'
 import { Hud } from '@/components/Hud'
 import { MobileGameControls } from '@/components/MobileGameControls'
 import { useGameStore } from '@/hooks/useGameStore'
+import { useLandscapeGameplay } from '@/hooks/useLandscapeGameplay'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { cn } from '@/lib/cn'
 
-export function GameShell() {
+export function GameShell({ isActive = true }: { isActive?: boolean }) {
   const shellRef = useRef<HTMLElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const gameRef = useRef<Phaser.Game | null>(null)
@@ -19,8 +20,11 @@ export function GameShell() {
   const gameApiReady = useGameStore((state) => Boolean(state.gameApi))
   const { showTouchControls, isMobileLandscape, isMobilePortrait } = useMobileViewport()
   const [desktopMode, setDesktopMode] = useState(false)
-  const [mobileFullscreen, setMobileFullscreen] = useState(false)
-  const [mobileFullscreenDismissed, setMobileFullscreenDismissed] = useState(false)
+  const mobileGameplayActive = showTouchControls && isActive && (status === 'playing' || status === 'paused')
+  const { immersiveActive, enterImmersive } = useLandscapeGameplay({
+    shellRef,
+    enabled: mobileGameplayActive,
+  })
 
   useEffect(() => {
     let mounted = true
@@ -61,50 +65,32 @@ export function GameShell() {
   }, [])
 
   useEffect(() => {
-    const syncFullscreen = () => {
-      setMobileFullscreen(document.fullscreenElement === shellRef.current)
+    const refreshLayout = () => {
+      if (!gameRef.current) {
+        return
+      }
+
+      window.requestAnimationFrame(() => {
+        gameRef.current?.scale.refresh()
+      })
     }
 
-    document.addEventListener('fullscreenchange', syncFullscreen)
-    return () => document.removeEventListener('fullscreenchange', syncFullscreen)
-  }, [])
+    refreshLayout()
+    window.addEventListener('resize', refreshLayout)
+    window.addEventListener('orientationchange', refreshLayout)
+    document.addEventListener('fullscreenchange', refreshLayout)
+
+    return () => {
+      window.removeEventListener('resize', refreshLayout)
+      window.removeEventListener('orientationchange', refreshLayout)
+      document.removeEventListener('fullscreenchange', refreshLayout)
+    }
+  }, [immersiveActive, isActive, isMobileLandscape, isMobilePortrait, showTouchControls, status])
 
   const showMobileControlDeck = showTouchControls && status === 'playing'
-  const shouldUseMobileFullscreen =
-    showTouchControls &&
-    !mobileFullscreenDismissed &&
-    (mobileFullscreen || status === 'playing' || status === 'paused' || status === 'gameover')
-
-  const enterMobileFullscreen = async () => {
-    if (!showTouchControls) {
-      return
-    }
-
-    setMobileFullscreenDismissed(false)
-    setMobileFullscreen(true)
-
-    try {
-      await shellRef.current?.requestFullscreen?.()
-    } catch {
-      // CSS fullscreen fallback keeps the arena usable on mobile browsers without element fullscreen support.
-    }
-  }
-
-  const exitMobileFullscreen = async () => {
-    setMobileFullscreenDismissed(true)
-    setMobileFullscreen(false)
-
-    if (document.fullscreenElement === shellRef.current) {
-      try {
-        await document.exitFullscreen()
-      } catch {
-        // Browser already left fullscreen or blocked the request.
-      }
-    }
-  }
 
   const handleStartRun = async () => {
-    await enterMobileFullscreen()
+    await enterImmersive()
     startRun()
   }
 
@@ -114,23 +100,30 @@ export function GameShell() {
       className={cn(
         'panel inferno-subtle-grid relative w-full overflow-hidden border border-cyan-300/15 bg-[#020713] shadow-[0_22px_52px_rgba(0,0,0,0.44)]',
         showTouchControls ? 'rounded-[22px]' : 'rounded-[30px]',
-        shouldUseMobileFullscreen ? 'mobile-fullscreen-shell' : '',
+        immersiveActive ? 'mobile-fullscreen-shell' : '',
       )}
     >
       <div className="relative overflow-hidden bg-[#020713]">
         <div
-          ref={containerRef}
           className={cn(
-            'game-canvas w-full max-w-full overflow-hidden bg-[#020713]',
-            shouldUseMobileFullscreen
-              ? 'aspect-auto h-[100dvh] min-h-[100dvh] max-h-[100dvh]'
+            'relative flex w-full items-center justify-center overflow-hidden bg-[#020713]',
+            immersiveActive
+              ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(4px+var(--safe-left))] pr-[calc(4px+var(--safe-right))] pt-[calc(42px+var(--safe-top))] pb-[calc(88px+var(--safe-bottom))]'
               : isMobileLandscape
-              ? 'aspect-auto h-[calc(100svh-116px)] min-h-[400px] max-h-[calc(100svh-116px)]'
-              : showTouchControls
-                ? 'aspect-auto h-[calc(100svh-182px)] min-h-[60svh] max-h-[calc(100svh-182px)]'
-                : 'aspect-[16/9] min-h-0 lg:max-h-[82svh]',
+                ? 'h-[calc(100svh-116px)] min-h-[400px] max-h-[calc(100svh-116px)] px-2 pt-11 pb-20'
+                : showTouchControls
+                  ? 'h-[calc(100svh-182px)] min-h-[60svh] max-h-[calc(100svh-182px)] px-1.5 pt-12 pb-24'
+                  : 'aspect-[16/9] min-h-0 lg:max-h-[82svh]',
           )}
-        />
+        >
+          <div
+            ref={containerRef}
+            className={cn(
+              'game-canvas h-full w-full max-w-full overflow-hidden bg-[#020713]',
+              !showTouchControls && 'aspect-[16/9]',
+            )}
+          />
+        </div>
 
         <div className="pointer-events-none absolute inset-0 border border-cyan-300/20" />
         <div className="pointer-events-none absolute inset-[14px] border border-cyan-300/15 [clip-path:polygon(0_14px,14px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-18px))]" />
@@ -158,15 +151,6 @@ export function GameShell() {
               >
                 Resume
               </button>
-              {showTouchControls ? (
-                <button
-                  type="button"
-                  onClick={() => void exitMobileFullscreen()}
-                  className="action-button mt-3 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-[0.16em]"
-                >
-                  Exit Fullscreen
-                </button>
-              ) : null}
             </div>
           </div>
         ) : null}

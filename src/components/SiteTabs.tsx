@@ -173,7 +173,7 @@ export function SiteTabs() {
             activeTab === 'game' ? 'relative z-10' : 'pointer-events-none absolute inset-0 opacity-0',
           )}
         >
-          <GameShell />
+          <GameShell isActive={activeTab === 'game'} />
         </section>
 
         <section

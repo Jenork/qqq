@@ -43,6 +43,7 @@ Required meta tag:
 * Game
 * Leaderboard
 * Arsenal
+* Profile
 
 Wallet UI remains separate from gameplay.
 
@@ -70,8 +71,8 @@ Default:
 
 Unlocks:
 
-* Shotgun → 0.3 USDC mission
-* Grenade → Social mission
+* Shotgun -> Daily check-in mission
+* Grenade -> 0.3 USDC mission
 
 Shotgun must stay locked until unlocked.
 
@@ -85,13 +86,12 @@ Type:
 
 Reward:
 
-* Armor
+* Shotgun unlock
 
 Rules:
 
 * Once every 24h
-* Armor is separate from HP
-* Active armor uses red marine variant
+* Unlock is driven by active daily reward state
 
 ### Follow Twitter + Telegram
 
@@ -101,12 +101,14 @@ Type:
 
 Reward:
 
-* Grenade unlock
+* Armor
 
 Rules:
 
 * No external verification API
 * Stored in browser state
+* Armor is separate from HP
+* Active armor uses armored marine variant
 
 ### Pay 0.3 USDC
 
@@ -116,7 +118,7 @@ Type:
 
 Reward:
 
-* Shotgun unlock
+* Grenade unlock
 
 Rules:
 
@@ -146,6 +148,8 @@ Header:
 * Ignore equal or lower scores
 * Sort descending
 * Highlight current player
+* Visible leaderboard starts from Base block `47772727`
+* Read `ScoreSubmitted` logs in chunks no larger than `10_000` blocks on Base RPC
 
 ## Important Files
 
@@ -155,11 +159,13 @@ Frontend:
 * src/components/ConnectWallet.tsx
 * src/components/Hud.tsx
 * src/components/OnchainPanel.tsx
+* src/components/ProfilePanel.tsx
+* src/components/MissionRewardSync.tsx
 * src/hooks/useDailyCheckIn.ts
 * src/hooks/useUsdcPayment.ts
-* src/config/wagmi.ts
 * src/config/contracts.ts
-* src/lib/wallet.ts
+* src/config/season.ts
+* src/lib/seasonProgress.ts
 
 Contracts:
 
@@ -168,19 +174,22 @@ Contracts:
 
 ## Current Known Issue
 
-Open bug:
-
-Version of JSON-RPC protocol is not supported.
-
 Recent work:
 
-* submitScore moved away from wagmi write path
-* switched toward injected wallet transaction flow
+* leaderboard reset to start from Base block `47772727` (`2026-06-25 00:00:00 MSK`)
+* Base RPC `eth_getLogs` paging fixed by reading max `10_000` blocks per chunk
+* Arsenal rewards remapped:
+* Daily check-in -> Shotgun
+* Social links -> Armor
+* 0.3 USDC -> Grenade
+* Game Over modal now uses `/sprites/player-marine-dead.png`
+* Profile tab now uses `/sprites/profile-marine.png`
+* HUD helmet art was replaced and rescaled in `src/components/Hud.tsx`
 
 Status:
 
 * typecheck passes
-* browser verification still required
+* browser verification still useful after art swaps or HUD tuning
 
 ## Startup Workflow
 

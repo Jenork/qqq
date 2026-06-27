@@ -5,10 +5,12 @@ import { USDC_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { useGameStore } from '@/hooks/useGameStore'
 import { cn } from '@/lib/cn'
 
-const JOYSTICK_RADIUS = 58
-const MOVE_THRESHOLD = 18
-const JUMP_THRESHOLD = 34
-const JUMP_RESET_THRESHOLD = 16
+const JOYSTICK_RADIUS = 46
+const JOYSTICK_DIAMETER = 92
+const JOYSTICK_KNOB_DIAMETER = 46
+const MOVE_THRESHOLD = 16
+const JUMP_THRESHOLD = 28
+const JUMP_RESET_THRESHOLD = 14
 
 type Point = {
   x: number
@@ -62,7 +64,7 @@ function TapActionButton({
     <button
       type="button"
       className={cn(
-        'action-button pointer-events-auto flex min-h-[52px] min-w-[52px] touch-none items-center justify-center rounded-full border border-cyan-300/18 bg-[linear-gradient(180deg,rgba(8,32,55,0.9),rgba(4,12,24,0.96))] px-3 py-3 text-[10px] font-black uppercase tracking-[0.14em] text-slate-100 shadow-[0_14px_26px_rgba(0,0,0,0.28)] backdrop-blur',
+        'action-button pointer-events-auto flex min-h-[46px] min-w-[46px] touch-none items-center justify-center rounded-full border border-cyan-300/18 bg-[linear-gradient(180deg,rgba(8,32,55,0.9),rgba(4,12,24,0.96))] px-2.5 py-2.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-100 shadow-[0_12px_22px_rgba(0,0,0,0.28)] backdrop-blur',
         className,
       )}
       disabled={disabled}
@@ -140,8 +142,7 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
     const dx = point.x - state.origin.x
     const dy = point.y - state.origin.y
     const clamped = clampJoystick(dx, dy)
-    const nextJumpTriggered =
-      state.jumpTriggered || clamped.y <= -JUMP_THRESHOLD
+    const nextJumpTriggered = state.jumpTriggered || clamped.y <= -JUMP_THRESHOLD
 
     setMobileControl('left', clamped.x <= -MOVE_THRESHOLD)
     setMobileControl('right', clamped.x >= MOVE_THRESHOLD)
@@ -153,25 +154,24 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
     setJoystick({
       ...state,
       knob: clamped,
-      jumpTriggered:
-        nextJumpTriggered && clamped.y < -JUMP_RESET_THRESHOLD,
+      jumpTriggered: nextJumpTriggered && clamped.y < -JUMP_RESET_THRESHOLD,
     })
   }
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
-      <div className="absolute left-3 top-3 right-3 flex items-start justify-end">
+      <div className="absolute right-[calc(8px+var(--safe-right))] top-[calc(40px+var(--safe-top))] flex items-start justify-end">
         <TapActionButton
           label={status === 'paused' ? 'Resume' : 'Pause'}
           onClick={() => togglePause()}
-          className="min-h-[42px] min-w-[42px] px-2 py-2 text-[9px]"
+          className="min-h-[38px] min-w-[38px] px-2 py-2 text-[8px]"
         />
       </div>
 
       <div
         className={cn(
-          'pointer-events-auto absolute bottom-[calc(18px+var(--safe-bottom))] left-3 touch-none overflow-hidden rounded-[30px]',
-          portraitMode ? 'top-[42%] right-[50%]' : 'top-[54%] right-[52%]',
+          'pointer-events-auto absolute left-[calc(8px+var(--safe-left))] bottom-[calc(10px+var(--safe-bottom))] touch-none overflow-hidden rounded-[28px]',
+          portraitMode ? 'h-[118px] w-[118px]' : 'h-[108px] w-[108px]',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -220,25 +220,34 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
         {joystickStyle ? (
           <>
             <div
-              className="absolute h-[116px] w-[116px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/14 bg-black/28 shadow-[0_0_26px_rgba(0,0,0,0.22)] backdrop-blur-[2px]"
-              style={joystickStyle.base}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/14 bg-black/28 shadow-[0_0_22px_rgba(0,0,0,0.22)] backdrop-blur-[2px]"
+              style={{ ...joystickStyle.base, height: `${JOYSTICK_DIAMETER}px`, width: `${JOYSTICK_DIAMETER}px` }}
             />
             <div
-              className="absolute h-[56px] w-[56px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/32 bg-cyan-500/18 shadow-[0_0_20px_rgba(65,196,255,0.22)] backdrop-blur"
-              style={joystickStyle.knob}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/32 bg-cyan-500/18 shadow-[0_0_18px_rgba(65,196,255,0.22)] backdrop-blur"
+              style={{ ...joystickStyle.knob, height: `${JOYSTICK_KNOB_DIAMETER}px`, width: `${JOYSTICK_KNOB_DIAMETER}px` }}
             />
           </>
         ) : (
-          <div className="absolute bottom-5 left-3 flex h-[92px] w-[92px] items-center justify-center rounded-full border border-cyan-100/10 bg-black/12 text-[9px] font-black uppercase tracking-[0.14em] text-slate-300/70">
+          <div className="absolute bottom-2.5 left-2.5 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-100/10 bg-black/12 text-[8px] font-black uppercase tracking-[0.12em] text-slate-300/70">
             Move
           </div>
         )}
       </div>
 
+      <div className="pointer-events-auto absolute left-[calc(18px+var(--safe-left))] bottom-[calc(110px+var(--safe-bottom))]">
+        <TapActionButton
+          label="Gren"
+          disabled={!grenadeUnlocked}
+          onClick={() => pulseAction('grenade')}
+          className="min-h-[38px] min-w-[44px] px-2 py-2 text-[8px]"
+        />
+      </div>
+
       <div
         className={cn(
-          'pointer-events-auto absolute bottom-[calc(18px+var(--safe-bottom))] right-3 touch-none overflow-hidden rounded-[32px]',
-          portraitMode ? 'top-[36%] left-[52%]' : 'top-[42%] left-[58%]',
+          'pointer-events-auto absolute right-[calc(8px+var(--safe-right))] bottom-[calc(12px+var(--safe-bottom))] touch-none overflow-hidden rounded-[30px]',
+          portraitMode ? 'h-[112px] w-[112px]' : 'h-[98px] w-[98px]',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -284,13 +293,13 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
           setMobileControl('shoot', false)
         }}
       >
-        <div className="absolute bottom-4 right-3 flex h-[98px] w-[98px] items-center justify-center rounded-full border border-cyan-300/12 bg-cyan-500/10 text-[10px] font-black uppercase tracking-[0.16em] text-cyan-100/72 backdrop-blur-[1px]">
+        <div className="absolute bottom-2 right-2 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-300/12 bg-cyan-500/10 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-100/72 backdrop-blur-[1px]">
           Fire
         </div>
 
         {fire ? (
           <div
-            className="absolute h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/24 bg-cyan-500/18 shadow-[0_0_28px_rgba(65,196,255,0.22)]"
+            className="absolute h-[62px] w-[62px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/24 bg-cyan-500/18 shadow-[0_0_24px_rgba(65,196,255,0.22)]"
             style={{ left: fire.point.x, top: fire.point.y }}
           />
         ) : null}
@@ -298,27 +307,21 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
 
       <div
         className={cn(
-          'pointer-events-auto absolute flex items-center gap-2',
+          'pointer-events-auto absolute flex flex-col gap-2',
           portraitMode
-            ? 'bottom-[calc(20px+var(--safe-bottom))] left-[44%] -translate-x-1/2'
-            : 'bottom-[calc(24px+var(--safe-bottom))] left-[40%] -translate-x-1/2',
+            ? 'right-[calc(90px+var(--safe-right))] bottom-[calc(28px+var(--safe-bottom))]'
+            : 'right-[calc(96px+var(--safe-right))] bottom-[calc(16px+var(--safe-bottom))]',
         )}
       >
         <TapActionButton
-          label="Gren"
-          disabled={!grenadeUnlocked}
-          onClick={() => pulseAction('grenade')}
-          className="min-h-[48px] min-w-[58px] px-3 py-2 text-[9px]"
-        />
-        <TapActionButton
           label="Skill"
           onClick={() => pulseAction('ability')}
-          className="min-h-[48px] min-w-[58px] px-3 py-2 text-[9px]"
+          className="min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]"
         />
         <TapActionButton
           label="Heal"
           onClick={() => pulseAction('heal')}
-          className="min-h-[48px] min-w-[58px] px-3 py-2 text-[9px]"
+          className="min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]"
         />
       </div>
     </div>
