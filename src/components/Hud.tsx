@@ -15,7 +15,7 @@ function formatCooldown(remainingMs: number) {
   return `${(remainingMs / 1000).toFixed(1)}s`
 }
 
-export function Hud() {
+export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: boolean }) {
   const hp = useGameStore((state) => state.hp)
   const maxHp = useGameStore((state) => state.maxHp)
   const armor = useGameStore((state) => state.armor)
@@ -53,7 +53,7 @@ export function Hud() {
   const fireGrenadeUnlocked = unlockedItemIds.includes(USDC_GRENADE_REWARD_ITEM_ID)
   const shotgunUnlocked = unlockedItemIds.includes('shotgun')
   const compactHud = showTouchControls
-  const compactLandscapeHud = compactHud && isMobileLandscape
+  const compactLandscapeHud = compactHud && (isMobileLandscape || forceLandscapeLayout)
   const weaponLabel = getItemById(equippedWeapon)?.label ?? 'Pistol'
   const shortWeaponLabel =
     equippedWeapon === 'shotgun' ? 'SG' : equippedWeapon === 'burst-rifle' ? 'BR' : 'PI'

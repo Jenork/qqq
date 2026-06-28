@@ -25,7 +25,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
     shellRef,
     enabled: mobileGameplayActive,
   })
-  const showPortraitRotationGuard = showTouchControls && immersiveActive && isMobilePortrait && status !== 'ready'
+  const portraitLandscapeFallback = showTouchControls && immersiveActive && isMobilePortrait && status !== 'ready'
 
   useEffect(() => {
     let mounted = true
@@ -88,7 +88,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
     }
   }, [immersiveActive, isActive, isMobileLandscape, isMobilePortrait, showTouchControls, status])
 
-  const showMobileControlDeck = showTouchControls && status === 'playing' && !showPortraitRotationGuard
+  const showMobileControlDeck = showTouchControls && status === 'playing'
 
   const handleStartRun = async () => {
     await enterImmersive()
@@ -108,7 +108,9 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
         <div
           className={cn(
             'relative flex w-full items-center justify-center overflow-hidden bg-[#020713]',
-            immersiveActive
+            portraitLandscapeFallback
+              ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(6px+var(--safe-left))] pr-[calc(6px+var(--safe-right))] pt-[calc(46px+var(--safe-top))] pb-[calc(112px+var(--safe-bottom))]'
+              : immersiveActive
               ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(4px+var(--safe-left))] pr-[calc(4px+var(--safe-right))] pt-[calc(42px+var(--safe-top))] pb-[calc(88px+var(--safe-bottom))]'
               : isMobileLandscape
                 ? 'h-[calc(100svh-116px)] min-h-[400px] max-h-[calc(100svh-116px)] px-2 pt-11 pb-20'
@@ -121,6 +123,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
             ref={containerRef}
             className={cn(
               'game-canvas h-full w-full max-w-full overflow-hidden bg-[#020713]',
+              portraitLandscapeFallback && 'aspect-[16/9] h-auto max-h-[42dvh] min-h-[200px] self-center',
               !showTouchControls && 'aspect-[16/9]',
             )}
           />
@@ -129,23 +132,12 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
         <div className="pointer-events-none absolute inset-0 border border-cyan-300/20" />
         <div className="pointer-events-none absolute inset-[14px] border border-cyan-300/15 [clip-path:polygon(0_14px,14px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-18px))]" />
 
-        {status !== 'ready' ? <Hud /> : null}
-        {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} /> : null}
-        {showTouchControls && isMobilePortrait && status !== 'ready' && !showPortraitRotationGuard ? (
+        {status !== 'ready' ? <Hud forceLandscapeLayout={portraitLandscapeFallback} /> : null}
+        {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} forceLandscapeLayout={portraitLandscapeFallback} /> : null}
+        {showTouchControls && isMobilePortrait && status !== 'ready' && !portraitLandscapeFallback ? (
           <div className="pointer-events-none absolute left-1/2 top-[calc(10px+var(--safe-top))] z-30 -translate-x-1/2">
             <div className="inferno-chip rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-50 shadow-[0_0_18px_rgba(65,196,255,0.16)]">
               Rotate for full arena
-            </div>
-          </div>
-        ) : null}
-        {showPortraitRotationGuard ? (
-          <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#020713]/96 p-5">
-            <div className="inferno-frame w-full max-w-[320px] px-5 py-6 text-center">
-              <p className="panel-title">Landscape Required</p>
-              <h2 className="inferno-heading mt-2 text-2xl font-black uppercase">Rotate Device</h2>
-              <p className="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-cyan-100/82">
-                The Base App did not switch orientation automatically. Turn the phone sideways to continue the run.
-              </p>
             </div>
           </div>
         ) : null}

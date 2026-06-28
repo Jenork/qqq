@@ -76,7 +76,13 @@ function TapActionButton({
   )
 }
 
-export function MobileGameControls({ portraitMode = false }: { portraitMode?: boolean }) {
+export function MobileGameControls({
+  portraitMode = false,
+  forceLandscapeLayout = false,
+}: {
+  portraitMode?: boolean
+  forceLandscapeLayout?: boolean
+}) {
   const unlockedItemIds = useGameStore((state) => state.unlockedItemIds)
   const status = useGameStore((state) => state.status)
   const setMobileControl = useGameStore((state) => state.setMobileControl)
@@ -86,7 +92,7 @@ export function MobileGameControls({ portraitMode = false }: { portraitMode?: bo
   const [joystick, setJoystick] = useState<JoystickState | null>(null)
   const [fire, setFire] = useState<FireState | null>(null)
   const jumpTimeoutRef = useRef<number | null>(null)
-  const compactLandscapeControls = !portraitMode && isMobileLandscape
+  const compactLandscapeControls = forceLandscapeLayout || (!portraitMode && isMobileLandscape)
 
   useEffect(() => {
     return () => {
