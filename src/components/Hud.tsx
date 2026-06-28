@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { USDC_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
-import { getItemById, getItemIconPath } from '@/config/items'
+import { getItemIconPath } from '@/config/items'
 import { useGameStore } from '@/hooks/useGameStore'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { cn } from '@/lib/cn'
@@ -21,7 +21,6 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
   const armor = useGameStore((state) => state.armor)
   const maxArmor = useGameStore((state) => state.maxArmor)
   const score = useGameStore((state) => state.score)
-  const wave = useGameStore((state) => state.wave)
   const activeMessage = useGameStore((state) => state.activeMessage)
   const grenadeCooldownRemaining = useGameStore((state) => state.grenadeCooldownRemaining)
   const abilityCooldownRemaining = useGameStore((state) => state.abilityCooldownRemaining)
@@ -30,7 +29,6 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
   const healCharges = useGameStore((state) => state.healCharges)
   const bossHp = useGameStore((state) => state.bossHp)
   const bossMaxHp = useGameStore((state) => state.bossMaxHp)
-  const equippedWeapon = useGameStore((state) => state.equippedWeapon)
   const unlockedItemIds = useGameStore((state) => state.unlockedItemIds)
   const status = useGameStore((state) => state.status)
   const togglePause = useGameStore((state) => state.togglePause)
@@ -50,20 +48,13 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
   const healIcon = getItemIconPath('medkit')
   const isWaveMessage = Boolean(activeMessage && /wave/i.test(activeMessage))
   const armoredRewardActive = maxArmor > 0
-  const fireGrenadeUnlocked = unlockedItemIds.includes(USDC_GRENADE_REWARD_ITEM_ID)
   const shotgunUnlocked = unlockedItemIds.includes('shotgun')
   const compactHud = showTouchControls
   const compactLandscapeHud = compactHud && (isMobileLandscape || forceLandscapeLayout)
-  const weaponLabel = getItemById(equippedWeapon)?.label ?? 'Pistol'
-  const shortWeaponLabel =
-    equippedWeapon === 'shotgun' ? 'SG' : equippedWeapon === 'burst-rifle' ? 'BR' : 'PI'
-  const ammoLabel = equippedWeapon === 'shotgun' ? '8+' : 'INF'
   const bossVisible = bossMaxHp > 0 && bossHp > 0
   const bossHpPercent = bossVisible ? Math.max(0, Math.min(100, (bossHp / bossMaxHp) * 100)) : 0
 
   const desktopStatusEntries = [
-    { label: 'Weapon', value: weaponLabel, icon: null, tone: 'text-cyan-50' },
-    { label: 'Ammo', value: ammoLabel, icon: null, tone: 'text-cyan-50' },
     { label: 'Grenade', value: grenadeLabel, icon: grenadeIcon, tone: 'text-amber-200' },
     {
       label: 'Ability',
@@ -76,9 +67,6 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
 
   const mobileStatusEntries = [
     { label: 'Score', value: String(score), tone: 'text-amber-200' },
-    { label: 'Wave', value: String(wave), tone: 'text-amber-200' },
-    { label: 'Wpn', value: shortWeaponLabel, tone: 'text-cyan-50' },
-    { label: 'Ammo', value: ammoLabel, tone: 'text-cyan-50' },
     { label: 'Gren', value: grenadeLabel, tone: 'text-cyan-100' },
     { label: 'Skill', value: abilityLabel, tone: shieldRemaining > 0 ? 'text-cyan-100' : 'text-[#8ad5ff]' },
     { label: 'Heal', value: healLabel, tone: 'text-[#85ff78]' },
@@ -147,7 +135,7 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
           <div
             className={cn(
               'grid min-w-0 flex-1 gap-1',
-              compactLandscapeHud ? 'grid-cols-7 gap-0.5' : isMobileLandscape ? 'grid-cols-7' : 'grid-cols-4',
+              compactLandscapeHud ? 'grid-cols-4 gap-0.5' : isMobileLandscape ? 'grid-cols-4' : 'grid-cols-4',
             )}
           >
             {mobileStatusEntries.map((entry) => (
@@ -257,11 +245,6 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
                 <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/80">Score</div>
                 <div className="relative z-[1] mt-1 text-2xl font-black text-amber-200">{score}</div>
               </div>
-              <div className="inferno-frame min-w-[82px] px-3 py-2 text-center">
-                <div className="relative z-[1] text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/80">Wave</div>
-                <div className="relative z-[1] mt-1 text-2xl font-black text-amber-200">{wave}</div>
-              </div>
-
               {desktopStatusEntries.map((entry) => (
                 <div key={entry.label} className="inferno-frame min-w-[82px] px-3 py-2 text-center">
                   <div className="relative z-[1] flex items-center justify-center gap-1 text-[9px] font-black uppercase tracking-[0.16em] text-cyan-100/80">
@@ -281,18 +264,8 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
               ))}
             </div>
 
-            {armoredRewardActive || fireGrenadeUnlocked || shotgunUnlocked ? (
+            {shotgunUnlocked ? (
               <div className="flex flex-wrap justify-end gap-1">
-                {armoredRewardActive ? (
-                  <span className="inferno-chip rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-rose-100 sm:text-[9px]">
-                    Armored
-                  </span>
-                ) : null}
-                {fireGrenadeUnlocked ? (
-                  <span className="inferno-chip rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-orange-50 sm:text-[9px]">
-                    Fire Grenade
-                  </span>
-                ) : null}
                 {shotgunUnlocked ? (
                   <span className="inferno-chip rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-amber-100 sm:text-[9px]">
                     Shotgun Unlocked
