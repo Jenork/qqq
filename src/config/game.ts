@@ -47,7 +47,7 @@ export const PLAYER_CONFIG = {
 
 export const SPRITE_TUNING = {
   player: {
-    scale: 0.39,
+    scale: 0.429,
     bobScaleX: 0.006,
     bobScaleY: 0.002,
     floorOffset: 10,
@@ -62,7 +62,7 @@ export const SPRITE_TUNING = {
   },
   enemies: {
     melee: {
-      scale: 0.29,
+      scale: 0.325,
       floorOffset: 7,
       bodyWidth: 230,
       bodyHeight: 270,
@@ -70,7 +70,7 @@ export const SPRITE_TUNING = {
       bodyOffsetY: 140,
     },
     ranged: {
-      scale: 0.252,
+      scale: 0.282,
       hoverBaseOffset: 92,
       hoverAmplitude: 5,
       bodyWidth: 300,
@@ -80,7 +80,7 @@ export const SPRITE_TUNING = {
       projectileOffsetY: 46,
     },
     heavy: {
-      scale: 0.3,
+      scale: 0.336,
       floorOffset: 7,
       bodyWidth: 250,
       bodyHeight: 300,
@@ -88,7 +88,7 @@ export const SPRITE_TUNING = {
       bodyOffsetY: 112,
     },
     boss: {
-      scale: 0.48,
+      scale: 0.538,
       floorOffset: 12,
       bodyWidth: 292,
       bodyHeight: 330,

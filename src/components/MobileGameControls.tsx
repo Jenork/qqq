@@ -76,6 +76,19 @@ function TapActionButton({
 }) {
   const boundedProgress = Math.max(0, Math.min(1, cooldownProgress))
   const almostReady = boundedProgress >= 0.9 && boundedProgress < 1
+  const previousReadyRef = useRef(ready)
+  const [readyFlash, setReadyFlash] = useState(false)
+
+  useEffect(() => {
+    if (ready && !previousReadyRef.current && !disabled) {
+      setReadyFlash(true)
+      const timeout = window.setTimeout(() => setReadyFlash(false), 460)
+      previousReadyRef.current = ready
+      return () => window.clearTimeout(timeout)
+    }
+
+    previousReadyRef.current = ready
+  }, [disabled, ready])
 
   return (
     <button
@@ -84,6 +97,7 @@ function TapActionButton({
         'mobile-control-button pointer-events-auto relative flex touch-none items-center justify-center overflow-hidden rounded-full border text-[9px] font-black uppercase tracking-[0.12em] text-slate-100 backdrop-blur transition',
         ready && !disabled ? 'mobile-control-ready' : 'mobile-control-muted',
         almostReady && !disabled && 'mobile-control-almost-ready',
+        readyFlash && 'mobile-control-ready-flash',
         primary && 'mobile-fire-button',
         className,
       )}
@@ -254,7 +268,7 @@ export function MobileGameControls({
       <div
         className={cn(
           'pointer-events-auto absolute left-[calc(8px+var(--safe-left))] bottom-[calc(10px+var(--safe-bottom))] touch-none overflow-hidden rounded-[28px]',
-          compactLandscapeControls ? 'h-[72px] w-[72px] left-[calc(7px+var(--safe-left))] bottom-[calc(16px+var(--safe-bottom))]' : portraitMode ? 'h-[112px] w-[112px]' : 'h-[100px] w-[100px]',
+          compactLandscapeControls ? 'h-[72px] w-[72px] left-[calc(7px+var(--safe-left))] bottom-[calc(104px+var(--safe-bottom))]' : portraitMode ? 'h-[112px] w-[112px] bottom-[calc(104px+var(--safe-bottom))]' : 'h-[100px] w-[100px] bottom-[calc(104px+var(--safe-bottom))]',
           joystick && 'mobile-joystick-active',
         )}
         onPointerDown={(event) => {
@@ -324,7 +338,7 @@ export function MobileGameControls({
 
       <div
         className={cn(
-          'pointer-events-auto absolute right-[calc(28px+var(--safe-right))] bottom-[calc(18px+var(--safe-bottom))] touch-none overflow-hidden rounded-full',
+          'pointer-events-auto absolute right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] touch-none overflow-hidden rounded-full',
           compactLandscapeControls ? 'h-[82px] w-[82px]' : portraitMode ? 'h-[108px] w-[108px]' : 'h-[98px] w-[98px]',
         )}
         onPointerDown={(event) => {
@@ -394,10 +408,10 @@ export function MobileGameControls({
         className={cn(
           'pointer-events-none absolute',
           portraitMode
-            ? 'right-[calc(28px+var(--safe-right))] bottom-[calc(18px+var(--safe-bottom))] h-[150px] w-[162px]'
+            ? 'right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] h-[150px] w-[162px]'
             : compactLandscapeControls
-              ? 'right-[calc(28px+var(--safe-right))] bottom-[calc(18px+var(--safe-bottom))] h-[132px] w-[150px]'
-              : 'right-[calc(28px+var(--safe-right))] bottom-[calc(18px+var(--safe-bottom))] h-[142px] w-[154px]',
+              ? 'right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] h-[132px] w-[150px]'
+              : 'right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] h-[142px] w-[154px]',
         )}
       >
         <TapActionButton

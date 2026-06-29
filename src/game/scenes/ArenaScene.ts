@@ -1284,7 +1284,12 @@ export class ArenaScene extends Phaser.Scene {
 
   private getCenteredCameraScrollX() {
     const camera = this.cameras.main
-    return Math.max(0, (ARENA_SIZE.width - camera.width / camera.zoom) / 2)
+    const visibleWidth = camera.width / camera.zoom
+    return Phaser.Math.Clamp(
+      ARENA_BOUNDS.playerSpawnX - visibleWidth * 0.28,
+      0,
+      Math.max(0, ARENA_SIZE.width - visibleWidth),
+    )
   }
 
   private getCenteredCameraScrollY() {
