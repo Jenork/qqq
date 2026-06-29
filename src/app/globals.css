@@ -714,6 +714,183 @@ a:focus-visible,
   background: #0d0504;
 }
 
+.mobile-hud-glass {
+  border: 1px solid rgba(116, 232, 255, 0.16);
+  background:
+    linear-gradient(180deg, rgba(4, 15, 28, 0.46), rgba(1, 6, 14, 0.34)),
+    radial-gradient(circle at 50% 0%, rgba(85, 218, 255, 0.12), transparent 58%);
+  box-shadow:
+    inset 0 0 0 1px rgba(144, 237, 255, 0.05),
+    0 0 18px rgba(42, 184, 255, 0.09);
+  backdrop-filter: blur(10px);
+}
+
+.mobile-wave-toast {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  z-index: 30;
+  transform: translateX(-50%);
+  color: #e9fbff;
+  font-size: clamp(2rem, 8vw, 4.4rem);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-shadow:
+    0 0 12px rgba(117, 232, 255, 0.75),
+    0 0 34px rgba(65, 196, 255, 0.42),
+    0 4px 0 rgba(3, 19, 36, 0.92);
+  animation: mobile-wave-toast 1100ms ease-out forwards;
+}
+
+.mobile-low-hp-vignette {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 56%, rgba(255, 23, 46, 0.16) 100%),
+    linear-gradient(90deg, rgba(255, 0, 42, 0.12), transparent 12%, transparent 88%, rgba(255, 0, 42, 0.12));
+  animation: mobile-heartbeat 980ms ease-in-out infinite;
+}
+
+.mobile-hp-hit {
+  animation: mobile-hp-hit 420ms ease-out;
+}
+
+.mobile-armor-hit {
+  animation: mobile-armor-hit 420ms ease-out;
+}
+
+.mobile-hp-low {
+  box-shadow: 0 0 14px rgba(255, 54, 73, 0.42);
+  animation: mobile-hp-low 820ms ease-in-out infinite;
+}
+
+.mobile-control-button {
+  border-color: rgba(132, 232, 255, 0.26);
+  background: rgba(2, 10, 22, 0.26);
+  box-shadow:
+    inset 0 0 0 1px rgba(148, 235, 255, 0.06),
+    0 10px 24px rgba(0, 0, 0, 0.32),
+    0 0 18px rgba(65, 196, 255, 0.08);
+}
+
+.mobile-control-button:active {
+  transform: scale(0.94);
+}
+
+.mobile-control-ready {
+  box-shadow:
+    inset 0 0 0 1px rgba(158, 243, 255, 0.08),
+    0 0 20px rgba(77, 214, 255, 0.18),
+    0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-control-muted {
+  filter: saturate(0.55);
+  opacity: 0.68;
+}
+
+.mobile-fire-button {
+  border: 1px solid rgba(190, 246, 255, 0.62);
+  background:
+    radial-gradient(circle at 44% 35%, rgba(145, 240, 255, 0.28), rgba(7, 40, 62, 0.74) 58%, rgba(2, 10, 22, 0.92) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(224, 252, 255, 0.12),
+    inset 0 -14px 24px rgba(5, 20, 40, 0.5),
+    0 0 22px rgba(99, 225, 255, 0.28),
+    0 0 42px rgba(65, 196, 255, 0.13);
+  animation: mobile-fire-pulse 1600ms ease-in-out infinite;
+}
+
+.mobile-fire-active {
+  transform: scale(0.93) translateY(1px);
+  box-shadow:
+    inset 0 0 22px rgba(232, 252, 255, 0.22),
+    0 0 30px rgba(128, 235, 255, 0.4);
+}
+
+@keyframes mobile-wave-toast {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.88);
+  }
+  18% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(1.1);
+  }
+}
+
+@keyframes mobile-hp-hit {
+  0%, 100% {
+    transform: translateX(0);
+    box-shadow: none;
+  }
+  22% {
+    transform: translateX(-2px);
+    box-shadow: 0 0 18px rgba(255, 48, 63, 0.72);
+  }
+  46% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes mobile-armor-hit {
+  0%, 100% {
+    box-shadow: none;
+  }
+  34% {
+    box-shadow: 0 0 18px rgba(87, 218, 255, 0.72);
+  }
+}
+
+@keyframes mobile-hp-low {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes mobile-heartbeat {
+  0%, 100% {
+    opacity: 0.68;
+  }
+  45% {
+    opacity: 0.28;
+  }
+  55% {
+    opacity: 0.78;
+  }
+}
+
+@keyframes mobile-fire-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(224, 252, 255, 0.12),
+      inset 0 -14px 24px rgba(5, 20, 40, 0.5),
+      0 0 22px rgba(99, 225, 255, 0.28),
+      0 0 42px rgba(65, 196, 255, 0.13);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(224, 252, 255, 0.16),
+      inset 0 -14px 24px rgba(5, 20, 40, 0.46),
+      0 0 30px rgba(122, 235, 255, 0.38),
+      0 0 52px rgba(65, 196, 255, 0.18);
+  }
+}
+
 @media (max-width: 1023px) {
   .dashboard-header {
     flex-direction: column;

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { USDC_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { getItemIconPath } from '@/config/items'
@@ -21,6 +22,7 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
   const armor = useGameStore((state) => state.armor)
   const maxArmor = useGameStore((state) => state.maxArmor)
   const score = useGameStore((state) => state.score)
+  const wave = useGameStore((state) => state.wave)
   const activeMessage = useGameStore((state) => state.activeMessage)
   const grenadeCooldownRemaining = useGameStore((state) => state.grenadeCooldownRemaining)
   const abilityCooldownRemaining = useGameStore((state) => state.abilityCooldownRemaining)
@@ -33,6 +35,11 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
   const status = useGameStore((state) => state.status)
   const togglePause = useGameStore((state) => state.togglePause)
   const { showTouchControls, isMobileLandscape } = useMobileViewport()
+  const previousHpRef = useRef(hp)
+  const previousArmorRef = useRef(armor)
+  const [hpHit, setHpHit] = useState(false)
+  const [armorHit, setArmorHit] = useState(false)
+  const [waveToast, setWaveToast] = useState<number | null>(null)
 
   const grenadeUnlocked =
     unlockedItemIds.includes('frag-grenade') || unlockedItemIds.includes(USDC_GRENADE_REWARD_ITEM_ID)
@@ -53,6 +60,40 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
   const compactLandscapeHud = compactHud && (isMobileLandscape || forceLandscapeLayout)
   const bossVisible = bossMaxHp > 0 && bossHp > 0
   const bossHpPercent = bossVisible ? Math.max(0, Math.min(100, (bossHp / bossMaxHp) * 100)) : 0
+  const lowHp = status === 'playing' && hpPercent <= 35
+
+  useEffect(() => {
+    if (hp < previousHpRef.current) {
+      setHpHit(true)
+      const timeout = window.setTimeout(() => setHpHit(false), 420)
+      previousHpRef.current = hp
+      return () => window.clearTimeout(timeout)
+    }
+
+    previousHpRef.current = hp
+  }, [hp])
+
+  useEffect(() => {
+    if (armor < previousArmorRef.current) {
+      setArmorHit(true)
+      const timeout = window.setTimeout(() => setArmorHit(false), 420)
+      previousArmorRef.current = armor
+      return () => window.clearTimeout(timeout)
+    }
+
+    previousArmorRef.current = armor
+  }, [armor])
+
+  useEffect(() => {
+    if (status === 'ready') {
+      setWaveToast(null)
+      return
+    }
+
+    setWaveToast(wave)
+    const timeout = window.setTimeout(() => setWaveToast(null), 1100)
+    return () => window.clearTimeout(timeout)
+  }, [status, wave])
 
   const desktopStatusEntries = [
     { label: 'Grenade', value: grenadeLabel, icon: grenadeIcon, tone: 'text-amber-200' },
@@ -65,27 +106,22 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
     { label: 'Heal', value: healLabel, icon: healIcon, tone: 'text-[#85ff78]' },
   ]
 
-  const mobileStatusEntries = [
-    { label: 'Score', value: String(score), tone: 'text-amber-200' },
-    { label: 'Gren', value: grenadeLabel, tone: 'text-cyan-100' },
-    { label: 'Skill', value: abilityLabel, tone: shieldRemaining > 0 ? 'text-cyan-100' : 'text-[#8ad5ff]' },
-    { label: 'Heal', value: healLabel, tone: 'text-[#85ff78]' },
-  ]
-
   if (compactHud) {
     return (
-      <div className={cn(
-        'pointer-events-none absolute left-[calc(4px+var(--safe-left))] right-[calc(4px+var(--safe-right))] top-[calc(4px+var(--safe-top))] z-20 flex flex-col gap-1',
-        compactLandscapeHud && 'left-[calc(6px+var(--safe-left))] right-[calc(6px+var(--safe-right))] top-[calc(3px+var(--safe-top))]',
-      )}>
-        <div className={cn('pointer-events-auto flex items-stretch gap-1', compactLandscapeHud && 'gap-0.5')}>
+      <div className="pointer-events-none absolute inset-0 z-20">
+        {lowHp ? <div className="mobile-low-hp-vignette" /> : null}
+
+        <div className={cn(
+          'absolute left-[calc(6px+var(--safe-left))] right-[calc(6px+var(--safe-right))] top-[calc(5px+var(--safe-top))] grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2',
+          compactLandscapeHud && 'left-[calc(7px+var(--safe-left))] right-[calc(7px+var(--safe-right))] top-[calc(5px+var(--safe-top))] gap-1.5',
+        )}>
           <div className={cn(
-            'inferno-frame flex min-w-0 flex-[1.2] items-center gap-1.5 px-2 py-1.5',
-            compactLandscapeHud && 'max-w-[48%] flex-[1.05] gap-1 px-1.5 py-1',
+            'mobile-hud-glass flex min-w-0 items-center gap-1.5 rounded-full px-2 py-1',
+            compactLandscapeHud && 'max-w-[54vw] gap-1 px-1.5 py-0.5',
           )}>
             <div className={cn(
-              'relative z-[1] flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[10px] border border-cyan-300/18 bg-[radial-gradient(circle_at_50%_25%,rgba(73,202,255,0.18),rgba(3,12,24,0.98)_68%)] shadow-[inset_0_0_18px_rgba(65,196,255,0.16)]',
-              compactLandscapeHud && 'h-[24px] w-[24px] rounded-[8px]',
+              'relative z-[1] flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full border border-cyan-200/20 bg-cyan-300/10 shadow-[inset_0_0_12px_rgba(65,196,255,0.16)]',
+              compactLandscapeHud && 'h-[24px] w-[24px]',
             )}>
               <Image
                 src={armoredRewardActive ? '/ui/helmet-armored.png' : '/ui/helmet-base.png'}
@@ -93,88 +129,73 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
                 width={64}
                 height={64}
                 className={cn(
-                  'h-[22px] w-[22px] scale-[1.65] object-contain [image-rendering:auto]',
-                  compactLandscapeHud && 'h-[18px] w-[18px] scale-[1.45]',
+                  'h-[20px] w-[20px] scale-[1.55] object-contain [image-rendering:auto]',
+                  compactLandscapeHud && 'h-[17px] w-[17px] scale-[1.35]',
                 )}
               />
             </div>
 
             <div className="min-w-0 flex-1">
               <div className={cn('flex items-center justify-between gap-1.5', compactLandscapeHud && 'gap-1')}>
-                <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-rose-200', compactLandscapeHud && 'text-[6px]')}>
+                <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-rose-100', compactLandscapeHud && 'text-[6px]')}>
                   HP
                 </span>
-                <span className={cn('text-[9px] font-black text-rose-50', compactLandscapeHud && 'text-[8px]')}>
+                <span className={cn('text-[8px] font-black text-rose-50', compactLandscapeHud && 'text-[7px]')}>
                   {Math.ceil(hp)}/{maxHp}
                 </span>
               </div>
-              <div className={cn('mt-0.5 h-1.5 overflow-hidden rounded-[4px] border border-rose-300/18 bg-black/50', compactLandscapeHud && 'h-1')}>
+              <div className={cn('mt-0.5 h-1.5 overflow-hidden rounded-full border border-rose-200/12 bg-black/45', compactLandscapeHud && 'h-1', hpHit && 'mobile-hp-hit', lowHp && 'mobile-hp-low')}>
                 <div
-                  className="h-full bg-[linear-gradient(90deg,#b50b07_0%,#ff5f1e_62%,#ffc45e_100%)] transition-all"
+                  className="h-full rounded-full bg-[linear-gradient(90deg,#d80f10_0%,#ff5f1e_62%,#ffc45e_100%)] transition-[width] duration-300 ease-out"
                   style={{ width: `${hpPercent}%` }}
                 />
               </div>
 
               <div className={cn('mt-0.5 flex items-center justify-between gap-1.5', compactLandscapeHud && 'gap-1')}>
-                <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-cyan-200', compactLandscapeHud && 'text-[6px]')}>
+                <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-cyan-100', compactLandscapeHud && 'text-[6px]')}>
                   Armor
                 </span>
-                <span className={cn('text-[9px] font-black text-cyan-50', compactLandscapeHud && 'text-[8px]')}>
+                <span className={cn('text-[8px] font-black text-cyan-50', compactLandscapeHud && 'text-[7px]')}>
                   {armor}/{maxArmor || 0}
                 </span>
               </div>
-              <div className={cn('mt-0.5 h-1 overflow-hidden rounded-[4px] border border-cyan-400/18 bg-black/50', compactLandscapeHud && 'h-[3px]')}>
+              <div className={cn('mt-0.5 h-1 overflow-hidden rounded-full border border-cyan-300/12 bg-black/45', compactLandscapeHud && 'h-[3px]', armorHit && 'mobile-armor-hit')}>
                 <div
-                  className="h-full bg-[linear-gradient(90deg,#0b5d83_0%,#28b8db_100%)] transition-all"
+                  className="h-full rounded-full bg-[linear-gradient(90deg,#0b5d83_0%,#28b8db_100%)] transition-[width] duration-300 ease-out"
                   style={{ width: `${armorPercent}%` }}
                 />
               </div>
             </div>
           </div>
 
-          <div
-            className={cn(
-              'grid min-w-0 flex-1 gap-1',
-              compactLandscapeHud ? 'grid-cols-4 gap-0.5' : isMobileLandscape ? 'grid-cols-4' : 'grid-cols-4',
-            )}
-          >
-            {mobileStatusEntries.map((entry) => (
-              <div key={entry.label} className={cn('inferno-frame min-w-0 px-1 py-1 text-center', compactLandscapeHud && 'px-0.5 py-0.5')}>
-                <div className={cn('relative z-[1] truncate text-[6px] font-black uppercase tracking-[0.1em] text-cyan-100/80', compactLandscapeHud && 'text-[5px]')}>
-                  {entry.label}
-                </div>
-                <div className={cn('relative z-[1] mt-0.5 truncate text-[9px] font-black', entry.tone, compactLandscapeHud && 'mt-0 text-[8px]')}>
-                  {entry.value}
-                </div>
-              </div>
-            ))}
+          <div className="mobile-hud-glass justify-self-center rounded-full px-2.5 py-1 text-center">
+            <div className="text-[6px] font-black uppercase tracking-[0.12em] text-cyan-100/70">Wave</div>
+            <div className="text-[12px] font-black leading-none text-cyan-50">{wave}</div>
           </div>
 
-          <button
-            type="button"
-            className={cn(
-              'action-button shrink-0 rounded-2xl px-2 py-1.5 text-[8px] font-black uppercase tracking-[0.1em]',
-              compactLandscapeHud && 'min-w-[52px] px-1.5 py-1 text-[7px]',
-            )}
-            disabled={status === 'ready' || status === 'gameover'}
-            onClick={() => togglePause()}
-          >
-            {status === 'paused' ? 'Run' : 'Pause'}
-          </button>
+          <div className="flex items-start justify-end gap-1">
+            <div className="mobile-hud-glass rounded-full px-2.5 py-1 text-right">
+              <div className="text-[6px] font-black uppercase tracking-[0.12em] text-cyan-100/70">Score</div>
+              <div className="text-[12px] font-black leading-none text-amber-200">{score}</div>
+            </div>
+            <button
+              type="button"
+              className={cn(
+                'mobile-hud-glass pointer-events-auto rounded-full px-2.5 py-2 text-[8px] font-black uppercase tracking-[0.1em] text-cyan-50 transition active:scale-95',
+                compactLandscapeHud && 'px-2 py-1.5 text-[7px]',
+              )}
+              disabled={status === 'ready' || status === 'gameover'}
+              onClick={() => togglePause()}
+            >
+              {status === 'paused' ? 'Run' : 'Pause'}
+            </button>
+          </div>
         </div>
 
-        {activeMessage ? (
-          <p
-            className={cn(
-              'pointer-events-none self-center rounded-full px-2 py-0.5 text-[7px] uppercase tracking-[0.1em]',
-              compactLandscapeHud && 'max-w-[180px] px-1.5 text-[6px]',
-              isWaveMessage
-                ? 'inferno-chip font-black text-cyan-50 shadow-[0_0_14px_rgba(65,196,255,0.18)]'
-                : 'text-cyan-100/82',
-            )}
-          >
-            {activeMessage}
-          </p>
+        {waveToast !== null ? (
+          <div key={waveToast} className="mobile-wave-toast">
+            WAVE {waveToast}
+          </div>
         ) : null}
 
         {bossVisible ? (

@@ -109,11 +109,11 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
           className={cn(
             'relative flex w-full items-center justify-center overflow-hidden bg-[#020713]',
             portraitLandscapeFallback
-              ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(6px+var(--safe-left))] pr-[calc(6px+var(--safe-right))] pt-[calc(46px+var(--safe-top))] pb-[calc(112px+var(--safe-bottom))]'
+              ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(2px+var(--safe-left))] pr-[calc(2px+var(--safe-right))] pt-[calc(2px+var(--safe-top))] pb-[calc(2px+var(--safe-bottom))]'
               : immersiveActive
-              ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(4px+var(--safe-left))] pr-[calc(4px+var(--safe-right))] pt-[calc(42px+var(--safe-top))] pb-[calc(88px+var(--safe-bottom))]'
+              ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(2px+var(--safe-left))] pr-[calc(2px+var(--safe-right))] pt-[calc(2px+var(--safe-top))] pb-[calc(2px+var(--safe-bottom))]'
               : isMobileLandscape
-                ? 'h-[calc(100svh-116px)] min-h-[400px] max-h-[calc(100svh-116px)] px-2 pt-11 pb-20'
+                ? 'h-[calc(100svh-84px)] min-h-[400px] max-h-[calc(100svh-84px)] px-1 pt-1 pb-1'
                 : showTouchControls
                   ? 'h-[calc(100svh-182px)] min-h-[60svh] max-h-[calc(100svh-182px)] px-1.5 pt-12 pb-24'
                   : 'aspect-[16/9] min-h-0 lg:max-h-[82svh]',
@@ -123,14 +123,18 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
             ref={containerRef}
             className={cn(
               'game-canvas h-full w-full max-w-full overflow-hidden bg-[#020713]',
-              portraitLandscapeFallback && 'aspect-[16/9] h-auto max-h-[42dvh] min-h-[200px] self-center',
+              portraitLandscapeFallback && 'aspect-[16/9] h-auto max-h-[100%] min-h-[200px] self-center',
               !showTouchControls && 'aspect-[16/9]',
             )}
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 border border-cyan-300/20" />
-        <div className="pointer-events-none absolute inset-[14px] border border-cyan-300/15 [clip-path:polygon(0_14px,14px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-18px))]" />
+        {!mobileGameplayActive ? (
+          <>
+            <div className="pointer-events-none absolute inset-0 border border-cyan-300/20" />
+            <div className="pointer-events-none absolute inset-[14px] border border-cyan-300/15 [clip-path:polygon(0_14px,14px_0,calc(100%-18px)_0,100%_18px,100%_calc(100%-14px),calc(100%-14px)_100%,14px_100%,0_calc(100%-18px))]" />
+          </>
+        ) : null}
 
         {status !== 'ready' ? <Hud forceLandscapeLayout={portraitLandscapeFallback} /> : null}
         {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} forceLandscapeLayout={portraitLandscapeFallback} /> : null}

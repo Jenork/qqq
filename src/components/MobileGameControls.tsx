@@ -1,6 +1,9 @@
 'use client'
 
 import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
+import { PLAYER_CONFIG } from '@/config/game'
+import { getItemIconPath } from '@/config/items'
 import { USDC_GRENADE_REWARD_ITEM_ID } from '@/config/missions'
 import { useGameStore } from '@/hooks/useGameStore'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
@@ -54,24 +57,71 @@ function TapActionButton({
   label,
   onClick,
   disabled,
+  iconSrc,
+  count,
+  cooldownProgress = 0,
+  ready = true,
+  primary = false,
   className,
 }: {
   label: string
   onClick: () => void
   disabled?: boolean
+  iconSrc?: string
+  count?: number
+  cooldownProgress?: number
+  ready?: boolean
+  primary?: boolean
   className?: string
 }) {
+  const boundedProgress = Math.max(0, Math.min(1, cooldownProgress))
+
   return (
     <button
       type="button"
       className={cn(
-        'action-button pointer-events-auto flex min-h-[46px] min-w-[46px] touch-none items-center justify-center rounded-full border border-cyan-300/18 bg-[linear-gradient(180deg,rgba(8,32,55,0.9),rgba(4,12,24,0.96))] px-2.5 py-2.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-100 shadow-[0_12px_22px_rgba(0,0,0,0.28)] backdrop-blur',
+        'mobile-control-button pointer-events-auto relative flex touch-none items-center justify-center overflow-hidden rounded-full border text-[9px] font-black uppercase tracking-[0.12em] text-slate-100 backdrop-blur transition',
+        ready && !disabled ? 'mobile-control-ready' : 'mobile-control-muted',
+        primary && 'mobile-fire-button',
         className,
       )}
       disabled={disabled}
       onClick={onClick}
+      aria-label={label}
     >
-      {label}
+      {boundedProgress > 0 ? (
+        <span
+          className="pointer-events-none absolute inset-0 rounded-full opacity-80"
+          style={{
+            background: `conic-gradient(rgba(102,225,255,0.82) ${boundedProgress * 360}deg, rgba(255,255,255,0.06) 0deg)`,
+          }}
+        />
+      ) : null}
+      <span className="pointer-events-none absolute inset-[3px] rounded-full bg-[radial-gradient(circle_at_45%_30%,rgba(123,232,255,0.2),rgba(3,10,20,0.9)_68%)]" />
+      {iconSrc ? (
+        <Image
+          src={iconSrc}
+          alt=""
+          width={48}
+          height={48}
+          className={cn('relative z-[1] h-[56%] w-[56%] object-contain', disabled && 'grayscale opacity-45')}
+        />
+      ) : (
+        <span className="relative z-[1]">{label}</span>
+      )}
+      {typeof count === 'number' ? (
+        <span className="pointer-events-none absolute bottom-0.5 right-0.5 z-[2] flex h-4 min-w-4 items-center justify-center rounded-full border border-cyan-200/30 bg-black/70 px-1 text-[9px] leading-none text-cyan-50">
+          {count}
+        </span>
+      ) : null}
+      {disabled ? (
+        <span className="pointer-events-none absolute inset-0 z-[3] flex items-center justify-center rounded-full bg-black/35">
+          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[42%] w-[42%] fill-none stroke-cyan-50/82 stroke-[2.4]">
+            <rect x="6.5" y="10" width="11" height="8" rx="1.5" />
+            <path d="M8.5 10V8a3.5 3.5 0 0 1 7 0v2" />
+          </svg>
+        </span>
+      ) : null}
     </button>
   )
 }
@@ -88,6 +138,11 @@ export function MobileGameControls({
   const setMobileControl = useGameStore((state) => state.setMobileControl)
   const pulseAction = useGameStore((state) => state.pulseAction)
   const togglePause = useGameStore((state) => state.togglePause)
+  const grenadeCooldownRemaining = useGameStore((state) => state.grenadeCooldownRemaining)
+  const abilityCooldownRemaining = useGameStore((state) => state.abilityCooldownRemaining)
+  const healCooldownRemaining = useGameStore((state) => state.healCooldownRemaining)
+  const shieldRemaining = useGameStore((state) => state.shieldRemaining)
+  const healCharges = useGameStore((state) => state.healCharges)
   const { isMobileLandscape } = useMobileViewport()
   const [joystick, setJoystick] = useState<JoystickState | null>(null)
   const [fire, setFire] = useState<FireState | null>(null)
@@ -106,6 +161,15 @@ export function MobileGameControls({
 
   const grenadeUnlocked =
     unlockedItemIds.includes('frag-grenade') || unlockedItemIds.includes(USDC_GRENADE_REWARD_ITEM_ID)
+  const grenadeReady = grenadeUnlocked && grenadeCooldownRemaining <= 0
+  const abilityReady = abilityCooldownRemaining <= 0 && shieldRemaining <= 0
+  const healReady = healCharges > 0 && healCooldownRemaining <= 0
+  const grenadeCooldownProgress = grenadeUnlocked ? grenadeCooldownRemaining / PLAYER_CONFIG.grenadeCooldownMs : 0
+  const abilityCooldownProgress = Math.max(abilityCooldownRemaining, shieldRemaining) / PLAYER_CONFIG.abilityCooldownMs
+  const healCooldownProgress = healCooldownRemaining / PLAYER_CONFIG.healCooldownMs
+  const grenadeIcon = getItemIconPath('frag-grenade') ?? undefined
+  const abilityIcon = getItemIconPath('shield') ?? undefined
+  const healIcon = getItemIconPath('medkit') ?? undefined
 
   const joystickStyle = useMemo(() => {
     if (!joystick) {
@@ -182,7 +246,7 @@ export function MobileGameControls({
       <div
         className={cn(
           'pointer-events-auto absolute left-[calc(8px+var(--safe-left))] bottom-[calc(10px+var(--safe-bottom))] touch-none overflow-hidden rounded-[28px]',
-          compactLandscapeControls ? 'h-[78px] w-[78px] left-[calc(10px+var(--safe-left))] bottom-[calc(30px+var(--safe-bottom))]' : portraitMode ? 'h-[118px] w-[118px]' : 'h-[108px] w-[108px]',
+          compactLandscapeControls ? 'h-[72px] w-[72px] left-[calc(7px+var(--safe-left))] bottom-[calc(16px+var(--safe-bottom))]' : portraitMode ? 'h-[112px] w-[112px]' : 'h-[100px] w-[100px]',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -231,7 +295,7 @@ export function MobileGameControls({
         {joystickStyle ? (
           <>
             <div
-              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/14 bg-black/28 shadow-[0_0_22px_rgba(0,0,0,0.22)] backdrop-blur-[2px]"
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/14 bg-black/24 shadow-[0_0_22px_rgba(0,0,0,0.22)] backdrop-blur-[2px]"
               style={{ ...joystickStyle.base, height: `${JOYSTICK_DIAMETER}px`, width: `${JOYSTICK_DIAMETER}px` }}
             />
             <div
@@ -241,30 +305,18 @@ export function MobileGameControls({
           </>
         ) : (
           <div className={cn(
-            'absolute bottom-2.5 left-2.5 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-100/10 bg-black/12 text-[8px] font-black uppercase tracking-[0.12em] text-slate-300/70',
-            compactLandscapeControls && 'bottom-1.5 left-1.5 h-[58px] w-[58px] text-[7px]',
+            'absolute bottom-2.5 left-2.5 flex h-[78px] w-[78px] items-center justify-center rounded-full border border-cyan-100/10 bg-black/10 text-[0] shadow-[inset_0_0_18px_rgba(65,196,255,0.08)]',
+            compactLandscapeControls && 'bottom-1 left-1 h-[58px] w-[58px]',
           )}>
-            Move
+            <span className="h-2 w-2 rounded-full bg-cyan-100/45 shadow-[0_0_14px_rgba(125,230,255,0.34)]" />
           </div>
         )}
       </div>
 
-      <div className={cn(
-        'pointer-events-auto absolute left-[calc(18px+var(--safe-left))] bottom-[calc(110px+var(--safe-bottom))]',
-        compactLandscapeControls && 'left-[calc(20px+var(--safe-left))] bottom-[calc(106px+var(--safe-bottom))]',
-      )}>
-        <TapActionButton
-          label="Gren"
-          disabled={!grenadeUnlocked}
-          onClick={() => pulseAction('grenade')}
-          className={cn('min-h-[38px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[30px] min-w-[34px] px-1.5 py-1 text-[7px]')}
-        />
-      </div>
-
       <div
         className={cn(
-          'pointer-events-auto absolute right-[calc(8px+var(--safe-right))] bottom-[calc(12px+var(--safe-bottom))] touch-none overflow-hidden rounded-[30px]',
-          compactLandscapeControls ? 'right-[calc(12px+var(--safe-right))] bottom-[calc(28px+var(--safe-bottom))] h-[78px] w-[78px]' : portraitMode ? 'h-[112px] w-[112px]' : 'h-[98px] w-[98px]',
+          'pointer-events-auto absolute right-[calc(10px+var(--safe-right))] bottom-[calc(14px+var(--safe-bottom))] touch-none overflow-hidden rounded-full',
+          compactLandscapeControls ? 'h-[78px] w-[78px]' : portraitMode ? 'h-[106px] w-[106px]' : 'h-[96px] w-[96px]',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -311,8 +363,9 @@ export function MobileGameControls({
         }}
       >
         <div className={cn(
-          'absolute bottom-2 right-2 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-300/12 bg-cyan-500/10 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-100/72 backdrop-blur-[1px]',
-          compactLandscapeControls && 'bottom-1.5 right-1.5 h-[62px] w-[62px] text-[8px]',
+          'mobile-fire-button absolute bottom-1 right-1 flex h-[84px] w-[84px] items-center justify-center rounded-full text-[9px] font-black uppercase tracking-[0.14em] text-cyan-50',
+          compactLandscapeControls && 'h-[68px] w-[68px] text-[8px]',
+          fire && 'mobile-fire-active',
         )}>
           Fire
         </div>
@@ -330,23 +383,50 @@ export function MobileGameControls({
 
       <div
         className={cn(
-          'pointer-events-auto absolute flex flex-col gap-2',
+          'pointer-events-none absolute',
           portraitMode
-            ? 'right-[calc(90px+var(--safe-right))] bottom-[calc(28px+var(--safe-bottom))]'
+            ? 'right-[calc(10px+var(--safe-right))] bottom-[calc(14px+var(--safe-bottom))] h-[142px] w-[152px]'
             : compactLandscapeControls
-              ? 'right-[calc(82px+var(--safe-right))] bottom-[calc(28px+var(--safe-bottom))] gap-1'
-              : 'right-[calc(96px+var(--safe-right))] bottom-[calc(16px+var(--safe-bottom))]',
+              ? 'right-[calc(10px+var(--safe-right))] bottom-[calc(14px+var(--safe-bottom))] h-[118px] w-[132px]'
+              : 'right-[calc(10px+var(--safe-right))] bottom-[calc(14px+var(--safe-bottom))] h-[132px] w-[144px]',
         )}
       >
         <TapActionButton
+          label="Grenade"
+          iconSrc={grenadeIcon}
+          count={grenadeUnlocked ? 1 : 0}
+          disabled={!grenadeUnlocked}
+          ready={grenadeReady}
+          cooldownProgress={grenadeCooldownProgress}
+          onClick={() => pulseAction('grenade')}
+          className={cn(
+            'absolute right-[30px] top-0 h-[42px] w-[42px]',
+            compactLandscapeControls && 'h-[36px] w-[36px]',
+          )}
+        />
+        <TapActionButton
           label="Skill"
+          iconSrc={abilityIcon}
+          ready={abilityReady}
+          cooldownProgress={abilityCooldownProgress}
           onClick={() => pulseAction('ability')}
-          className={cn('min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[31px] min-w-[36px] px-1.5 py-1 text-[7px]')}
+          className={cn(
+            'absolute left-0 top-1/2 h-[42px] w-[42px] -translate-y-1/2',
+            compactLandscapeControls && 'h-[36px] w-[36px]',
+          )}
         />
         <TapActionButton
           label="Heal"
+          iconSrc={healIcon}
+          count={healCharges}
+          disabled={healCharges <= 0}
+          ready={healReady}
+          cooldownProgress={healCooldownProgress}
           onClick={() => pulseAction('heal')}
-          className={cn('min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[31px] min-w-[36px] px-1.5 py-1 text-[7px]')}
+          className={cn(
+            'absolute bottom-0 right-[30px] h-[42px] w-[42px]',
+            compactLandscapeControls && 'h-[36px] w-[36px]',
+          )}
         />
       </div>
     </div>
