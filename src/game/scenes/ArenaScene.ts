@@ -30,6 +30,7 @@ import { createArenaEnemy } from '@/game/systems/enemyFactory'
 
 export class ArenaScene extends Phaser.Scene {
   private static readonly BACKGROUND_FLOOR_SOURCE_Y = 704
+  private static readonly CAMERA_ZOOM = 1.12
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private keys!: Record<string, Phaser.Input.Keyboard.Key>
   private player!: Player
@@ -49,6 +50,9 @@ export class ArenaScene extends Phaser.Scene {
   private shootLatch = false
   private survivalTickAt = 0
   private nextContactHitAt = 0
+  private cameraNudgeTween: Phaser.Tweens.Tween | null = null
+  private comboKills = 0
+  private comboWindowUntil = 0
 
   constructor() {
     super('arena')
@@ -66,6 +70,7 @@ export class ArenaScene extends Phaser.Scene {
   private buildArena() {
     this.cameras.main.setBackgroundColor('#020713')
     this.cameras.main.setRoundPixels(true)
+    this.resetCameraView()
     this.physics.world.setBounds(0, 0, ARENA_SIZE.width, ARENA_SIZE.height)
 
     const background = this.add.image(ARENA_SIZE.width / 2, ARENA_SIZE.height / 2, 'arena-background')
@@ -222,6 +227,9 @@ export class ArenaScene extends Phaser.Scene {
     this.playerBaseY = ARENA_BOUNDS.floorY + SPRITE_TUNING.player.floorOffset
     this.nextContactHitAt = 0
     this.shootLatch = false
+    this.comboKills = 0
+    this.comboWindowUntil = 0
+    this.resetCameraView()
     this.player.resetState(ARENA_BOUNDS.playerSpawnX, this.playerBaseY, rewards)
     this.survivalTickAt = this.time.now + SCORE_CONFIG.survivalTickMs
 
@@ -505,6 +513,7 @@ export class ArenaScene extends Phaser.Scene {
       store.equippedWeapon === 'shotgun' ? 42 : 26,
       store.equippedWeapon === 'shotgun' ? 0.00085 : 0.00045,
     )
+    this.nudgeCamera(direction * (store.equippedWeapon === 'shotgun' ? 10 : 6), 0, 70)
   }
 
   private throwGrenade(time: number) {
@@ -541,6 +550,7 @@ export class ArenaScene extends Phaser.Scene {
       fireVariant ? 'fire' : 'frag',
     )
     this.playSfx('grenade-throw')
+    this.cameras.main.shake(80, 0.0018)
   }
 
   private useAbility(time: number) {
@@ -555,12 +565,14 @@ export class ArenaScene extends Phaser.Scene {
     if (ability === 'shield') {
       this.player.shieldUntil = time + PLAYER_CONFIG.shieldDurationMs
       this.player.refreshVisualState(time)
+      this.cameras.main.shake(90, 0.0012)
       useGameStore.getState().setMessage('Shield pulse active.')
       return
     }
 
     if (ability === 'dash') {
       this.player.setVelocityX(this.player.facing * (PLAYER_CONFIG.moveSpeed + PLAYER_CONFIG.dashDistance))
+      this.cameras.main.shake(90, 0.0012)
       useGameStore.getState().setMessage('Dash triggered.')
       return
     }
@@ -568,12 +580,14 @@ export class ArenaScene extends Phaser.Scene {
     if (ability === 'rage') {
       this.player.rageUntil = time + PLAYER_CONFIG.rageDurationMs
       this.player.refreshVisualState(time)
+      this.cameras.main.shake(90, 0.0012)
       useGameStore.getState().setMessage('Rage mode active.')
       return
     }
 
     this.player.slowFieldUntil = time + PLAYER_CONFIG.slowDurationMs
     this.cameras.main.flash(120, 136, 198, 255)
+    this.cameras.main.shake(90, 0.0012)
     useGameStore.getState().setMessage('Enemies slowed.')
   }
 
@@ -928,12 +942,19 @@ export class ArenaScene extends Phaser.Scene {
   private hitEnemy(enemy: Enemy, damage: number) {
     const hp = enemy.takeDamage(this.time.now, damage)
     const isBoss = enemy.enemyType === 'boss'
+    const highDamage = damage >= 10 || hp <= 0
     this.playSfx(hp > 0 ? 'enemy-hit' : 'enemy-death')
     this.addImpact(
       enemy.x,
       enemy.y - (isBoss ? 92 : 32),
       hp > 0 ? (isBoss ? 0x8fefff : 0xffa366) : 0xffd48a,
       hp > 0 ? (isBoss ? 18 : 12) : isBoss ? 34 : 20,
+    )
+    this.addDamageNumber(
+      enemy.x,
+      enemy.y - (isBoss ? 124 : 58),
+      Math.round(damage),
+      highDamage,
     )
 
     if (hp > 0) {
@@ -955,6 +976,7 @@ export class ArenaScene extends Phaser.Scene {
     }
     enemy.destroy()
     const store = useGameStore.getState()
+    this.registerKillPresentation()
     useGameStore.setState({
       score: store.score + enemy.scoreValue,
       kills: store.kills + 1,
@@ -1127,6 +1149,7 @@ export class ArenaScene extends Phaser.Scene {
     this.addImpact(this.player.x, this.player.y - 72, 0xff6273, 18)
     this.player.setVelocityX((sourceX > this.player.x ? -1 : 1) * 132)
     this.cameras.main.shake(110, 0.003)
+    this.nudgeCamera(sourceX > this.player.x ? -8 : 8, 0, 95)
     useGameStore.setState({ hp: result.hp, armor: result.armor, maxArmor: this.player.maxArmor })
 
     if (result.hp > 0) {
@@ -1182,6 +1205,114 @@ export class ArenaScene extends Phaser.Scene {
       scale: 1.6,
       duration: 180,
       onComplete: () => circle.destroy(),
+    })
+  }
+
+  private addDamageNumber(x: number, y: number, damage: number, highDamage: boolean) {
+    const text = this.add
+      .text(x, y, String(damage), {
+        color: highDamage ? '#ffe66f' : '#f7fbff',
+        fontFamily: 'Arial Black, Trebuchet MS, sans-serif',
+        fontSize: highDamage ? '22px' : '16px',
+        stroke: '#031321',
+        strokeThickness: highDamage ? 5 : 4,
+      })
+      .setOrigin(0.5)
+      .setDepth(30)
+
+    this.tweens.add({
+      targets: text,
+      y: y - (highDamage ? 48 : 34),
+      alpha: 0,
+      scale: highDamage ? 1.18 : 1.05,
+      duration: highDamage ? 520 : 420,
+      ease: 'Cubic.easeOut',
+      onComplete: () => text.destroy(),
+    })
+  }
+
+  private registerKillPresentation() {
+    const time = this.time.now
+    this.comboKills = time <= this.comboWindowUntil ? this.comboKills + 1 : 1
+    this.comboWindowUntil = time + 1600
+
+    const comboLabel =
+      this.comboKills >= 8
+        ? 'UNSTOPPABLE'
+        : this.comboKills >= 6
+          ? 'RAMPAGE'
+          : this.comboKills >= 4
+            ? 'MONSTER KILL'
+            : this.comboKills === 3
+              ? 'TRIPLE KILL'
+              : this.comboKills === 2
+                ? 'DOUBLE KILL'
+                : null
+
+    if (!comboLabel) {
+      return
+    }
+
+    const text = this.add
+      .text(90, 210, comboLabel, {
+        color: '#ffe66f',
+        fontFamily: 'Arial Black, Trebuchet MS, sans-serif',
+        fontSize: '24px',
+        stroke: '#031321',
+        strokeThickness: 5,
+      })
+      .setOrigin(0, 0.5)
+      .setDepth(30)
+      .setScrollFactor(0)
+
+    this.tweens.add({
+      targets: text,
+      x: 118,
+      alpha: 0,
+      scale: 1.06,
+      duration: 820,
+      ease: 'Cubic.easeOut',
+      onComplete: () => text.destroy(),
+    })
+  }
+
+  private resetCameraView() {
+    const camera = this.cameras.main
+    camera.setZoom(ArenaScene.CAMERA_ZOOM)
+    camera.setScroll(this.getCenteredCameraScrollX(), this.getCenteredCameraScrollY())
+  }
+
+  private getCenteredCameraScrollX() {
+    const camera = this.cameras.main
+    return Math.max(0, (ARENA_SIZE.width - camera.width / camera.zoom) / 2)
+  }
+
+  private getCenteredCameraScrollY() {
+    const camera = this.cameras.main
+    return Math.max(0, (ARENA_SIZE.height - camera.height / camera.zoom) / 2)
+  }
+
+  private nudgeCamera(offsetX: number, offsetY: number, duration: number) {
+    const camera = this.cameras.main
+    const baseX = this.getCenteredCameraScrollX()
+    const baseY = this.getCenteredCameraScrollY()
+    const maxScrollX = Math.max(0, ARENA_SIZE.width - camera.width / camera.zoom)
+    const maxScrollY = Math.max(0, ARENA_SIZE.height - camera.height / camera.zoom)
+
+    this.cameraNudgeTween?.stop()
+    camera.setScroll(
+      Phaser.Math.Clamp(baseX + offsetX, 0, maxScrollX),
+      Phaser.Math.Clamp(baseY + offsetY, 0, maxScrollY),
+    )
+    this.cameraNudgeTween = this.tweens.add({
+      targets: camera,
+      scrollX: baseX,
+      scrollY: baseY,
+      duration,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        this.cameraNudgeTween = null
+      },
     })
   }
 

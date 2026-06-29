@@ -728,6 +728,9 @@ a:focus-visible,
 .mobile-wave-toast {
   pointer-events: none;
   position: absolute;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
   left: 50%;
   top: 22%;
   z-index: 30;
@@ -741,6 +744,15 @@ a:focus-visible,
     0 0 34px rgba(65, 196, 255, 0.42),
     0 4px 0 rgba(3, 19, 36, 0.92);
   animation: mobile-wave-toast 1100ms ease-out forwards;
+}
+
+.mobile-wave-toast small {
+  font-size: clamp(0.65rem, 2vw, 1rem);
+  letter-spacing: 0.2em;
+  color: #bceeff;
+  text-shadow:
+    0 0 10px rgba(117, 232, 255, 0.62),
+    0 2px 0 rgba(3, 19, 36, 0.92);
 }
 
 .mobile-low-hp-vignette {
@@ -762,6 +774,14 @@ a:focus-visible,
   animation: mobile-armor-hit 420ms ease-out;
 }
 
+.mobile-hp-heal {
+  animation: mobile-hp-heal 420ms ease-out;
+}
+
+.mobile-armor-gain {
+  animation: mobile-armor-gain 420ms ease-out;
+}
+
 .mobile-hp-low {
   box-shadow: 0 0 14px rgba(255, 54, 73, 0.42);
   animation: mobile-hp-low 820ms ease-in-out infinite;
@@ -774,10 +794,18 @@ a:focus-visible,
     inset 0 0 0 1px rgba(148, 235, 255, 0.06),
     0 10px 24px rgba(0, 0, 0, 0.32),
     0 0 18px rgba(65, 196, 255, 0.08);
+  transition:
+    transform 120ms cubic-bezier(0.2, 0.9, 0.22, 1.25),
+    filter 120ms ease,
+    opacity 120ms ease,
+    box-shadow 140ms ease;
 }
 
 .mobile-control-button:active {
   transform: scale(0.94);
+  box-shadow:
+    inset 0 0 20px rgba(210, 249, 255, 0.16),
+    0 0 28px rgba(98, 226, 255, 0.28);
 }
 
 .mobile-control-ready {
@@ -785,6 +813,10 @@ a:focus-visible,
     inset 0 0 0 1px rgba(158, 243, 255, 0.08),
     0 0 20px rgba(77, 214, 255, 0.18),
     0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-control-almost-ready {
+  animation: mobile-control-almost-ready 520ms ease-in-out infinite;
 }
 
 .mobile-control-muted {
@@ -805,10 +837,25 @@ a:focus-visible,
 }
 
 .mobile-fire-active {
-  transform: scale(0.93) translateY(1px);
+  animation: mobile-fire-rebound 180ms cubic-bezier(0.2, 0.9, 0.2, 1.35) both;
   box-shadow:
     inset 0 0 22px rgba(232, 252, 255, 0.22),
-    0 0 30px rgba(128, 235, 255, 0.4);
+    0 0 34px rgba(128, 235, 255, 0.46),
+    0 0 58px rgba(65, 196, 255, 0.2);
+}
+
+.mobile-joystick-active {
+  opacity: 1;
+  filter: saturate(1.25);
+}
+
+.mobile-joystick-active::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(164, 240, 255, 0.32);
+  box-shadow: 0 0 22px rgba(65, 196, 255, 0.24);
 }
 
 @keyframes mobile-wave-toast {
@@ -853,6 +900,24 @@ a:focus-visible,
   }
 }
 
+@keyframes mobile-hp-heal {
+  0%, 100% {
+    box-shadow: none;
+  }
+  34% {
+    box-shadow: 0 0 18px rgba(115, 255, 95, 0.58);
+  }
+}
+
+@keyframes mobile-armor-gain {
+  0%, 100% {
+    box-shadow: none;
+  }
+  34% {
+    box-shadow: 0 0 18px rgba(122, 235, 255, 0.66);
+  }
+}
+
 @keyframes mobile-hp-low {
   0%, 100% {
     opacity: 1;
@@ -874,6 +939,19 @@ a:focus-visible,
   }
 }
 
+@keyframes mobile-control-almost-ready {
+  0%, 100% {
+    box-shadow:
+      inset 0 0 0 1px rgba(158, 243, 255, 0.08),
+      0 0 18px rgba(77, 214, 255, 0.14);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(226, 252, 255, 0.18),
+      0 0 30px rgba(116, 232, 255, 0.42);
+  }
+}
+
 @keyframes mobile-fire-pulse {
   0%, 100% {
     box-shadow:
@@ -888,6 +966,18 @@ a:focus-visible,
       inset 0 -14px 24px rgba(5, 20, 40, 0.46),
       0 0 30px rgba(122, 235, 255, 0.38),
       0 0 52px rgba(65, 196, 255, 0.18);
+  }
+}
+
+@keyframes mobile-fire-rebound {
+  0% {
+    transform: scale(0.94) translateY(1px);
+  }
+  72% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 

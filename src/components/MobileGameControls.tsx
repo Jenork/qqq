@@ -75,6 +75,7 @@ function TapActionButton({
   className?: string
 }) {
   const boundedProgress = Math.max(0, Math.min(1, cooldownProgress))
+  const almostReady = boundedProgress >= 0.9 && boundedProgress < 1
 
   return (
     <button
@@ -82,6 +83,7 @@ function TapActionButton({
       className={cn(
         'mobile-control-button pointer-events-auto relative flex touch-none items-center justify-center overflow-hidden rounded-full border text-[9px] font-black uppercase tracking-[0.12em] text-slate-100 backdrop-blur transition',
         ready && !disabled ? 'mobile-control-ready' : 'mobile-control-muted',
+        almostReady && !disabled && 'mobile-control-almost-ready',
         primary && 'mobile-fire-button',
         className,
       )}
@@ -164,9 +166,15 @@ export function MobileGameControls({
   const grenadeReady = grenadeUnlocked && grenadeCooldownRemaining <= 0
   const abilityReady = abilityCooldownRemaining <= 0 && shieldRemaining <= 0
   const healReady = healCharges > 0 && healCooldownRemaining <= 0
-  const grenadeCooldownProgress = grenadeUnlocked ? grenadeCooldownRemaining / PLAYER_CONFIG.grenadeCooldownMs : 0
-  const abilityCooldownProgress = Math.max(abilityCooldownRemaining, shieldRemaining) / PLAYER_CONFIG.abilityCooldownMs
-  const healCooldownProgress = healCooldownRemaining / PLAYER_CONFIG.healCooldownMs
+  const grenadeCooldownProgress = grenadeUnlocked && grenadeCooldownRemaining > 0
+    ? 1 - grenadeCooldownRemaining / PLAYER_CONFIG.grenadeCooldownMs
+    : 0
+  const abilityCooldownProgress = Math.max(abilityCooldownRemaining, shieldRemaining) > 0
+    ? 1 - Math.max(abilityCooldownRemaining, shieldRemaining) / PLAYER_CONFIG.abilityCooldownMs
+    : 0
+  const healCooldownProgress = healCooldownRemaining > 0
+    ? 1 - healCooldownRemaining / PLAYER_CONFIG.healCooldownMs
+    : 0
   const grenadeIcon = getItemIconPath('frag-grenade') ?? undefined
   const abilityIcon = getItemIconPath('shield') ?? undefined
   const healIcon = getItemIconPath('medkit') ?? undefined
@@ -247,6 +255,7 @@ export function MobileGameControls({
         className={cn(
           'pointer-events-auto absolute left-[calc(8px+var(--safe-left))] bottom-[calc(10px+var(--safe-bottom))] touch-none overflow-hidden rounded-[28px]',
           compactLandscapeControls ? 'h-[72px] w-[72px] left-[calc(7px+var(--safe-left))] bottom-[calc(16px+var(--safe-bottom))]' : portraitMode ? 'h-[112px] w-[112px]' : 'h-[100px] w-[100px]',
+          joystick && 'mobile-joystick-active',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -295,12 +304,12 @@ export function MobileGameControls({
         {joystickStyle ? (
           <>
             <div
-              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/14 bg-black/24 shadow-[0_0_22px_rgba(0,0,0,0.22)] backdrop-blur-[2px]"
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-100/14 bg-black/24 shadow-[0_0_22px_rgba(0,0,0,0.22)] backdrop-blur-[2px] transition-all duration-100"
               style={{ ...joystickStyle.base, height: `${JOYSTICK_DIAMETER}px`, width: `${JOYSTICK_DIAMETER}px` }}
             />
             <div
-              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/32 bg-cyan-500/18 shadow-[0_0_18px_rgba(65,196,255,0.22)] backdrop-blur"
-              style={{ ...joystickStyle.knob, height: `${JOYSTICK_KNOB_DIAMETER}px`, width: `${JOYSTICK_KNOB_DIAMETER}px` }}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-200/42 bg-cyan-500/24 shadow-[0_0_22px_rgba(65,196,255,0.32)] backdrop-blur transition-all duration-100"
+              style={{ ...joystickStyle.knob, height: `${JOYSTICK_KNOB_DIAMETER + 8}px`, width: `${JOYSTICK_KNOB_DIAMETER + 8}px` }}
             />
           </>
         ) : (
@@ -315,8 +324,8 @@ export function MobileGameControls({
 
       <div
         className={cn(
-          'pointer-events-auto absolute right-[calc(10px+var(--safe-right))] bottom-[calc(14px+var(--safe-bottom))] touch-none overflow-hidden rounded-full',
-          compactLandscapeControls ? 'h-[78px] w-[78px]' : portraitMode ? 'h-[106px] w-[106px]' : 'h-[96px] w-[96px]',
+          'pointer-events-auto absolute right-[calc(28px+var(--safe-right))] bottom-[calc(18px+var(--safe-bottom))] touch-none overflow-hidden rounded-full',
+          compactLandscapeControls ? 'h-[82px] w-[82px]' : portraitMode ? 'h-[108px] w-[108px]' : 'h-[98px] w-[98px]',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -364,7 +373,7 @@ export function MobileGameControls({
       >
         <div className={cn(
           'mobile-fire-button absolute bottom-1 right-1 flex h-[84px] w-[84px] items-center justify-center rounded-full text-[9px] font-black uppercase tracking-[0.14em] text-cyan-50',
-          compactLandscapeControls && 'h-[68px] w-[68px] text-[8px]',
+          compactLandscapeControls && 'h-[72px] w-[72px] text-[8px]',
           fire && 'mobile-fire-active',
         )}>
           Fire
@@ -385,10 +394,10 @@ export function MobileGameControls({
         className={cn(
           'pointer-events-none absolute',
           portraitMode
-            ? 'right-[calc(10px+var(--safe-right))] bottom-[calc(14px+var(--safe-bottom))] h-[142px] w-[152px]'
+            ? 'right-[calc(28px+var(--safe-right))] bottom-[calc(18px+var(--safe-bottom))] h-[150px] w-[162px]'
             : compactLandscapeControls
-              ? 'right-[calc(10px+var(--safe-right))] bottom-[calc(14px+var(--safe-bottom))] h-[118px] w-[132px]'
-              : 'right-[calc(10px+var(--safe-right))] bottom-[calc(14px+var(--safe-bottom))] h-[132px] w-[144px]',
+              ? 'right-[calc(28px+var(--safe-right))] bottom-[calc(18px+var(--safe-bottom))] h-[132px] w-[150px]'
+              : 'right-[calc(28px+var(--safe-right))] bottom-[calc(18px+var(--safe-bottom))] h-[142px] w-[154px]',
         )}
       >
         <TapActionButton
@@ -400,8 +409,8 @@ export function MobileGameControls({
           cooldownProgress={grenadeCooldownProgress}
           onClick={() => pulseAction('grenade')}
           className={cn(
-            'absolute right-[30px] top-0 h-[42px] w-[42px]',
-            compactLandscapeControls && 'h-[36px] w-[36px]',
+            'absolute right-[30px] top-0 h-[52px] w-[52px]',
+            compactLandscapeControls && 'h-[46px] w-[46px]',
           )}
         />
         <TapActionButton
@@ -411,8 +420,8 @@ export function MobileGameControls({
           cooldownProgress={abilityCooldownProgress}
           onClick={() => pulseAction('ability')}
           className={cn(
-            'absolute left-0 top-1/2 h-[42px] w-[42px] -translate-y-1/2',
-            compactLandscapeControls && 'h-[36px] w-[36px]',
+            'absolute left-0 top-1/2 h-[52px] w-[52px] -translate-y-1/2',
+            compactLandscapeControls && 'h-[46px] w-[46px]',
           )}
         />
         <TapActionButton
@@ -424,8 +433,8 @@ export function MobileGameControls({
           cooldownProgress={healCooldownProgress}
           onClick={() => pulseAction('heal')}
           className={cn(
-            'absolute bottom-0 right-[30px] h-[42px] w-[42px]',
-            compactLandscapeControls && 'h-[36px] w-[36px]',
+            'absolute bottom-0 right-[30px] h-[52px] w-[52px]',
+            compactLandscapeControls && 'h-[46px] w-[46px]',
           )}
         />
       </div>

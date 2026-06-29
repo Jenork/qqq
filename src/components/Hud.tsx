@@ -37,8 +37,11 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
   const { showTouchControls, isMobileLandscape } = useMobileViewport()
   const previousHpRef = useRef(hp)
   const previousArmorRef = useRef(armor)
+  const previousWaveRef = useRef<number | null>(null)
   const [hpHit, setHpHit] = useState(false)
+  const [hpHeal, setHpHeal] = useState(false)
   const [armorHit, setArmorHit] = useState(false)
+  const [armorGain, setArmorGain] = useState(false)
   const [waveToast, setWaveToast] = useState<number | null>(null)
 
   const grenadeUnlocked =
@@ -70,6 +73,13 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
       return () => window.clearTimeout(timeout)
     }
 
+    if (hp > previousHpRef.current) {
+      setHpHeal(true)
+      const timeout = window.setTimeout(() => setHpHeal(false), 420)
+      previousHpRef.current = hp
+      return () => window.clearTimeout(timeout)
+    }
+
     previousHpRef.current = hp
   }, [hp])
 
@@ -81,15 +91,28 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
       return () => window.clearTimeout(timeout)
     }
 
+    if (armor > previousArmorRef.current) {
+      setArmorGain(true)
+      const timeout = window.setTimeout(() => setArmorGain(false), 420)
+      previousArmorRef.current = armor
+      return () => window.clearTimeout(timeout)
+    }
+
     previousArmorRef.current = armor
   }, [armor])
 
   useEffect(() => {
     if (status === 'ready') {
       setWaveToast(null)
+      previousWaveRef.current = null
       return
     }
 
+    if (status !== 'playing' || previousWaveRef.current === wave) {
+      return
+    }
+
+    previousWaveRef.current = wave
     setWaveToast(wave)
     const timeout = window.setTimeout(() => setWaveToast(null), 1100)
     return () => window.clearTimeout(timeout)
@@ -144,7 +167,7 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
                   {Math.ceil(hp)}/{maxHp}
                 </span>
               </div>
-              <div className={cn('mt-0.5 h-1.5 overflow-hidden rounded-full border border-rose-200/12 bg-black/45', compactLandscapeHud && 'h-1', hpHit && 'mobile-hp-hit', lowHp && 'mobile-hp-low')}>
+              <div className={cn('mt-0.5 h-1.5 overflow-hidden rounded-full border border-rose-200/12 bg-black/45', compactLandscapeHud && 'h-1', hpHit && 'mobile-hp-hit', hpHeal && 'mobile-hp-heal', lowHp && 'mobile-hp-low')}>
                 <div
                   className="h-full rounded-full bg-[linear-gradient(90deg,#d80f10_0%,#ff5f1e_62%,#ffc45e_100%)] transition-[width] duration-300 ease-out"
                   style={{ width: `${hpPercent}%` }}
@@ -159,7 +182,7 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
                   {armor}/{maxArmor || 0}
                 </span>
               </div>
-              <div className={cn('mt-0.5 h-1 overflow-hidden rounded-full border border-cyan-300/12 bg-black/45', compactLandscapeHud && 'h-[3px]', armorHit && 'mobile-armor-hit')}>
+              <div className={cn('mt-0.5 h-1 overflow-hidden rounded-full border border-cyan-300/12 bg-black/45', compactLandscapeHud && 'h-[3px]', armorHit && 'mobile-armor-hit', armorGain && 'mobile-armor-gain')}>
                 <div
                   className="h-full rounded-full bg-[linear-gradient(90deg,#0b5d83_0%,#28b8db_100%)] transition-[width] duration-300 ease-out"
                   style={{ width: `${armorPercent}%` }}
@@ -194,7 +217,8 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
 
         {waveToast !== null ? (
           <div key={waveToast} className="mobile-wave-toast">
-            WAVE {waveToast}
+            <span>WAVE {waveToast}</span>
+            <small>DEMONS INCOMING</small>
           </div>
         ) : null}
 
