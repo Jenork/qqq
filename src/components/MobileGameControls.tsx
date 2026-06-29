@@ -182,7 +182,7 @@ export function MobileGameControls({
       <div
         className={cn(
           'pointer-events-auto absolute left-[calc(8px+var(--safe-left))] bottom-[calc(10px+var(--safe-bottom))] touch-none overflow-hidden rounded-[28px]',
-          compactLandscapeControls ? 'h-[88px] w-[88px] left-[calc(6px+var(--safe-left))] bottom-[calc(8px+var(--safe-bottom))]' : portraitMode ? 'h-[118px] w-[118px]' : 'h-[108px] w-[108px]',
+          compactLandscapeControls ? 'h-[78px] w-[78px] left-[calc(10px+var(--safe-left))] bottom-[calc(30px+var(--safe-bottom))]' : portraitMode ? 'h-[118px] w-[118px]' : 'h-[108px] w-[108px]',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -242,7 +242,7 @@ export function MobileGameControls({
         ) : (
           <div className={cn(
             'absolute bottom-2.5 left-2.5 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-100/10 bg-black/12 text-[8px] font-black uppercase tracking-[0.12em] text-slate-300/70',
-            compactLandscapeControls && 'bottom-1.5 left-1.5 h-[66px] w-[66px] text-[7px]',
+            compactLandscapeControls && 'bottom-1.5 left-1.5 h-[58px] w-[58px] text-[7px]',
           )}>
             Move
           </div>
@@ -251,7 +251,7 @@ export function MobileGameControls({
 
       <div className={cn(
         'pointer-events-auto absolute left-[calc(18px+var(--safe-left))] bottom-[calc(110px+var(--safe-bottom))]',
-        compactLandscapeControls && 'left-[calc(12px+var(--safe-left))] bottom-[calc(90px+var(--safe-bottom))]',
+        compactLandscapeControls && 'left-[calc(20px+var(--safe-left))] bottom-[calc(106px+var(--safe-bottom))]',
       )}>
         <TapActionButton
           label="Gren"
@@ -264,7 +264,7 @@ export function MobileGameControls({
       <div
         className={cn(
           'pointer-events-auto absolute right-[calc(8px+var(--safe-right))] bottom-[calc(12px+var(--safe-bottom))] touch-none overflow-hidden rounded-[30px]',
-          compactLandscapeControls ? 'right-[calc(6px+var(--safe-right))] bottom-[calc(8px+var(--safe-bottom))] h-[84px] w-[84px]' : portraitMode ? 'h-[112px] w-[112px]' : 'h-[98px] w-[98px]',
+          compactLandscapeControls ? 'right-[calc(12px+var(--safe-right))] bottom-[calc(28px+var(--safe-bottom))] h-[78px] w-[78px]' : portraitMode ? 'h-[112px] w-[112px]' : 'h-[98px] w-[98px]',
         )}
         onPointerDown={(event) => {
           event.preventDefault()
@@ -312,7 +312,7 @@ export function MobileGameControls({
       >
         <div className={cn(
           'absolute bottom-2 right-2 flex h-[82px] w-[82px] items-center justify-center rounded-full border border-cyan-300/12 bg-cyan-500/10 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-100/72 backdrop-blur-[1px]',
-          compactLandscapeControls && 'bottom-1.5 right-1.5 h-[68px] w-[68px] text-[8px]',
+          compactLandscapeControls && 'bottom-1.5 right-1.5 h-[62px] w-[62px] text-[8px]',
         )}>
           Fire
         </div>
@@ -334,19 +334,19 @@ export function MobileGameControls({
           portraitMode
             ? 'right-[calc(90px+var(--safe-right))] bottom-[calc(28px+var(--safe-bottom))]'
             : compactLandscapeControls
-              ? 'right-[calc(74px+var(--safe-right))] bottom-[calc(10px+var(--safe-bottom))] gap-1.5'
+              ? 'right-[calc(82px+var(--safe-right))] bottom-[calc(28px+var(--safe-bottom))] gap-1'
               : 'right-[calc(96px+var(--safe-right))] bottom-[calc(16px+var(--safe-bottom))]',
         )}
       >
         <TapActionButton
           label="Skill"
           onClick={() => pulseAction('ability')}
-          className={cn('min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[34px] min-w-[38px] px-1.5 py-1.5 text-[7px]')}
+          className={cn('min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[31px] min-w-[36px] px-1.5 py-1 text-[7px]')}
         />
         <TapActionButton
           label="Heal"
           onClick={() => pulseAction('heal')}
-          className={cn('min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[34px] min-w-[38px] px-1.5 py-1.5 text-[7px]')}
+          className={cn('min-h-[40px] min-w-[44px] px-2 py-2 text-[8px]', compactLandscapeControls && 'min-h-[31px] min-w-[36px] px-1.5 py-1 text-[7px]')}
         />
       </div>
     </div>
