@@ -714,6 +714,29 @@ a:focus-visible,
   background: #0d0504;
 }
 
+.mobile-landscape-fallback-stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100dvh;
+  height: 100dvw;
+  min-width: 100dvh;
+  min-height: 100dvw;
+  max-width: none;
+  max-height: none;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center;
+}
+
+@supports not (height: 100dvh) {
+  .mobile-landscape-fallback-stage {
+    width: 100vh;
+    height: 100vw;
+    min-width: 100vh;
+    min-height: 100vw;
+  }
+}
+
 .mobile-hud-glass {
   border: 1px solid rgba(116, 232, 255, 0.16);
   background:

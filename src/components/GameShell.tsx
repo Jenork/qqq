@@ -104,12 +104,12 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
         immersiveActive ? 'mobile-fullscreen-shell' : '',
       )}
     >
-      <div className="relative overflow-hidden bg-[#020713]">
+      <div className={cn('relative overflow-hidden bg-[#020713]', portraitLandscapeFallback && 'mobile-landscape-fallback-stage')}>
         <div
           className={cn(
             'relative flex w-full items-center justify-center overflow-hidden bg-[#020713]',
             portraitLandscapeFallback
-              ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(2px+var(--safe-left))] pr-[calc(2px+var(--safe-right))] pt-[calc(2px+var(--safe-top))] pb-[calc(2px+var(--safe-bottom))]'
+              ? 'h-full min-h-full max-h-full px-[calc(2px+var(--safe-left))] pr-[calc(2px+var(--safe-right))] pt-[calc(2px+var(--safe-top))] pb-[calc(2px+var(--safe-bottom))]'
               : immersiveActive
               ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(2px+var(--safe-left))] pr-[calc(2px+var(--safe-right))] pt-[calc(2px+var(--safe-top))] pb-[calc(2px+var(--safe-bottom))]'
               : isMobileLandscape
@@ -123,7 +123,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
             ref={containerRef}
             className={cn(
               'game-canvas h-full w-full max-w-full overflow-hidden bg-[#020713]',
-              portraitLandscapeFallback && 'aspect-[16/9] h-auto max-h-[100%] min-h-[200px] self-center',
+              portraitLandscapeFallback && 'h-full w-full',
               !showTouchControls && 'aspect-[16/9]',
             )}
           />
