@@ -66,6 +66,8 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
   }, [])
 
   useEffect(() => {
+    const refreshTimers: number[] = []
+
     const refreshLayout = () => {
       if (!gameRef.current) {
         return
@@ -76,17 +78,38 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
       })
     }
 
-    refreshLayout()
-    window.addEventListener('resize', refreshLayout)
-    window.addEventListener('orientationchange', refreshLayout)
-    document.addEventListener('fullscreenchange', refreshLayout)
+    const scheduleRefresh = () => {
+      refreshLayout()
+      refreshTimers.push(window.setTimeout(refreshLayout, 80))
+      refreshTimers.push(window.setTimeout(refreshLayout, 220))
+    }
+
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => scheduleRefresh())
+        : null
+
+    if (containerRef.current) {
+      resizeObserver?.observe(containerRef.current)
+    }
+
+    if (shellRef.current) {
+      resizeObserver?.observe(shellRef.current)
+    }
+
+    scheduleRefresh()
+    window.addEventListener('resize', scheduleRefresh)
+    window.addEventListener('orientationchange', scheduleRefresh)
+    document.addEventListener('fullscreenchange', scheduleRefresh)
 
     return () => {
-      window.removeEventListener('resize', refreshLayout)
-      window.removeEventListener('orientationchange', refreshLayout)
-      document.removeEventListener('fullscreenchange', refreshLayout)
+      window.removeEventListener('resize', scheduleRefresh)
+      window.removeEventListener('orientationchange', scheduleRefresh)
+      document.removeEventListener('fullscreenchange', scheduleRefresh)
+      resizeObserver?.disconnect()
+      refreshTimers.forEach((timer) => window.clearTimeout(timer))
     }
-  }, [immersiveActive, isActive, isMobileLandscape, isMobilePortrait, showTouchControls, status])
+  }, [immersiveActive, isActive, isMobileLandscape, isMobilePortrait, portraitLandscapeFallback, showTouchControls, status])
 
   const showMobileControlDeck = showTouchControls && status === 'playing'
 
