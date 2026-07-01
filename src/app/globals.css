@@ -38,11 +38,17 @@ body {
 html.gameplay-immersive,
 body.gameplay-immersive {
   overflow: hidden;
-  height: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  width: 100vw;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 body.gameplay-immersive {
   background: #020713;
+  position: fixed;
+  inset: 0;
 }
 
 body {
@@ -714,6 +720,26 @@ a:focus-visible,
   background: #0d0504;
 }
 
+.mobile-fullscreen-shell.mobile-browser-fallback-shell {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+.mobile-browser-fallback-stage {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+}
+
+@supports (height: 100svh) {
+  .mobile-fullscreen-shell.mobile-browser-fallback-shell {
+    height: 100svh;
+    max-height: 100svh;
+  }
+}
+
 .mobile-landscape-fallback-stage {
   position: absolute;
   left: 50%;
@@ -726,6 +752,18 @@ a:focus-visible,
   max-height: none;
   transform: translate(-50%, -50%) rotate(90deg);
   transform-origin: center;
+}
+
+.mobile-browser-fallback-shell .mobile-landscape-fallback-stage {
+  width: 100dvh;
+  min-width: 100dvh;
+}
+
+@supports (height: 100svh) {
+  .mobile-browser-fallback-shell .mobile-landscape-fallback-stage {
+    width: 100svh;
+    min-width: 100svh;
+  }
 }
 
 .mobile-landscape-fallback-stage .game-canvas,
@@ -750,13 +788,22 @@ a:focus-visible,
 }
 
 .mobile-controls-rotated-fallback .mobile-control-joystick {
-  left: calc(84px + var(--safe-left)) !important;
-  bottom: calc(118px + var(--safe-bottom)) !important;
+  left: calc(100% - 168px) !important;
+  bottom: calc(24px + var(--safe-left)) !important;
+  z-index: 42;
+  opacity: 1;
 }
 
-.mobile-controls-rotated-fallback .mobile-control-fire-zone,
+.mobile-controls-rotated-fallback .mobile-control-fire-zone {
+  right: auto !important;
+  left: calc(100% - 122px) !important;
+  bottom: calc(154px + var(--safe-bottom)) !important;
+}
+
 .mobile-controls-rotated-fallback .mobile-control-ability-cluster {
-  bottom: calc(164px + var(--safe-bottom)) !important;
+  right: auto !important;
+  left: calc(100% - 168px) !important;
+  bottom: calc(154px + var(--safe-bottom)) !important;
 }
 
 .mobile-hud-glass {

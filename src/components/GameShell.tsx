@@ -21,11 +21,12 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
   const { showTouchControls, isMobileLandscape, isMobilePortrait } = useMobileViewport()
   const [desktopMode, setDesktopMode] = useState(false)
   const mobileGameplayActive = showTouchControls && isActive && (status === 'playing' || status === 'paused')
-  const { immersiveActive, enterImmersive } = useLandscapeGameplay({
+  const { immersiveActive, isFullscreen, enterImmersive } = useLandscapeGameplay({
     shellRef,
     enabled: mobileGameplayActive,
   })
   const portraitLandscapeFallback = showTouchControls && immersiveActive && isMobilePortrait && status !== 'ready'
+  const browserFallbackLayout = mobileGameplayActive && immersiveActive && !isFullscreen
 
   useEffect(() => {
     let mounted = true
@@ -125,13 +126,22 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
         'panel inferno-subtle-grid relative w-full overflow-hidden border border-cyan-300/15 bg-[#020713] shadow-[0_22px_52px_rgba(0,0,0,0.44)]',
         showTouchControls ? 'rounded-[22px]' : 'rounded-[30px]',
         immersiveActive ? 'mobile-fullscreen-shell' : '',
+        browserFallbackLayout ? 'mobile-browser-fallback-shell' : '',
       )}
     >
-      <div className={cn('relative overflow-hidden bg-[#020713]', portraitLandscapeFallback && 'mobile-landscape-fallback-stage')}>
+      <div
+        className={cn(
+          'relative overflow-hidden bg-[#020713]',
+          portraitLandscapeFallback && 'mobile-landscape-fallback-stage',
+          browserFallbackLayout && 'mobile-browser-fallback-stage',
+        )}
+      >
         <div
           className={cn(
             'relative flex w-full items-center justify-center overflow-hidden bg-[#020713]',
-            portraitLandscapeFallback
+            browserFallbackLayout
+              ? 'h-full min-h-full max-h-full px-[calc(2px+var(--safe-left))] pr-[calc(2px+var(--safe-right))] pt-[calc(2px+var(--safe-top))] pb-[calc(2px+var(--safe-bottom))]'
+              : portraitLandscapeFallback
               ? 'h-full min-h-full max-h-full px-[calc(2px+var(--safe-left))] pr-[calc(2px+var(--safe-right))] pt-[calc(2px+var(--safe-top))] pb-[calc(2px+var(--safe-bottom))]'
               : immersiveActive
               ? 'h-[100dvh] min-h-[100dvh] max-h-[100dvh] px-[calc(2px+var(--safe-left))] pr-[calc(2px+var(--safe-right))] pt-[calc(2px+var(--safe-top))] pb-[calc(2px+var(--safe-bottom))]'

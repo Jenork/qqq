@@ -6,6 +6,11 @@ type FullscreenHost = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void
 }
 
+type FullscreenDocument = Document & {
+  webkitExitFullscreen?: () => Promise<void> | void
+  webkitFullscreenElement?: Element | null
+}
+
 type OrientationController = ScreenOrientation & {
   lock?: (orientation: 'landscape' | 'landscape-primary') => Promise<void>
   unlock?: () => void
@@ -25,9 +30,14 @@ export function useLandscapeGameplay({
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
+  const getFullscreenElement = useCallback(() => {
+    const fullscreenDocument = document as FullscreenDocument
+    return document.fullscreenElement ?? fullscreenDocument.webkitFullscreenElement ?? null
+  }, [])
+
   const syncFullscreen = useCallback(() => {
-    setIsFullscreen(document.fullscreenElement === shellRef.current)
-  }, [shellRef])
+    setIsFullscreen(getFullscreenElement() === shellRef.current)
+  }, [getFullscreenElement, shellRef])
 
   const unlockOrientation = useCallback(() => {
     const orientation = screen.orientation as OrientationController | undefined
@@ -58,19 +68,43 @@ export function useLandscapeGameplay({
   }, [])
 
   const exitImmersive = useCallback(async () => {
+    const fullscreenDocument = document as FullscreenDocument
+
     setImmersiveDomState(false)
     unlockOrientation()
 
-    if (document.fullscreenElement === shellRef.current) {
+    if (getFullscreenElement()) {
       try {
-        await document.exitFullscreen()
+        if (document.exitFullscreen) {
+          await document.exitFullscreen()
+        } else {
+          await fullscreenDocument.webkitExitFullscreen?.()
+        }
       } catch {
         // Ignore blocked exits.
       }
     }
 
     syncFullscreen()
-  }, [shellRef, syncFullscreen, unlockOrientation])
+  }, [getFullscreenElement, syncFullscreen, unlockOrientation])
+
+  const requestFullscreen = useCallback(async (target: FullscreenHost | HTMLElement | null) => {
+    const host = target as FullscreenHost | null
+
+    if (!host || getFullscreenElement()) {
+      return
+    }
+
+    try {
+      if (host.requestFullscreen) {
+        await host.requestFullscreen({ navigationUI: 'hide' })
+      } else {
+        await host.webkitRequestFullscreen?.()
+      }
+    } catch {
+      // Some mobile webviews expose fullscreen but still block it.
+    }
+  }, [getFullscreenElement])
 
   const enterImmersive = useCallback(async () => {
     const shell = shellRef.current as FullscreenHost | null
@@ -78,21 +112,14 @@ export function useLandscapeGameplay({
     setImmersiveDomState(true)
     window.scrollTo(0, 1)
 
-    if (shell && document.fullscreenElement !== shell) {
-      try {
-        if (shell.requestFullscreen) {
-          await shell.requestFullscreen()
-        } else {
-          await shell.webkitRequestFullscreen?.()
-        }
-      } catch {
-        // Fullscreen is commonly blocked in some mobile webviews.
-      }
+    if (!getFullscreenElement()) {
+      await requestFullscreen(shell)
+      await requestFullscreen(document.documentElement)
     }
 
     await lockOrientation()
     syncFullscreen()
-  }, [lockOrientation, shellRef, syncFullscreen])
+  }, [getFullscreenElement, lockOrientation, requestFullscreen, shellRef, syncFullscreen])
 
   useEffect(() => {
     syncFullscreen()
@@ -107,12 +134,16 @@ export function useLandscapeGameplay({
     if (enabled) {
       setImmersiveDomState(true)
       window.scrollTo(0, 1)
+      if (!getFullscreenElement()) {
+        void requestFullscreen(shellRef.current)
+        void requestFullscreen(document.documentElement)
+      }
       void lockOrientation()
       return
     }
 
     void exitImmersive()
-  }, [enabled, exitImmersive, lockOrientation])
+  }, [enabled, exitImmersive, getFullscreenElement, lockOrientation, requestFullscreen, shellRef])
 
   useEffect(
     () => () => {
