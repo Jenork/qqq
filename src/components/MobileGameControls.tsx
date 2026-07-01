@@ -239,19 +239,21 @@ export function MobileGameControls({
     const dx = point.x - state.origin.x
     const dy = point.y - state.origin.y
     const clamped = clampJoystick(dx, dy)
-    const nextJumpTriggered = state.jumpTriggered || clamped.y <= -JUMP_THRESHOLD
+    const controlX = rotatedFallbackMode ? clamped.y : clamped.x
+    const controlY = rotatedFallbackMode ? -clamped.x : clamped.y
+    const nextJumpTriggered = state.jumpTriggered || controlY <= -JUMP_THRESHOLD
 
-    setMobileControl('left', clamped.x <= -MOVE_THRESHOLD)
-    setMobileControl('right', clamped.x >= MOVE_THRESHOLD)
+    setMobileControl('left', controlX <= -MOVE_THRESHOLD)
+    setMobileControl('right', controlX >= MOVE_THRESHOLD)
 
-    if (!state.jumpTriggered && clamped.y <= -JUMP_THRESHOLD) {
+    if (!state.jumpTriggered && controlY <= -JUMP_THRESHOLD) {
       pulseJump()
     }
 
     setJoystick({
       ...state,
       knob: clamped,
-      jumpTriggered: nextJumpTriggered && clamped.y < -JUMP_RESET_THRESHOLD,
+      jumpTriggered: nextJumpTriggered && controlY < -JUMP_RESET_THRESHOLD,
     })
   }
 

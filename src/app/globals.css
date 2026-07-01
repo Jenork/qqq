@@ -749,6 +749,16 @@ a:focus-visible,
   }
 }
 
+.mobile-controls-rotated-fallback .mobile-control-joystick {
+  left: calc(84px + var(--safe-left)) !important;
+  bottom: calc(118px + var(--safe-bottom)) !important;
+}
+
+.mobile-controls-rotated-fallback .mobile-control-fire-zone,
+.mobile-controls-rotated-fallback .mobile-control-ability-cluster {
+  bottom: calc(164px + var(--safe-bottom)) !important;
+}
+
 .mobile-hud-glass {
   border: 1px solid rgba(116, 232, 255, 0.16);
   background:
