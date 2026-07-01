@@ -136,8 +136,16 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
           </>
         ) : null}
 
-        {status !== 'ready' ? <Hud forceLandscapeLayout={portraitLandscapeFallback} /> : null}
-        {showMobileControlDeck ? <MobileGameControls portraitMode={isMobilePortrait} forceLandscapeLayout={portraitLandscapeFallback} /> : null}
+        {status !== 'ready' ? (
+          <Hud forceLandscapeLayout={portraitLandscapeFallback} rotatedFallbackMode={portraitLandscapeFallback} />
+        ) : null}
+        {showMobileControlDeck ? (
+          <MobileGameControls
+            portraitMode={isMobilePortrait}
+            forceLandscapeLayout={portraitLandscapeFallback}
+            rotatedFallbackMode={portraitLandscapeFallback}
+          />
+        ) : null}
         {showTouchControls && isMobilePortrait && status !== 'ready' && !portraitLandscapeFallback ? (
           <div className="pointer-events-none absolute left-1/2 top-[calc(10px+var(--safe-top))] z-30 -translate-x-1/2">
             <div className="inferno-chip rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-cyan-50 shadow-[0_0_18px_rgba(65,196,255,0.16)]">

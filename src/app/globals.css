@@ -737,6 +737,23 @@ a:focus-visible,
   }
 }
 
+.mobile-controls-rotated-fallback .mobile-control-joystick {
+  left: calc(100% - 158px) !important;
+  bottom: calc(18px + var(--safe-left)) !important;
+}
+
+.mobile-controls-rotated-fallback .mobile-control-fire-zone {
+  right: auto !important;
+  left: calc(100% - 166px) !important;
+  bottom: calc(100% - 116px - var(--safe-right)) !important;
+}
+
+.mobile-controls-rotated-fallback .mobile-control-ability-cluster {
+  right: auto !important;
+  left: calc(100% - 222px) !important;
+  bottom: calc(100% - 168px - var(--safe-right)) !important;
+}
+
 .mobile-hud-glass {
   border: 1px solid rgba(116, 232, 255, 0.16);
   background:

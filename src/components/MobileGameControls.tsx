@@ -145,9 +145,11 @@ function TapActionButton({
 export function MobileGameControls({
   portraitMode = false,
   forceLandscapeLayout = false,
+  rotatedFallbackMode = false,
 }: {
   portraitMode?: boolean
   forceLandscapeLayout?: boolean
+  rotatedFallbackMode?: boolean
 }) {
   const unlockedItemIds = useGameStore((state) => state.unlockedItemIds)
   const status = useGameStore((state) => state.status)
@@ -254,7 +256,7 @@ export function MobileGameControls({
   }
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20">
+    <div className={cn('pointer-events-none absolute inset-0 z-20', rotatedFallbackMode && 'mobile-controls-rotated-fallback')}>
       {!compactLandscapeControls ? (
         <div className="absolute right-[calc(8px+var(--safe-right))] top-[calc(40px+var(--safe-top))] flex items-start justify-end">
           <TapActionButton
@@ -267,6 +269,7 @@ export function MobileGameControls({
 
       <div
         className={cn(
+          'mobile-control-joystick',
           'pointer-events-auto absolute left-[calc(8px+var(--safe-left))] bottom-[calc(10px+var(--safe-bottom))] touch-none overflow-hidden rounded-[28px]',
           compactLandscapeControls ? 'h-[72px] w-[72px] left-[calc(7px+var(--safe-left))] bottom-[calc(104px+var(--safe-bottom))]' : portraitMode ? 'h-[112px] w-[112px] bottom-[calc(104px+var(--safe-bottom))]' : 'h-[100px] w-[100px] bottom-[calc(104px+var(--safe-bottom))]',
           joystick && 'mobile-joystick-active',
@@ -338,6 +341,7 @@ export function MobileGameControls({
 
       <div
         className={cn(
+          'mobile-control-fire-zone',
           'pointer-events-auto absolute right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] touch-none overflow-hidden rounded-full',
           compactLandscapeControls ? 'h-[82px] w-[82px]' : portraitMode ? 'h-[108px] w-[108px]' : 'h-[98px] w-[98px]',
         )}
@@ -406,6 +410,7 @@ export function MobileGameControls({
 
       <div
         className={cn(
+          'mobile-control-ability-cluster',
           'pointer-events-none absolute',
           portraitMode
             ? 'right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] h-[150px] w-[162px]'

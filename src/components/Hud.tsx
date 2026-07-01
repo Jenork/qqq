@@ -16,7 +16,13 @@ function formatCooldown(remainingMs: number) {
   return `${(remainingMs / 1000).toFixed(1)}s`
 }
 
-export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: boolean }) {
+export function Hud({
+  forceLandscapeLayout = false,
+  rotatedFallbackMode = false,
+}: {
+  forceLandscapeLayout?: boolean
+  rotatedFallbackMode?: boolean
+}) {
   const hp = useGameStore((state) => state.hp)
   const maxHp = useGameStore((state) => state.maxHp)
   const armor = useGameStore((state) => state.armor)
@@ -131,10 +137,11 @@ export function Hud({ forceLandscapeLayout = false }: { forceLandscapeLayout?: b
 
   if (compactHud) {
     return (
-      <div className="pointer-events-none absolute inset-0 z-20">
+      <div className={cn('pointer-events-none absolute inset-0 z-20', rotatedFallbackMode && 'mobile-hud-rotated-fallback')}>
         {lowHp ? <div className="mobile-low-hp-vignette" /> : null}
 
         <div className={cn(
+          'mobile-hud-topbar',
           'absolute left-[calc(6px+var(--safe-left))] right-[calc(6px+var(--safe-right))] top-[calc(5px+var(--safe-top))] grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2',
           compactLandscapeHud && 'left-[calc(7px+var(--safe-left))] right-[calc(7px+var(--safe-right))] top-[calc(5px+var(--safe-top))] gap-1.5',
         )}>
