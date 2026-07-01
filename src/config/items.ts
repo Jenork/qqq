@@ -151,6 +151,10 @@ export function getItemByContractId(itemId: number) {
 }
 
 export function getItemIconPath(itemId: ItemId) {
+  if (itemId === 'shotgun') {
+    return '/rewards/reward-shotgun.png'
+  }
+
   if (itemId === 'frag-grenade' || itemId === 'fire-grenade') {
     return '/icons/grenade.png'
   }

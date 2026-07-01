@@ -440,7 +440,7 @@ export function MobileGameControls({
           cooldownProgress={grenadeCooldownProgress}
           onClick={() => pulseAction('grenade')}
           className={cn(
-            'absolute right-[38px] top-[14px] h-[52px] w-[52px]',
+            'mobile-control-grenade absolute right-[38px] top-[14px] h-[52px] w-[52px]',
             compactLandscapeControls && 'right-[48px] top-[28px] h-[46px] w-[46px]',
           )}
         />
@@ -451,7 +451,7 @@ export function MobileGameControls({
           ready={shotgunUnlocked}
           onClick={() => equipItem(equippedWeapon === 'shotgun' ? 'pistol' : 'shotgun')}
           className={cn(
-            'absolute right-[104px] top-[92px] h-[52px] w-[52px]',
+            'mobile-control-shotgun absolute right-[104px] top-[92px] h-[52px] w-[52px]',
             compactLandscapeControls && 'right-[106px] top-[92px] h-[46px] w-[46px]',
             equippedWeapon === 'shotgun' && 'ring-2 ring-amber-200/70 shadow-[0_0_20px_rgba(251,191,36,0.42)]',
           )}
@@ -463,7 +463,7 @@ export function MobileGameControls({
           cooldownProgress={abilityCooldownProgress}
           onClick={() => pulseAction('ability')}
           className={cn(
-            'absolute left-[42px] top-[48px] h-[52px] w-[52px]',
+            'mobile-control-skill absolute left-[42px] top-[48px] h-[52px] w-[52px]',
             compactLandscapeControls && 'left-[66px] top-[42px] h-[46px] w-[46px]',
           )}
         />
@@ -476,7 +476,7 @@ export function MobileGameControls({
           cooldownProgress={healCooldownProgress}
           onClick={() => pulseAction('heal')}
           className={cn(
-            'absolute left-[12px] bottom-[8px] h-[52px] w-[52px]',
+            'mobile-control-heal absolute left-[12px] bottom-[8px] h-[52px] w-[52px]',
             compactLandscapeControls && 'left-[26px] bottom-[4px] h-[46px] w-[46px]',
           )}
         />

@@ -818,12 +818,43 @@ a:focus-visible,
 }
 
 .mobile-controls-rotated-fallback .mobile-control-ability-cluster {
-  right: calc(46px + var(--safe-right)) !important;
-  bottom: calc(28px + var(--safe-bottom)) !important;
+  right: calc(112px + var(--safe-right)) !important;
+  bottom: calc(10px + var(--safe-bottom)) !important;
   left: auto !important;
   z-index: 44;
-  height: 144px !important;
-  width: 160px !important;
+  height: 170px !important;
+  width: 220px !important;
+}
+
+.mobile-controls-rotated-fallback .mobile-control-grenade {
+  right: 8px !important;
+  top: 8px !important;
+  height: 46px !important;
+  width: 46px !important;
+}
+
+.mobile-controls-rotated-fallback .mobile-control-shotgun {
+  right: 8px !important;
+  top: auto !important;
+  bottom: 58px !important;
+  height: 46px !important;
+  width: 46px !important;
+}
+
+.mobile-controls-rotated-fallback .mobile-control-skill {
+  left: auto !important;
+  right: 74px !important;
+  top: 48px !important;
+  height: 46px !important;
+  width: 46px !important;
+}
+
+.mobile-controls-rotated-fallback .mobile-control-heal {
+  left: auto !important;
+  right: 74px !important;
+  bottom: 12px !important;
+  height: 46px !important;
+  width: 46px !important;
 }
 
 .mobile-hud-glass {

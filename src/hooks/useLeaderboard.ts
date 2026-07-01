@@ -27,6 +27,31 @@ function emptyOnchainSnapshot(): LeaderboardSnapshot {
   }
 }
 
+async function fetchLeaderboardSnapshot(
+  normalizedLimit: number | null,
+  normalizedCurrentAddress?: string,
+) {
+  const searchParams = new URLSearchParams()
+
+  if (normalizedLimit !== null) {
+    searchParams.set('limit', String(normalizedLimit))
+  }
+
+  if (normalizedCurrentAddress) {
+    searchParams.set('currentAddress', normalizedCurrentAddress)
+  }
+
+  const response = await fetch(`/api/season/leaderboard?${searchParams.toString()}`, {
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error(`Leaderboard API failed with status ${response.status}`)
+  }
+
+  return (await response.json()) as LeaderboardSnapshot
+}
+
 export function useLeaderboard(limit?: number, currentAddress?: string) {
   const publicClient = usePublicClient({ chainId: BASE_CHAIN_ID })
   const normalizedCurrentAddress = currentAddress?.toLowerCase()
@@ -37,6 +62,12 @@ export function useLeaderboard(limit?: number, currentAddress?: string) {
     enabled: true,
     staleTime: 15_000,
     queryFn: async (): Promise<LeaderboardSnapshot> => {
+      try {
+        return await fetchLeaderboardSnapshot(normalizedLimit, normalizedCurrentAddress)
+      } catch (error) {
+        console.warn('Season leaderboard API is unavailable; falling back to direct RPC.', error)
+      }
+
       if (!publicClient || !HAS_GAME_PROGRESS_ADDRESS) {
         return emptyOnchainSnapshot()
       }
