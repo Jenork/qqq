@@ -806,6 +806,80 @@ a:focus-visible,
   bottom: calc(154px + var(--safe-bottom)) !important;
 }
 
+.mobile-controls-detached-fallback {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 120;
+  width: var(--game-viewport-width, 100vw);
+  height: var(--game-viewport-height, 100dvh);
+  min-width: var(--game-viewport-width, 100vw);
+  min-height: var(--game-viewport-height, 100dvh);
+  overflow: visible;
+  transform: none !important;
+}
+
+.mobile-controls-detached-fallback .mobile-control-joystick {
+  left: calc(18px + var(--safe-left)) !important;
+  bottom: calc(24px + var(--safe-bottom)) !important;
+  z-index: 3;
+  height: 92px !important;
+  width: 92px !important;
+  opacity: 1;
+}
+
+.mobile-controls-detached-fallback .mobile-joystick-idle-pad {
+  bottom: 7px !important;
+  left: 7px !important;
+  height: 78px !important;
+  width: 78px !important;
+}
+
+.mobile-controls-detached-fallback .mobile-control-fire-zone {
+  right: calc(22px + var(--safe-right)) !important;
+  bottom: calc(26px + var(--safe-bottom)) !important;
+  left: auto !important;
+  z-index: 4;
+  height: 92px !important;
+  width: 92px !important;
+}
+
+.mobile-controls-detached-fallback .mobile-control-fire-zone .mobile-fire-button {
+  height: 80px !important;
+  width: 80px !important;
+}
+
+.mobile-controls-detached-fallback .mobile-control-ability-cluster {
+  right: calc(46px + var(--safe-right)) !important;
+  bottom: calc(34px + var(--safe-bottom)) !important;
+  left: auto !important;
+  z-index: 5;
+  height: 144px !important;
+  width: 160px !important;
+}
+
+.mobile-controls-detached-fallback.mobile-controls-rotated-fallback .mobile-control-joystick,
+.mobile-controls-detached-fallback.mobile-controls-rotated-fallback .mobile-control-fire-zone,
+.mobile-controls-detached-fallback.mobile-controls-rotated-fallback .mobile-control-ability-cluster {
+  transform: none !important;
+}
+
+@media (orientation: landscape) {
+  .mobile-controls-detached-fallback .mobile-control-joystick {
+    left: calc(18px + var(--safe-left)) !important;
+    bottom: calc(16px + var(--safe-bottom)) !important;
+  }
+
+  .mobile-controls-detached-fallback .mobile-control-fire-zone {
+    right: calc(22px + var(--safe-right)) !important;
+    bottom: calc(16px + var(--safe-bottom)) !important;
+  }
+
+  .mobile-controls-detached-fallback .mobile-control-ability-cluster {
+    right: calc(48px + var(--safe-right)) !important;
+    bottom: calc(24px + var(--safe-bottom)) !important;
+  }
+}
+
 .mobile-hud-glass {
   border: 1px solid rgba(116, 232, 255, 0.16);
   background:

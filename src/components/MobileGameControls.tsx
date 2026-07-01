@@ -146,10 +146,12 @@ export function MobileGameControls({
   portraitMode = false,
   forceLandscapeLayout = false,
   rotatedFallbackMode = false,
+  detachedFallbackMode = false,
 }: {
   portraitMode?: boolean
   forceLandscapeLayout?: boolean
   rotatedFallbackMode?: boolean
+  detachedFallbackMode?: boolean
 }) {
   const unlockedItemIds = useGameStore((state) => state.unlockedItemIds)
   const status = useGameStore((state) => state.status)
@@ -258,7 +260,13 @@ export function MobileGameControls({
   }
 
   return (
-    <div className={cn('pointer-events-none absolute inset-0 z-20', rotatedFallbackMode && 'mobile-controls-rotated-fallback')}>
+    <div
+      className={cn(
+        'pointer-events-none absolute inset-0 z-20',
+        rotatedFallbackMode && 'mobile-controls-rotated-fallback',
+        detachedFallbackMode && 'mobile-controls-detached-fallback',
+      )}
+    >
       {!compactLandscapeControls ? (
         <div className="absolute right-[calc(8px+var(--safe-right))] top-[calc(40px+var(--safe-top))] flex items-start justify-end">
           <TapActionButton
@@ -333,7 +341,7 @@ export function MobileGameControls({
           </>
         ) : (
           <div className={cn(
-            'absolute bottom-2.5 left-2.5 flex h-[78px] w-[78px] items-center justify-center rounded-full border border-cyan-100/10 bg-black/10 text-[0] shadow-[inset_0_0_18px_rgba(65,196,255,0.08)]',
+            'mobile-joystick-idle-pad absolute bottom-2.5 left-2.5 flex h-[78px] w-[78px] items-center justify-center rounded-full border border-cyan-100/10 bg-black/10 text-[0] shadow-[inset_0_0_18px_rgba(65,196,255,0.08)]',
             compactLandscapeControls && 'bottom-1 left-1 h-[58px] w-[58px]',
           )}>
             <span className="h-2 w-2 rounded-full bg-cyan-100/45 shadow-[0_0_14px_rgba(125,230,255,0.34)]" />
