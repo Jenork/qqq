@@ -38,9 +38,9 @@ body {
 html.gameplay-immersive,
 body.gameplay-immersive {
   overflow: hidden;
-  height: 100dvh;
-  min-height: 100dvh;
-  width: 100vw;
+  height: var(--game-viewport-height, 100dvh);
+  min-height: var(--game-viewport-height, 100dvh);
+  width: var(--game-viewport-width, 100vw);
   overscroll-behavior: none;
   touch-action: none;
 }
@@ -699,10 +699,10 @@ a:focus-visible,
   position: fixed;
   inset: 0;
   z-index: 80;
-  width: 100vw;
-  height: 100dvh;
-  max-width: 100vw;
-  max-height: 100dvh;
+  width: var(--game-viewport-width, 100vw);
+  height: var(--game-viewport-height, 100dvh);
+  max-width: var(--game-viewport-width, 100vw);
+  max-height: var(--game-viewport-height, 100dvh);
   border-radius: 0;
   border: 0;
   background: #0d0504;
@@ -721,8 +721,8 @@ a:focus-visible,
 }
 
 .mobile-fullscreen-shell.mobile-browser-fallback-shell {
-  height: 100dvh;
-  max-height: 100dvh;
+  height: var(--game-viewport-height, 100dvh);
+  max-height: var(--game-viewport-height, 100dvh);
   overflow: hidden;
 }
 
@@ -735,8 +735,8 @@ a:focus-visible,
 
 @supports (height: 100svh) {
   .mobile-fullscreen-shell.mobile-browser-fallback-shell {
-    height: 100svh;
-    max-height: 100svh;
+    height: var(--game-viewport-height, 100svh);
+    max-height: var(--game-viewport-height, 100svh);
   }
 }
 
@@ -744,10 +744,10 @@ a:focus-visible,
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 100dvh;
-  height: 100dvw;
-  min-width: 100dvh;
-  min-height: 100dvw;
+  width: var(--game-viewport-height, 100dvh);
+  height: var(--game-viewport-width, 100dvw);
+  min-width: var(--game-viewport-height, 100dvh);
+  min-height: var(--game-viewport-width, 100dvw);
   max-width: none;
   max-height: none;
   transform: translate(-50%, -50%) rotate(90deg);
@@ -755,14 +755,14 @@ a:focus-visible,
 }
 
 .mobile-browser-fallback-shell .mobile-landscape-fallback-stage {
-  width: 100dvh;
-  min-width: 100dvh;
+  width: var(--game-viewport-height, 100dvh);
+  min-width: var(--game-viewport-height, 100dvh);
 }
 
 @supports (height: 100svh) {
   .mobile-browser-fallback-shell .mobile-landscape-fallback-stage {
-    width: 100svh;
-    min-width: 100svh;
+    width: var(--game-viewport-height, 100svh);
+    min-width: var(--game-viewport-height, 100svh);
   }
 }
 
@@ -780,10 +780,10 @@ a:focus-visible,
 
 @supports not (height: 100dvh) {
   .mobile-landscape-fallback-stage {
-    width: 100vh;
-    height: 100vw;
-    min-width: 100vh;
-    min-height: 100vw;
+    width: var(--game-viewport-height, 100vh);
+    height: var(--game-viewport-width, 100vw);
+    min-width: var(--game-viewport-height, 100vh);
+    min-height: var(--game-viewport-width, 100vw);
   }
 }
 

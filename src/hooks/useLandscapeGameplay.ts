@@ -21,6 +21,20 @@ function setImmersiveDomState(active: boolean) {
   document.body.classList.toggle('gameplay-immersive', active)
 }
 
+function setImmersiveViewportVars() {
+  const viewport = window.visualViewport
+  const width = Math.round(viewport?.width ?? window.innerWidth)
+  const height = Math.round(viewport?.height ?? window.innerHeight)
+
+  document.documentElement.style.setProperty('--game-viewport-width', `${width}px`)
+  document.documentElement.style.setProperty('--game-viewport-height', `${height}px`)
+}
+
+function clearImmersiveViewportVars() {
+  document.documentElement.style.removeProperty('--game-viewport-width')
+  document.documentElement.style.removeProperty('--game-viewport-height')
+}
+
 export function useLandscapeGameplay({
   shellRef,
   enabled,
@@ -36,8 +50,8 @@ export function useLandscapeGameplay({
   }, [])
 
   const syncFullscreen = useCallback(() => {
-    setIsFullscreen(getFullscreenElement() === shellRef.current)
-  }, [getFullscreenElement, shellRef])
+    setIsFullscreen(Boolean(getFullscreenElement()))
+  }, [getFullscreenElement])
 
   const unlockOrientation = useCallback(() => {
     const orientation = screen.orientation as OrientationController | undefined
@@ -71,6 +85,7 @@ export function useLandscapeGameplay({
     const fullscreenDocument = document as FullscreenDocument
 
     setImmersiveDomState(false)
+    clearImmersiveViewportVars()
     unlockOrientation()
 
     if (getFullscreenElement()) {
@@ -109,6 +124,7 @@ export function useLandscapeGameplay({
   const enterImmersive = useCallback(async () => {
     const shell = shellRef.current as FullscreenHost | null
 
+    setImmersiveViewportVars()
     setImmersiveDomState(true)
     window.scrollTo(0, 1)
 
@@ -132,6 +148,7 @@ export function useLandscapeGameplay({
 
   useEffect(() => {
     if (enabled) {
+      setImmersiveViewportVars()
       setImmersiveDomState(true)
       window.scrollTo(0, 1)
       if (!getFullscreenElement()) {
@@ -145,9 +162,34 @@ export function useLandscapeGameplay({
     void exitImmersive()
   }, [enabled, exitImmersive, getFullscreenElement, lockOrientation, requestFullscreen, shellRef])
 
+  useEffect(() => {
+    if (!enabled) {
+      return
+    }
+
+    const syncViewport = () => {
+      setImmersiveViewportVars()
+      syncFullscreen()
+    }
+
+    syncViewport()
+    window.addEventListener('resize', syncViewport)
+    window.addEventListener('orientationchange', syncViewport)
+    window.visualViewport?.addEventListener?.('resize', syncViewport)
+    window.visualViewport?.addEventListener?.('scroll', syncViewport)
+
+    return () => {
+      window.removeEventListener('resize', syncViewport)
+      window.removeEventListener('orientationchange', syncViewport)
+      window.visualViewport?.removeEventListener?.('resize', syncViewport)
+      window.visualViewport?.removeEventListener?.('scroll', syncViewport)
+    }
+  }, [enabled, syncFullscreen])
+
   useEffect(
     () => () => {
       setImmersiveDomState(false)
+      clearImmersiveViewportVars()
       unlockOrientation()
     },
     [unlockOrientation],
