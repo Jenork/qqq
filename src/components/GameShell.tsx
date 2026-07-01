@@ -113,8 +113,6 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
   }, [immersiveActive, isActive, isMobileLandscape, isMobilePortrait, portraitLandscapeFallback, showTouchControls, status])
 
   const showMobileControlDeck = showTouchControls && status === 'playing'
-  const detachedMobileControls = showMobileControlDeck && browserFallbackLayout
-
   const handleStartRun = async () => {
     await enterImmersive()
     startRun()
@@ -173,7 +171,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
         {status !== 'ready' ? (
           <Hud forceLandscapeLayout={portraitLandscapeFallback} rotatedFallbackMode={portraitLandscapeFallback} />
         ) : null}
-        {showMobileControlDeck && !detachedMobileControls ? (
+        {showMobileControlDeck ? (
           <MobileGameControls
             portraitMode={isMobilePortrait}
             forceLandscapeLayout={portraitLandscapeFallback}
@@ -233,14 +231,6 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
           </div>
         ) : null}
       </div>
-      {detachedMobileControls ? (
-        <MobileGameControls
-          portraitMode={isMobilePortrait}
-          forceLandscapeLayout
-          rotatedFallbackMode={portraitLandscapeFallback}
-          detachedFallbackMode
-        />
-      ) : null}
     </section>
   )
 }

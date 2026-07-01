@@ -146,12 +146,10 @@ export function MobileGameControls({
   portraitMode = false,
   forceLandscapeLayout = false,
   rotatedFallbackMode = false,
-  detachedFallbackMode = false,
 }: {
   portraitMode?: boolean
   forceLandscapeLayout?: boolean
   rotatedFallbackMode?: boolean
-  detachedFallbackMode?: boolean
 }) {
   const unlockedItemIds = useGameStore((state) => state.unlockedItemIds)
   const status = useGameStore((state) => state.status)
@@ -264,7 +262,6 @@ export function MobileGameControls({
       className={cn(
         'pointer-events-none absolute inset-0 z-20',
         rotatedFallbackMode && 'mobile-controls-rotated-fallback',
-        detachedFallbackMode && 'mobile-controls-detached-fallback',
       )}
     >
       {!compactLandscapeControls ? (
