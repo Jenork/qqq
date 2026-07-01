@@ -155,6 +155,8 @@ export function MobileGameControls({
   const status = useGameStore((state) => state.status)
   const setMobileControl = useGameStore((state) => state.setMobileControl)
   const pulseAction = useGameStore((state) => state.pulseAction)
+  const equipItem = useGameStore((state) => state.equipItem)
+  const equippedWeapon = useGameStore((state) => state.equippedWeapon)
   const togglePause = useGameStore((state) => state.togglePause)
   const grenadeCooldownRemaining = useGameStore((state) => state.grenadeCooldownRemaining)
   const abilityCooldownRemaining = useGameStore((state) => state.abilityCooldownRemaining)
@@ -179,6 +181,7 @@ export function MobileGameControls({
 
   const grenadeUnlocked =
     unlockedItemIds.includes('frag-grenade') || unlockedItemIds.includes(USDC_GRENADE_REWARD_ITEM_ID)
+  const shotgunUnlocked = unlockedItemIds.includes('shotgun')
   const grenadeReady = grenadeUnlocked && grenadeCooldownRemaining <= 0
   const abilityReady = abilityCooldownRemaining <= 0 && shieldRemaining <= 0
   const healReady = healCharges > 0 && healCooldownRemaining <= 0
@@ -192,6 +195,7 @@ export function MobileGameControls({
     ? 1 - healCooldownRemaining / PLAYER_CONFIG.healCooldownMs
     : 0
   const grenadeIcon = getItemIconPath('frag-grenade') ?? undefined
+  const shotgunIcon = getItemIconPath('shotgun') ?? undefined
   const abilityIcon = getItemIconPath('shield') ?? undefined
   const healIcon = getItemIconPath('medkit') ?? undefined
 
@@ -278,7 +282,7 @@ export function MobileGameControls({
         className={cn(
           'mobile-control-joystick',
           'pointer-events-auto absolute left-[calc(8px+var(--safe-left))] bottom-[calc(10px+var(--safe-bottom))] touch-none overflow-hidden rounded-[28px]',
-          compactLandscapeControls ? 'h-[72px] w-[72px] left-[calc(7px+var(--safe-left))] bottom-[calc(104px+var(--safe-bottom))]' : portraitMode ? 'h-[112px] w-[112px] bottom-[calc(104px+var(--safe-bottom))]' : 'h-[100px] w-[100px] bottom-[calc(104px+var(--safe-bottom))]',
+          compactLandscapeControls ? 'h-[72px] w-[72px] left-[calc(7px+var(--safe-left))] bottom-[calc(18px+var(--safe-bottom))]' : portraitMode ? 'h-[112px] w-[112px] bottom-[calc(104px+var(--safe-bottom))]' : 'h-[100px] w-[100px] bottom-[calc(104px+var(--safe-bottom))]',
           joystick && 'mobile-joystick-active',
         )}
         onPointerDown={(event) => {
@@ -349,7 +353,8 @@ export function MobileGameControls({
       <div
         className={cn(
           'mobile-control-fire-zone',
-          'pointer-events-auto absolute right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] touch-none overflow-hidden rounded-full',
+          'pointer-events-auto absolute right-[calc(28px+var(--safe-right))] touch-none overflow-hidden rounded-full',
+          compactLandscapeControls ? 'bottom-[calc(18px+var(--safe-bottom))]' : 'bottom-[calc(104px+var(--safe-bottom))]',
           compactLandscapeControls ? 'h-[82px] w-[82px]' : portraitMode ? 'h-[108px] w-[108px]' : 'h-[98px] w-[98px]',
         )}
         onPointerDown={(event) => {
@@ -420,10 +425,10 @@ export function MobileGameControls({
           'mobile-control-ability-cluster',
           'pointer-events-none absolute',
           portraitMode
-            ? 'right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] h-[150px] w-[162px]'
+            ? 'right-[calc(20px+var(--safe-right))] bottom-[calc(88px+var(--safe-bottom))] h-[194px] w-[226px]'
             : compactLandscapeControls
-              ? 'right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] h-[132px] w-[150px]'
-              : 'right-[calc(28px+var(--safe-right))] bottom-[calc(104px+var(--safe-bottom))] h-[142px] w-[154px]',
+              ? 'right-[calc(18px+var(--safe-right))] bottom-[calc(14px+var(--safe-bottom))] h-[176px] w-[230px]'
+              : 'right-[calc(22px+var(--safe-right))] bottom-[calc(88px+var(--safe-bottom))] h-[188px] w-[220px]',
         )}
       >
         <TapActionButton
@@ -435,8 +440,20 @@ export function MobileGameControls({
           cooldownProgress={grenadeCooldownProgress}
           onClick={() => pulseAction('grenade')}
           className={cn(
-            'absolute right-[30px] top-0 h-[52px] w-[52px]',
-            compactLandscapeControls && 'h-[46px] w-[46px]',
+            'absolute right-[38px] top-[14px] h-[52px] w-[52px]',
+            compactLandscapeControls && 'right-[48px] top-[28px] h-[46px] w-[46px]',
+          )}
+        />
+        <TapActionButton
+          label="Shotgun"
+          iconSrc={shotgunIcon}
+          disabled={!shotgunUnlocked}
+          ready={shotgunUnlocked}
+          onClick={() => equipItem(equippedWeapon === 'shotgun' ? 'pistol' : 'shotgun')}
+          className={cn(
+            'absolute right-[104px] top-[92px] h-[52px] w-[52px]',
+            compactLandscapeControls && 'right-[106px] top-[92px] h-[46px] w-[46px]',
+            equippedWeapon === 'shotgun' && 'ring-2 ring-amber-200/70 shadow-[0_0_20px_rgba(251,191,36,0.42)]',
           )}
         />
         <TapActionButton
@@ -446,8 +463,8 @@ export function MobileGameControls({
           cooldownProgress={abilityCooldownProgress}
           onClick={() => pulseAction('ability')}
           className={cn(
-            'absolute left-0 top-1/2 h-[52px] w-[52px] -translate-y-1/2',
-            compactLandscapeControls && 'h-[46px] w-[46px]',
+            'absolute left-[42px] top-[48px] h-[52px] w-[52px]',
+            compactLandscapeControls && 'left-[66px] top-[42px] h-[46px] w-[46px]',
           )}
         />
         <TapActionButton
@@ -459,8 +476,8 @@ export function MobileGameControls({
           cooldownProgress={healCooldownProgress}
           onClick={() => pulseAction('heal')}
           className={cn(
-            'absolute bottom-0 right-[30px] h-[52px] w-[52px]',
-            compactLandscapeControls && 'h-[46px] w-[46px]',
+            'absolute left-[12px] bottom-[8px] h-[52px] w-[52px]',
+            compactLandscapeControls && 'left-[26px] bottom-[4px] h-[46px] w-[46px]',
           )}
         />
       </div>
