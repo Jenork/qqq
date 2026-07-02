@@ -1,9 +1,19 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { BASE_CHAIN_ID } from '@/config/web3'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { shortenAddress } from '@/lib/score'
+
+type WindowWithEthereum = Window & {
+  ethereum?: unknown
+}
+
+type MobileWalletLink = {
+  label: string
+  href: string
+}
 
 function getConnectorLabel(id: string, name: string) {
   if (id === 'baseAccount') {
@@ -40,7 +50,7 @@ function getConnectorHint(id: string, mobile: boolean) {
   }
 
   if (id === 'injected') {
-    return 'Browser extension or injected wallet'
+    return mobile ? 'Wallet app browser connection' : 'Browser extension or injected wallet'
   }
 
   return 'Wallet connection'
@@ -62,11 +72,50 @@ function getConnectorBadge(id: string, mobile: boolean) {
   return null
 }
 
+function hasInjectedWalletProvider() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return Boolean((window as WindowWithEthereum).ethereum)
+}
+
+function getMobileWalletLinks(): MobileWalletLink[] {
+  if (typeof window === 'undefined') {
+    return []
+  }
+
+  const currentUrl = window.location.href
+  const dappUrl = currentUrl.replace(/^https?:\/\//, '')
+
+  return [
+    {
+      label: 'Open MetaMask',
+      href: `https://metamask.app.link/dapp/${dappUrl}`,
+    },
+    {
+      label: 'Open Coinbase Wallet',
+      href: `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(currentUrl)}`,
+    },
+  ]
+}
+
+function getConnectErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  return 'Wallet connection failed. Open the game inside a wallet browser and try again.'
+}
+
 export function ConnectWallet() {
   const { address, isConnected, isConnecting, isReconnecting } = useAccount()
-  const { connect, connectors } = useConnect()
+  const { connectAsync, connectors, isPending } = useConnect()
   const { disconnect } = useDisconnect()
   const { showTouchControls } = useMobileViewport()
+  const [connectError, setConnectError] = useState<string | null>(null)
+  const [hasInjectedProvider, setHasInjectedProvider] = useState(false)
+  const [mobileWalletLinks, setMobileWalletLinks] = useState<MobileWalletLink[]>([])
   const availableConnectors = connectors
     .filter(
       (connector, index, list) =>
@@ -84,6 +133,32 @@ export function ConnectWallet() {
   const hasMobileWalletConnector = availableConnectors.some(
     (connector) => connector.id === 'baseAccount' || connector.id === 'injected',
   )
+  const isWalletConnecting = isConnecting || isPending
+
+  useEffect(() => {
+    const syncInjectedProvider = () => {
+      setHasInjectedProvider(hasInjectedWalletProvider())
+    }
+
+    syncInjectedProvider()
+    const timer = window.setTimeout(syncInjectedProvider, 1_000)
+
+    return () => window.clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    setMobileWalletLinks(getMobileWalletLinks())
+  }, [])
+
+  const handleConnect = async (connector: (typeof availableConnectors)[number]) => {
+    setConnectError(null)
+
+    try {
+      await connectAsync({ connector, chainId: BASE_CHAIN_ID })
+    } catch (error) {
+      setConnectError(getConnectErrorMessage(error))
+    }
+  }
 
   if (isReconnecting) {
     return (
@@ -100,7 +175,7 @@ export function ConnectWallet() {
         <p className="mt-2 text-sm text-stone-300">
           {hasMobileWalletConnector
             ? showTouchControls
-              ? 'Use Base Account inside Base App, or fallback to an injected mobile wallet.'
+              ? 'Use Base Account inside Base App, or open the game in a wallet browser.'
               : 'Choose Base Account or a browser wallet for onchain actions.'
             : 'Choose a browser wallet to save score and use onchain actions.'}
         </p>
@@ -109,19 +184,55 @@ export function ConnectWallet() {
             const label = getConnectorLabel(connector.id, connector.name)
             const hint = getConnectorHint(connector.id, showTouchControls)
             const badge = getConnectorBadge(connector.id, showTouchControls)
+            const needsMobileWalletBrowser =
+              showTouchControls && connector.id === 'injected' && !hasInjectedProvider
 
-            return (
+            return needsMobileWalletBrowser ? (
+              <div
+                key={connector.uid}
+                className="rounded-[18px] border border-white/10 bg-black/24 p-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-stone-100">
+                      {label}
+                    </span>
+                    <span className="mt-1 block text-xs leading-relaxed text-stone-400">
+                      Open this game inside a wallet app, then connect with Browser Wallet.
+                    </span>
+                  </span>
+                  {badge ? (
+                    <span className="inferno-chip shrink-0 rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-[#b5ffb7]">
+                      {badge}
+                    </span>
+                  ) : null}
+                </div>
+                {mobileWalletLinks.length > 0 ? (
+                  <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {mobileWalletLinks.map((wallet) => (
+                      <a
+                        key={wallet.href}
+                        href={wallet.href}
+                        className="action-button retro-button px-3 py-2 text-center text-xs font-black uppercase tracking-[0.12em]"
+                      >
+                        {wallet.label}
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : (
               <button
                 key={connector.uid}
                 type="button"
                 className="action-button retro-button px-4 py-3 text-left"
-                onClick={() => connect({ connector, chainId: BASE_CHAIN_ID })}
-                disabled={isConnecting}
+                onClick={() => handleConnect(connector)}
+                disabled={isWalletConnecting}
               >
                 <span className="flex items-start justify-between gap-3">
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-stone-100">
-                      {isConnecting ? `Confirm ${label}...` : label}
+                      {isWalletConnecting ? `Confirm ${label}...` : label}
                     </span>
                     <span className="mt-1 block text-xs text-stone-400">
                       {hint}
@@ -137,6 +248,11 @@ export function ConnectWallet() {
             )
           })}
         </div>
+        {connectError ? (
+          <p className="mt-3 rounded-[14px] border border-red-400/20 bg-red-950/30 px-3 py-2 text-xs leading-relaxed text-red-100">
+            {connectError}
+          </p>
+        ) : null}
       </div>
     )
   }
