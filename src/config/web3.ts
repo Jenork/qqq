@@ -3,7 +3,6 @@ import { base } from 'wagmi/chains'
 const configuredChainId = Number(process.env.NEXT_PUBLIC_BASE_CHAIN_ID ?? base.id)
 const rpcUrl =
   process.env.NEXT_PUBLIC_BASE_RPC_URL?.trim() ||
-  process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL?.trim() ||
   'https://mainnet.base.org'
 
 export const BASE_CHAIN = base

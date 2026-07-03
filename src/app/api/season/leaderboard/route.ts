@@ -3,14 +3,51 @@ import { createPublicClient, http } from 'viem'
 import { HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
 import { CURRENT_SEASON_START_BLOCK } from '@/config/season'
 import { BASE_CHAIN, BASE_RPC_URL } from '@/config/web3'
-import { readSeasonLeaderboard } from '@/lib/seasonProgress'
+import { readSeasonLeaderboard, type SeasonLeaderboardEntry } from '@/lib/seasonProgress'
 
 export const dynamic = 'force-dynamic'
+
+const CACHE_TTL_MS = 15_000
 
 const publicClient = createPublicClient({
   chain: BASE_CHAIN,
   transport: http(BASE_RPC_URL),
 })
+
+let leaderboardCache: {
+  expiresAt: number
+  promise?: Promise<SeasonLeaderboardEntry[]>
+  value?: SeasonLeaderboardEntry[]
+} = {
+  expiresAt: 0,
+}
+
+async function getCachedLeaderboard() {
+  const now = Date.now()
+
+  if (leaderboardCache.value && leaderboardCache.expiresAt > now) {
+    return leaderboardCache.value
+  }
+
+  if (leaderboardCache.promise) {
+    return leaderboardCache.promise
+  }
+
+  leaderboardCache.promise = readSeasonLeaderboard(publicClient)
+    .then((value) => {
+      leaderboardCache = {
+        expiresAt: Date.now() + CACHE_TTL_MS,
+        value,
+      }
+
+      return value
+    })
+    .finally(() => {
+      leaderboardCache.promise = undefined
+    })
+
+  return leaderboardCache.promise
+}
 
 export async function GET(request: Request) {
   if (!HAS_GAME_PROGRESS_ADDRESS) {
@@ -27,7 +64,7 @@ export async function GET(request: Request) {
   const normalizedCurrentAddress = searchParams.get('currentAddress')?.toLowerCase() ?? null
 
   try {
-    const rankedEntries = await readSeasonLeaderboard(publicClient)
+    const rankedEntries = await getCachedLeaderboard()
     const entries = normalizedLimit === null ? rankedEntries : rankedEntries.slice(0, normalizedLimit)
 
     return NextResponse.json(

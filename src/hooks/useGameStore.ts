@@ -30,6 +30,10 @@ const EMPTY_ACTION_TOKENS: ActionTokens = {
   heal: 0,
 }
 
+function isGrenadeItemId(itemId: ItemId) {
+  return itemId === 'frag-grenade' || itemId === 'fire-grenade'
+}
+
 type GameApi = {
   startRun: () => void
   restartRun: () => void
@@ -122,9 +126,9 @@ function resolveEquippedLoadout(state: Pick<GameStore, 'equippedWeapon' | 'equip
     equippedWeapon: unlockedItemIds.includes(state.equippedWeapon)
       ? state.equippedWeapon
       : INVENTORY_DEFAULTS.weapon,
-    equippedGrenade: preferredGrenade && unlockedItemIds.includes(preferredGrenade)
+    equippedGrenade: preferredGrenade && isGrenadeItemId(preferredGrenade) && unlockedItemIds.includes(preferredGrenade)
       ? preferredGrenade
-      : unlockedItemIds.includes(state.equippedGrenade)
+      : isGrenadeItemId(state.equippedGrenade) && unlockedItemIds.includes(state.equippedGrenade)
         ? state.equippedGrenade
         : INVENTORY_DEFAULTS.grenade,
     equippedAbility: unlockedItemIds.includes(state.equippedAbility)
@@ -268,11 +272,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setOffchainUnlocked: (itemIds) =>
     set((state) => {
       const unlockedItemIds = mergeUnlockedItemIds(state.onchainUnlockedItemIds, itemIds)
+      const preferredGrenade = itemIds.find(isGrenadeItemId)
 
       return {
         offchainUnlockedItemIds: itemIds,
         unlockedItemIds,
-        ...resolveEquippedLoadout(state, unlockedItemIds, itemIds[0]),
+        ...resolveEquippedLoadout(state, unlockedItemIds, preferredGrenade),
       }
     }),
   registerGameApi: (api) => set({ gameApi: api }),

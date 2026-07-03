@@ -1,9 +1,12 @@
 'use client'
 
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
+import { decodeEventLog, isAddressEqual, isHex, type Address, type Hex } from 'viem'
 import {
   useAccount,
   useChainId,
+  usePublicClient,
   useSwitchChain,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -21,9 +24,61 @@ import { BASE_CHAIN_ID } from '@/config/web3'
 import { getDisplayErrorMessage } from '@/lib/missions'
 import { markUsdcMissionSuccess, readUsdcMissionState, USDC_MISSION_EVENT_NAME } from '@/lib/usdcMission'
 
+type ReceiptClient = {
+  getTransactionReceipt(args: { hash: Hex }): Promise<{
+    status: string
+    logs: Array<{
+      address: Address
+      data: Hex
+      topics: readonly Hex[]
+    }>
+  }>
+}
+
+async function verifyUsdcTransferReceipt(
+  publicClient: ReceiptClient,
+  txHash: Hex,
+  playerAddress: Address,
+) {
+  const receipt = await publicClient.getTransactionReceipt({
+    hash: txHash as Hex,
+  })
+
+  if (receipt.status !== 'success') {
+    return false
+  }
+
+  return receipt.logs.some((log) => {
+    if (!isAddressEqual(log.address, USDC_TOKEN_ADDRESS)) {
+      return false
+    }
+
+    try {
+      const decoded = decodeEventLog({
+        abi: erc20Abi,
+        data: log.data,
+        topics: log.topics as [Hex, ...Hex[]],
+      })
+
+      if (decoded.eventName !== 'Transfer') {
+        return false
+      }
+
+      return (
+        isAddressEqual(decoded.args.from, playerAddress) &&
+        isAddressEqual(decoded.args.to, USDC_RECIPIENT) &&
+        decoded.args.value === USDC_PAYMENT_AMOUNT_UNITS
+      )
+    } catch {
+      return false
+    }
+  })
+}
+
 export function useUsdcPayment() {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
+  const publicClient = usePublicClient({ chainId: BASE_CHAIN_ID })
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const [error, setError] = useState<string | null>(null)
   const [storedSuccess, setStoredSuccess] = useState(() => readUsdcMissionState(address))
@@ -60,7 +115,34 @@ export function useUsdcPayment() {
     setError(null)
   }, [address, hash, isSuccess])
 
-  const paymentSuccess = Boolean(storedSuccess)
+  const receiptHash = hash ?? storedSuccess?.txHash ?? null
+  const verifiedPayment = useQuery({
+    queryKey: ['usdc-payment', 'verify-transfer', address, receiptHash],
+    enabled:
+      Boolean(address) &&
+      Boolean(receiptHash) &&
+      Boolean(publicClient) &&
+      HAS_USDC_TOKEN_ADDRESS &&
+      HAS_USDC_RECIPIENT,
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!address || !receiptHash || !publicClient) {
+        return false
+      }
+
+      if (!isHex(receiptHash)) {
+        return false
+      }
+
+      return verifyUsdcTransferReceipt(publicClient, receiptHash, address)
+    },
+  })
+  const paymentSuccess = verifiedPayment.data === true
+  const verificationFailed =
+    Boolean(receiptHash) &&
+    (verifiedPayment.isError || (verifiedPayment.isSuccess && verifiedPayment.data === false))
+  const isVerifyingPayment = Boolean(receiptHash) && verifiedPayment.isFetching
+  const displayError = error ?? (verificationFailed ? 'USDC payment was not verified onchain.' : null)
 
   const status = useMemo(() => {
     if (!isConnected) {
@@ -79,22 +161,27 @@ export function useUsdcPayment() {
       return 'confirming' as const
     }
 
+    if (isVerifyingPayment) {
+      return 'confirming' as const
+    }
+
     if (paymentSuccess) {
       return 'success' as const
     }
 
-    if (error) {
+    if (displayError) {
       return 'error' as const
     }
 
     return 'available' as const
   }, [
     chainId,
-    error,
+    displayError,
     isConfirming,
     isConnected,
     isPending,
     isSwitching,
+    isVerifyingPayment,
     paymentSuccess,
   ])
 
@@ -115,6 +202,10 @@ export function useUsdcPayment() {
       return 'Confirming'
     }
 
+    if (isVerifyingPayment) {
+      return 'Verifying'
+    }
+
     if (paymentSuccess) {
       return 'Grenade Unlocked'
     }
@@ -126,6 +217,7 @@ export function useUsdcPayment() {
     isConnected,
     isPending,
     isSwitching,
+    isVerifyingPayment,
     paymentSuccess,
   ])
 
@@ -173,11 +265,11 @@ export function useUsdcPayment() {
   return {
     status,
     actionLabel,
-    txHash: hash ?? storedSuccess?.txHash,
+    txHash: receiptHash,
     isPending,
-    isConfirming,
+    isConfirming: isConfirming || isVerifyingPayment,
     isSuccess: paymentSuccess,
-    error,
+    error: displayError,
     grenadeUnlocked: paymentSuccess,
     pay,
     run: pay,

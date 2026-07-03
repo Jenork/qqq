@@ -1,19 +1,29 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { BASE_CHAIN_ID } from '@/config/web3'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { shortenAddress } from '@/lib/score'
 
+type EthereumProvider = {
+  isMetaMask?: boolean
+  providers?: EthereumProvider[]
+}
+
 type WindowWithEthereum = Window & {
-  ethereum?: unknown
+  ethereum?: EthereumProvider
 }
 
 type MobileWalletLink = {
   label: string
   href: string
+  fallbackHref?: string
+  wallet: 'metamask' | 'coinbase'
 }
+
+const MOBILE_WALLET_PARAM = 'wallet'
+const METAMASK_WALLET_PARAM = 'metamask'
 
 function getConnectorLabel(id: string, name: string) {
   if (id === 'baseAccount') {
@@ -80,22 +90,42 @@ function hasInjectedWalletProvider() {
   return Boolean((window as WindowWithEthereum).ethereum)
 }
 
+function hasMetaMaskWalletProvider() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  const provider = (window as WindowWithEthereum).ethereum
+
+  return Boolean(provider?.isMetaMask || provider?.providers?.some((item) => item.isMetaMask))
+}
+
+function getUrlWithWalletParam(wallet: string) {
+  const url = new URL(window.location.href)
+  url.searchParams.set(MOBILE_WALLET_PARAM, wallet)
+  return url.toString()
+}
+
 function getMobileWalletLinks(): MobileWalletLink[] {
   if (typeof window === 'undefined') {
     return []
   }
 
-  const currentUrl = window.location.href
-  const dappUrl = currentUrl.replace(/^https?:\/\//, '')
+  const metamaskUrl = getUrlWithWalletParam(METAMASK_WALLET_PARAM)
+  const currentUrl = getUrlWithWalletParam('coinbase')
+  const metamaskDappUrl = metamaskUrl.replace(/^https?:\/\//, '')
 
   return [
     {
-      label: 'Open MetaMask',
-      href: `https://metamask.app.link/dapp/${dappUrl}`,
+      label: 'Connect MetaMask',
+      href: `metamask://dapp/${metamaskDappUrl}`,
+      fallbackHref: `https://metamask.app.link/dapp/${metamaskDappUrl}`,
+      wallet: 'metamask',
     },
     {
       label: 'Open Coinbase Wallet',
       href: `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(currentUrl)}`,
+      wallet: 'coinbase',
     },
   ]
 }
@@ -134,6 +164,7 @@ export function ConnectWallet() {
     (connector) => connector.id === 'baseAccount' || connector.id === 'injected',
   )
   const isWalletConnecting = isConnecting || isPending
+  const [autoConnectAttempted, setAutoConnectAttempted] = useState(false)
 
   useEffect(() => {
     const syncInjectedProvider = () => {
@@ -150,7 +181,7 @@ export function ConnectWallet() {
     setMobileWalletLinks(getMobileWalletLinks())
   }, [])
 
-  const handleConnect = async (connector: (typeof availableConnectors)[number]) => {
+  const handleConnect = useCallback(async (connector: (typeof availableConnectors)[number]) => {
     setConnectError(null)
 
     try {
@@ -158,6 +189,56 @@ export function ConnectWallet() {
     } catch (error) {
       setConnectError(getConnectErrorMessage(error))
     }
+  }, [connectAsync])
+
+  useEffect(() => {
+    if (
+      autoConnectAttempted ||
+      isConnected ||
+      isWalletConnecting ||
+      !hasInjectedProvider ||
+      typeof window === 'undefined'
+    ) {
+      return
+    }
+
+    const walletParam = new URL(window.location.href).searchParams.get(MOBILE_WALLET_PARAM)
+
+    if (walletParam !== METAMASK_WALLET_PARAM || !hasMetaMaskWalletProvider()) {
+      return
+    }
+
+    const injectedConnector = availableConnectors.find((connector) => connector.id === 'injected')
+
+    if (!injectedConnector) {
+      return
+    }
+
+    setAutoConnectAttempted(true)
+    void handleConnect(injectedConnector)
+  }, [
+    autoConnectAttempted,
+    availableConnectors,
+    handleConnect,
+    hasInjectedProvider,
+    isConnected,
+    isWalletConnecting,
+  ])
+
+  const openMobileWallet = (wallet: MobileWalletLink) => {
+    if (wallet.wallet !== 'metamask' || !wallet.fallbackHref) {
+      window.location.href = wallet.href
+      return
+    }
+
+    const openedAt = Date.now()
+    window.location.href = wallet.href
+
+    window.setTimeout(() => {
+      if (document.visibilityState === 'visible' && Date.now() - openedAt < 2_000) {
+        window.location.href = wallet.fallbackHref ?? wallet.href
+      }
+    }, 800)
   }
 
   if (isReconnecting) {
@@ -198,7 +279,7 @@ export function ConnectWallet() {
                       {label}
                     </span>
                     <span className="mt-1 block text-xs leading-relaxed text-stone-400">
-                      Open this game inside a wallet app, then connect with Browser Wallet.
+                      Open this game in MetaMask or Coinbase Wallet. MetaMask will request connection automatically.
                     </span>
                   </span>
                   {badge ? (
@@ -210,13 +291,14 @@ export function ConnectWallet() {
                 {mobileWalletLinks.length > 0 ? (
                   <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {mobileWalletLinks.map((wallet) => (
-                      <a
+                      <button
                         key={wallet.href}
-                        href={wallet.href}
+                        type="button"
+                        onClick={() => openMobileWallet(wallet)}
                         className="action-button retro-button px-3 py-2 text-center text-xs font-black uppercase tracking-[0.12em]"
                       >
                         {wallet.label}
-                      </a>
+                      </button>
                     ))}
                   </div>
                 ) : null}
