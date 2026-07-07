@@ -21,8 +21,14 @@ import { formatScore, isNewBestScore } from '@/lib/score'
 
 const PRODUCTION_GAME_URL = 'https://based-doom.vercel.app/#game'
 
-type ShareNavigator = Navigator & {
-  canShare?: (data: ShareData) => boolean
+type XStatus = {
+  configured: boolean
+  connected: boolean
+}
+
+type XShareResponse = {
+  url?: string
+  error?: string
 }
 
 function getGameShareUrl() {
@@ -42,16 +48,7 @@ function getGameShareUrl() {
 function getScoreShareText(score: number, savedOnchain: boolean) {
   const savedText = savedOnchain ? ' My best run is saved onchain on Base.' : ''
 
-  return `I scored ${formatScore(score)} in Based DOOM Season 2.${savedText} Can you beat me?`
-}
-
-function openTweetIntent(score: number, savedOnchain: boolean) {
-  const searchParams = new URLSearchParams({
-    text: getScoreShareText(score, savedOnchain),
-    url: getGameShareUrl(),
-  })
-
-  window.open(`https://twitter.com/intent/tweet?${searchParams.toString()}`, '_blank', 'noopener,noreferrer')
+  return `I scored ${formatScore(score)} in Based DOOM Season 2.${savedText} Can you beat me?\n\n${getGameShareUrl()}`
 }
 
 function loadShareImage(src: string) {
@@ -152,17 +149,6 @@ async function createScoreShareCard(score: number, savedOnchain: boolean) {
   return new File([blob], `based-doom-score-${score}.png`, { type: 'image/png' })
 }
 
-function downloadShareCard(file: File) {
-  const url = URL.createObjectURL(file)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = file.name
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
 export function GameOverModal() {
   const queryClient = useQueryClient()
   const { address, isConnected } = useAccount()
@@ -177,6 +163,8 @@ export function GameOverModal() {
 
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [shareStatus, setShareStatus] = useState<string | null>(null)
+  const [xStatus, setXStatus] = useState<XStatus | null>(null)
+  const [isPostingToX, setIsPostingToX] = useState(false)
   const dialogRef = useRef<HTMLDivElement | null>(null)
   const { data: hash, error, isPending, writeContract } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
@@ -217,38 +205,118 @@ export function GameOverModal() {
   const storedBestScore = seasonStats.data?.bestScore ?? 0
   const canSubmitScore = isNewBestScore(pendingScore, storedBestScore)
 
+  const refreshXStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/x/status', { cache: 'no-store' })
+
+      if (!response.ok) {
+        setXStatus({ configured: false, connected: false })
+        return
+      }
+
+      setXStatus((await response.json()) as XStatus)
+    } catch {
+      setXStatus({ configured: false, connected: false })
+    }
+  }, [])
+
   const handleShareScore = useCallback(async () => {
-    setShareStatus('Preparing share card...')
+    setShareStatus(null)
+
+    if (xStatus && !xStatus.configured) {
+      setShareStatus('X API is not configured yet.')
+      return
+    }
+
+    if (xStatus && !xStatus.connected) {
+      window.open('/api/x/connect', '_blank', 'noopener,noreferrer')
+      setShareStatus('Connect X in the opened tab, then return and press Post to X.')
+      return
+    }
+
+    setIsPostingToX(true)
+    setShareStatus('Posting to X...')
 
     try {
       const card = await createScoreShareCard(pendingScore, isSuccess)
-      const shareData: ShareData = {
-        title: 'Based DOOM',
-        text: getScoreShareText(pendingScore, isSuccess),
-        url: getGameShareUrl(),
-        files: [card],
-      }
-      const shareNavigator = navigator as ShareNavigator
+      const formData = new FormData()
+      formData.set('text', getScoreShareText(pendingScore, isSuccess))
+      formData.set('image', card)
 
-      if (shareNavigator.share && (!shareNavigator.canShare || shareNavigator.canShare(shareData))) {
-        await shareNavigator.share(shareData)
-        setShareStatus('Share sheet opened.')
+      const response = await fetch('/api/x/share', {
+        method: 'POST',
+        body: formData,
+      })
+      const result = (await response.json().catch(() => ({}))) as XShareResponse
+
+      if (response.status === 401) {
+        setXStatus((current) => ({ configured: current?.configured ?? true, connected: false }))
+        window.open('/api/x/connect', '_blank', 'noopener,noreferrer')
+        setShareStatus('Connect X in the opened tab, then return and press Post to X.')
         return
       }
 
-      downloadShareCard(card)
-      openTweetIntent(pendingScore, isSuccess)
-      setShareStatus('Share card downloaded. Attach it to the X post if needed.')
-    } catch (shareError) {
-      if (shareError instanceof DOMException && shareError.name === 'AbortError') {
-        setShareStatus(null)
+      if (!response.ok) {
+        setShareStatus(result.error === 'x_oauth_not_configured' ? 'X API is not configured yet.' : 'Failed to post to X.')
         return
       }
 
-      openTweetIntent(pendingScore, isSuccess)
-      setShareStatus('X post opened without image. Try again to save the card.')
+      setShareStatus('Posted to X.')
+
+      if (result.url) {
+        window.open(result.url, '_blank', 'noopener,noreferrer')
+      }
+    } catch {
+      setShareStatus('Failed to post to X.')
+    } finally {
+      setIsPostingToX(false)
+      void refreshXStatus()
     }
-  }, [isSuccess, pendingScore])
+  }, [isSuccess, pendingScore, refreshXStatus, xStatus])
+
+  useEffect(() => {
+    if (status !== 'gameover') {
+      return
+    }
+
+    void refreshXStatus()
+  }, [refreshXStatus, status])
+
+  useEffect(() => {
+    if (status !== 'gameover') {
+      return
+    }
+
+    const handleFocus = () => {
+      void refreshXStatus()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [refreshXStatus, status])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const url = new URL(window.location.href)
+    const xResult = url.searchParams.get('x')
+
+    if (!xResult) {
+      return
+    }
+
+    if (xResult === 'connected') {
+      setShareStatus('X connected. Press Share on X to post your run.')
+      void refreshXStatus()
+    } else if (xResult === 'error') {
+      setShareStatus('X connection failed. Try again.')
+    }
+
+    url.searchParams.delete('x')
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
+  }, [refreshXStatus])
 
   useEffect(() => {
     if (status !== 'gameover') {
@@ -432,9 +500,10 @@ export function GameOverModal() {
           <button
             type="button"
             className="action-button rounded-2xl px-4 py-4 text-sm font-bold uppercase tracking-[0.14em]"
+            disabled={isPostingToX}
             onClick={() => void handleShareScore()}
           >
-            Share on X
+            {isPostingToX ? 'Posting to X...' : xStatus?.connected ? 'Post to X' : 'Connect X to Share'}
           </button>
 
           {hasTxState ? (
