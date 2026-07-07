@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
 import {
@@ -19,6 +19,150 @@ import { cn } from '@/lib/cn'
 import { getDisplayErrorMessage } from '@/lib/missions'
 import { formatScore, isNewBestScore } from '@/lib/score'
 
+const PRODUCTION_GAME_URL = 'https://based-doom.vercel.app/#game'
+
+type ShareNavigator = Navigator & {
+  canShare?: (data: ShareData) => boolean
+}
+
+function getGameShareUrl() {
+  if (typeof window === 'undefined') {
+    return PRODUCTION_GAME_URL
+  }
+
+  const { origin } = window.location
+
+  if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    return PRODUCTION_GAME_URL
+  }
+
+  return `${origin}/#game`
+}
+
+function getScoreShareText(score: number, savedOnchain: boolean) {
+  const savedText = savedOnchain ? ' My best run is saved onchain on Base.' : ''
+
+  return `I scored ${formatScore(score)} in Based DOOM Season 2.${savedText} Can you beat me?`
+}
+
+function openTweetIntent(score: number, savedOnchain: boolean) {
+  const searchParams = new URLSearchParams({
+    text: getScoreShareText(score, savedOnchain),
+    url: getGameShareUrl(),
+  })
+
+  window.open(`https://twitter.com/intent/tweet?${searchParams.toString()}`, '_blank', 'noopener,noreferrer')
+}
+
+function loadShareImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new window.Image()
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error(`Failed to load ${src}`))
+    image.src = src
+  })
+}
+
+async function createScoreShareCard(score: number, savedOnchain: boolean) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1200
+  canvas.height = 630
+
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new Error('Canvas is unavailable.')
+  }
+
+  const background = context.createLinearGradient(0, 0, 1200, 630)
+  background.addColorStop(0, '#030712')
+  background.addColorStop(0.45, '#071322')
+  background.addColorStop(1, '#1a0707')
+  context.fillStyle = background
+  context.fillRect(0, 0, 1200, 630)
+
+  const glow = context.createRadialGradient(780, 250, 40, 780, 250, 420)
+  glow.addColorStop(0, 'rgba(255, 83, 41, 0.38)')
+  glow.addColorStop(0.5, 'rgba(56, 189, 248, 0.1)')
+  glow.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  context.fillStyle = glow
+  context.fillRect(0, 0, 1200, 630)
+
+  context.strokeStyle = 'rgba(56, 189, 248, 0.18)'
+  context.lineWidth = 2
+  for (let x = 60; x < 1200; x += 96) {
+    context.beginPath()
+    context.moveTo(x, 70)
+    context.lineTo(x, 570)
+    context.stroke()
+  }
+
+  for (let y = 70; y < 630; y += 84) {
+    context.beginPath()
+    context.moveTo(60, y)
+    context.lineTo(1140, y)
+    context.stroke()
+  }
+
+  context.strokeStyle = 'rgba(125, 211, 252, 0.42)'
+  context.lineWidth = 4
+  context.strokeRect(42, 42, 1116, 546)
+
+  context.fillStyle = 'rgba(3, 7, 18, 0.72)'
+  context.fillRect(70, 72, 1060, 486)
+
+  const marine = await loadShareImage('/sprites/player-marine-dead.png')
+  context.drawImage(marine, 725, 130, 325, 325)
+
+  context.fillStyle = '#9af3ff'
+  context.font = '900 54px Arial, sans-serif'
+  context.fillText('BASED DOOM', 116, 150)
+
+  context.fillStyle = '#fbbf24'
+  context.font = '900 28px Arial, sans-serif'
+  context.fillText('SEASON 2 RUN RESULT', 120, 198)
+
+  context.fillStyle = '#ffffff'
+  context.font = '900 42px Arial, sans-serif'
+  context.fillText('SCORE', 120, 300)
+
+  context.fillStyle = '#ffcf66'
+  context.font = '900 126px Arial, sans-serif'
+  context.fillText(formatScore(score), 116, 424)
+
+  context.fillStyle = savedOnchain ? '#a7f3d0' : '#e5e7eb'
+  context.font = '800 28px Arial, sans-serif'
+  context.fillText(savedOnchain ? 'SAVED ONCHAIN ON BASE' : 'READY TO SAVE ONCHAIN', 122, 484)
+
+  context.fillStyle = '#dbeafe'
+  context.font = '800 26px Arial, sans-serif'
+  context.fillText('based-doom.vercel.app', 122, 532)
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((value) => {
+      if (value) {
+        resolve(value)
+        return
+      }
+
+      reject(new Error('Failed to create share card.'))
+    }, 'image/png')
+  })
+
+  return new File([blob], `based-doom-score-${score}.png`, { type: 'image/png' })
+}
+
+function downloadShareCard(file: File) {
+  const url = URL.createObjectURL(file)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = file.name
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export function GameOverModal() {
   const queryClient = useQueryClient()
   const { address, isConnected } = useAccount()
@@ -32,6 +176,7 @@ export function GameOverModal() {
   const refetchSeasonStats = seasonStats.refetch
 
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [shareStatus, setShareStatus] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDivElement | null>(null)
   const { data: hash, error, isPending, writeContract } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
@@ -71,6 +216,39 @@ export function GameOverModal() {
 
   const storedBestScore = seasonStats.data?.bestScore ?? 0
   const canSubmitScore = isNewBestScore(pendingScore, storedBestScore)
+
+  const handleShareScore = useCallback(async () => {
+    setShareStatus('Preparing share card...')
+
+    try {
+      const card = await createScoreShareCard(pendingScore, isSuccess)
+      const shareData: ShareData = {
+        title: 'Based DOOM',
+        text: getScoreShareText(pendingScore, isSuccess),
+        url: getGameShareUrl(),
+        files: [card],
+      }
+      const shareNavigator = navigator as ShareNavigator
+
+      if (shareNavigator.share && (!shareNavigator.canShare || shareNavigator.canShare(shareData))) {
+        await shareNavigator.share(shareData)
+        setShareStatus('Share sheet opened.')
+        return
+      }
+
+      downloadShareCard(card)
+      openTweetIntent(pendingScore, isSuccess)
+      setShareStatus('Share card downloaded. Attach it to the X post if needed.')
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === 'AbortError') {
+        setShareStatus(null)
+        return
+      }
+
+      openTweetIntent(pendingScore, isSuccess)
+      setShareStatus('X post opened without image. Try again to save the card.')
+    }
+  }, [isSuccess, pendingScore])
 
   useEffect(() => {
     if (status !== 'gameover') {
@@ -251,9 +429,23 @@ export function GameOverModal() {
             </button>
           </div>
 
+          <button
+            type="button"
+            className="action-button rounded-2xl px-4 py-4 text-sm font-bold uppercase tracking-[0.14em]"
+            onClick={() => void handleShareScore()}
+          >
+            Share on X
+          </button>
+
           {hasTxState ? (
             <div className="panel-state panel-state-muted text-sm text-slate-200">
               {txState}
+            </div>
+          ) : null}
+
+          {shareStatus ? (
+            <div className="panel-state panel-state-muted text-sm text-slate-200">
+              {shareStatus}
             </div>
           ) : null}
 
