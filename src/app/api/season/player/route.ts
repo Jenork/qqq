@@ -69,9 +69,22 @@ async function getCachedPlayerStats(address: Address) {
   return next.promise
 }
 
+async function refreshCachedPlayerStats(address: Address) {
+  const cacheKey = address.toLowerCase()
+  const value = await readSeasonPlayerStats(publicClient, address)
+
+  playerStatsCache.set(cacheKey, {
+    expiresAt: Date.now() + CACHE_TTL_MS,
+    value,
+  })
+
+  return value
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const address = searchParams.get('address')
+  const forceRefresh = searchParams.get('refresh') === '1'
 
   if (!address || !isAddress(address)) {
     return NextResponse.json(EMPTY_STATS)
@@ -82,7 +95,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const stats = await getCachedPlayerStats(address as Address)
+    const stats = forceRefresh
+      ? await refreshCachedPlayerStats(address as Address)
+      : await getCachedPlayerStats(address as Address)
 
     return NextResponse.json(
       {
@@ -91,7 +106,7 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          'Cache-Control': 's-maxage=15, stale-while-revalidate=45',
+          'Cache-Control': forceRefresh ? 'no-store, max-age=0' : 's-maxage=15, stale-while-revalidate=30',
         },
       },
     )

@@ -16,6 +16,7 @@ const EMPTY_SEASON_STATS = {
 
 async function fetchSeasonPlayerStats(address: string) {
   const searchParams = new URLSearchParams({ address })
+
   const response = await fetch(`/api/season/player?${searchParams.toString()}`, {
     cache: 'no-store',
   })
@@ -34,6 +35,7 @@ export function useSeasonPlayerStats(address?: string | null) {
     queryKey: ['season-player-stats', CURRENT_SEASON_START_BLOCK.toString(), address?.toLowerCase() ?? 'guest'],
     enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
     staleTime: 15_000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       if (!address) {
         return EMPTY_SEASON_STATS

@@ -42,10 +42,26 @@ export function GameOverModal() {
     }
 
     setSubmitError(null)
-    void refetchSeasonStats()
-    void queryClient.invalidateQueries({ queryKey: ['season-player-stats'] })
-    void queryClient.invalidateQueries({ queryKey: ['leaderboard'] })
-  }, [isSuccess, queryClient, refetchSeasonStats])
+    const refreshSubmittedScore = async () => {
+      const refreshes = [fetch('/api/season/leaderboard?refresh=1', { cache: 'no-store' })]
+
+      if (address) {
+        const searchParams = new URLSearchParams({ address, refresh: '1' })
+        refreshes.push(fetch(`/api/season/player?${searchParams.toString()}`, { cache: 'no-store' }))
+      }
+
+      await Promise.allSettled(refreshes)
+      await Promise.allSettled([
+        refetchSeasonStats(),
+        queryClient.invalidateQueries({ queryKey: ['season-player-stats'] }),
+        queryClient.invalidateQueries({ queryKey: ['leaderboard'] }),
+        queryClient.refetchQueries({ queryKey: ['season-player-stats'], type: 'active' }),
+        queryClient.refetchQueries({ queryKey: ['leaderboard'], type: 'active' }),
+      ])
+    }
+
+    void refreshSubmittedScore()
+  }, [address, isSuccess, queryClient, refetchSeasonStats])
 
   useEffect(() => {
     if (error) {

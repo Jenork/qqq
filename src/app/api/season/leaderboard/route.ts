@@ -49,6 +49,17 @@ async function getCachedLeaderboard() {
   return leaderboardCache.promise
 }
 
+async function refreshCachedLeaderboard() {
+  const value = await readSeasonLeaderboard(publicClient)
+
+  leaderboardCache = {
+    expiresAt: Date.now() + CACHE_TTL_MS,
+    value,
+  }
+
+  return value
+}
+
 export async function GET(request: Request) {
   if (!HAS_GAME_PROGRESS_ADDRESS) {
     return NextResponse.json({
@@ -62,9 +73,10 @@ export async function GET(request: Request) {
   const rawLimit = Number(searchParams.get('limit') ?? 0)
   const normalizedLimit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : null
   const normalizedCurrentAddress = searchParams.get('currentAddress')?.toLowerCase() ?? null
+  const forceRefresh = searchParams.get('refresh') === '1'
 
   try {
-    const rankedEntries = await getCachedLeaderboard()
+    const rankedEntries = forceRefresh ? await refreshCachedLeaderboard() : await getCachedLeaderboard()
     const entries = normalizedLimit === null ? rankedEntries : rankedEntries.slice(0, normalizedLimit)
 
     return NextResponse.json(
@@ -77,7 +89,7 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          'Cache-Control': 's-maxage=15, stale-while-revalidate=45',
+          'Cache-Control': forceRefresh ? 'no-store, max-age=0' : 's-maxage=15, stale-while-revalidate=30',
         },
       },
     )

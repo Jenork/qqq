@@ -24,6 +24,8 @@ export function useDailyCheckIn() {
   const chainId = useChainId()
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const [error, setError] = useState<string | null>(null)
+  const [optimisticLastCheckInAt, setOptimisticLastCheckInAt] = useState(0)
+  const [optimisticCheckInCount, setOptimisticCheckInCount] = useState(0)
   const seasonStats = useSeasonPlayerStats(address)
 
   const query = useReadContracts({
@@ -51,17 +53,19 @@ export function useDailyCheckIn() {
     },
   })
 
-  const canCheckInNow = Boolean(query.data?.[0])
+  const hasOptimisticCheckIn =
+    optimisticLastCheckInAt > 0 && Date.now() < optimisticLastCheckInAt * 1000 + DAILY_CHECK_IN_INTERVAL_MS
+  const canCheckInNow = !hasOptimisticCheckIn && Boolean(query.data?.[0])
   const refetchCheckInState = query.refetch
   const refetchSeasonStats = seasonStats.refetch
   const contractLastCheckInAt = Number(query.data?.[1] ?? 0)
-  const lastCheckInAt = seasonStats.data?.lastCheckInAt ?? 0
-  const totalCount = seasonStats.data?.checkInCount ?? 0
+  const lastCheckInAt = Math.max(seasonStats.data?.lastCheckInAt ?? 0, contractLastCheckInAt, optimisticLastCheckInAt)
+  const totalCount = Math.max(seasonStats.data?.checkInCount ?? 0, optimisticCheckInCount)
   const contractUnavailable = query.isError
   const isCheckingAvailability =
-    isConnected && HAS_DAILY_CHECKIN_CONTRACT_ADDRESS && (query.isPending || seasonStats.isPending)
+    isConnected && HAS_DAILY_CHECKIN_CONTRACT_ADDRESS && query.isPending
   const nextAvailableAt =
-    contractLastCheckInAt > 0 ? contractLastCheckInAt * 1000 + DAILY_CHECK_IN_INTERVAL_MS : 0
+    lastCheckInAt > 0 ? lastCheckInAt * 1000 + DAILY_CHECK_IN_INTERVAL_MS : 0
   const rewardActive = Boolean(lastCheckInAt) && !canCheckInNow
 
   const { data: hash, error: writeError, isPending, writeContract } = useWriteContract()
@@ -78,10 +82,28 @@ export function useDailyCheckIn() {
       return
     }
 
+    const submittedAt = Math.floor(Date.now() / 1000)
+
     setError(null)
-    void refetchCheckInState()
-    void refetchSeasonStats()
-  }, [isSuccess, refetchCheckInState, refetchSeasonStats])
+    setOptimisticLastCheckInAt(submittedAt)
+    setOptimisticCheckInCount((count) => Math.max(count, (seasonStats.data?.checkInCount ?? 0) + 1))
+
+    const refreshCheckInReward = async () => {
+      if (address) {
+        const searchParams = new URLSearchParams({ address, refresh: '1' })
+        await fetch(`/api/season/player?${searchParams.toString()}`, { cache: 'no-store' }).catch(() => null)
+      }
+
+      await Promise.allSettled([refetchCheckInState(), refetchSeasonStats()])
+    }
+
+    void refreshCheckInReward()
+  }, [address, isSuccess, refetchCheckInState, refetchSeasonStats, seasonStats.data?.checkInCount])
+
+  useEffect(() => {
+    setOptimisticLastCheckInAt(0)
+    setOptimisticCheckInCount(0)
+  }, [address])
 
   const status = useMemo(() => {
     if (isPending || isConfirming || isSwitching || isCheckingAvailability) {

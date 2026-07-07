@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
@@ -10,6 +11,25 @@ export function LeaderboardPanel() {
   const { address } = useAccount()
   const { data, isLoading, isError, isFetching, refetch } = useLeaderboard(undefined, address)
   const { showTouchControls } = useMobileViewport()
+  const [isRefreshingNow, setIsRefreshingNow] = useState(false)
+  const isRefreshDisabled = isFetching || isRefreshingNow
+
+  const handleRefresh = async () => {
+    setIsRefreshingNow(true)
+
+    try {
+      const searchParams = new URLSearchParams({ refresh: '1' })
+
+      if (address) {
+        searchParams.set('currentAddress', address.toLowerCase())
+      }
+
+      await fetch(`/api/season/leaderboard?${searchParams.toString()}`, { cache: 'no-store' })
+      await refetch()
+    } finally {
+      setIsRefreshingNow(false)
+    }
+  }
 
   return (
     <section className="panel inferno-subtle-grid w-full rounded-[30px] p-4 sm:p-5 lg:p-6">
@@ -33,10 +53,10 @@ export function LeaderboardPanel() {
             <button
               type="button"
               className="action-button rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-[0.14em]"
-              disabled={isFetching}
-              onClick={() => void refetch()}
+              disabled={isRefreshDisabled}
+              onClick={() => void handleRefresh()}
             >
-              {isFetching ? 'Refreshing...' : 'Refresh'}
+              {isRefreshDisabled ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
         </div>

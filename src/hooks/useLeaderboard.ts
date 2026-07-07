@@ -61,6 +61,7 @@ export function useLeaderboard(limit?: number, currentAddress?: string) {
     queryKey: ['leaderboard', CURRENT_SEASON_START_BLOCK.toString(), normalizedLimit ?? 'all', normalizedCurrentAddress],
     enabled: true,
     staleTime: 15_000,
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<LeaderboardSnapshot> => {
       try {
         return await fetchLeaderboardSnapshot(normalizedLimit, normalizedCurrentAddress)
