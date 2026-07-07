@@ -15,6 +15,29 @@ export type PendingXShare = {
 export type XShareResponse = {
   url?: string
   error?: string
+  detail?: string
+  upstreamStatus?: number
+}
+
+export function getXShareErrorMessage(error?: string) {
+  switch (error) {
+    case 'x_reconnect_required':
+      return 'X needs permission refresh. Reconnecting...'
+    case 'x_oauth_not_configured':
+      return 'X API is not configured yet.'
+    case 'x_media_upload_failed':
+      return 'X media upload failed. Check that media.write is enabled for the app.'
+    case 'x_post_failed':
+      return 'X post failed. Check that tweet.write is enabled for the app.'
+    case 'x_rate_limited':
+      return 'X rate limit hit. Try again later.'
+    case 'invalid_share_text':
+      return 'Share text is invalid.'
+    case 'invalid_share_image':
+      return 'Share image is invalid.'
+    default:
+      return 'Failed to post to X.'
+  }
 }
 
 export function getGameShareUrl() {

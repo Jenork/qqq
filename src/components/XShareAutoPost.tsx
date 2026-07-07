@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   clearPendingXShare,
+  getXShareErrorMessage,
   postScoreToX,
   readPendingXShare,
 } from '@/lib/xShareClient'
@@ -44,8 +45,14 @@ export function XShareAutoPost() {
 
     void postScoreToX(pendingShare.score, pendingShare.savedOnchain)
       .then(({ response, result }) => {
+        if (response.status === 401) {
+          setStatus('X permissions need refresh. Reconnecting...')
+          window.location.href = '/api/x/connect'
+          return
+        }
+
         if (!response.ok) {
-          setStatus('X connected, but posting failed. Try Share again from Game Over.')
+          setStatus(getXShareErrorMessage(result.error))
           return
         }
 

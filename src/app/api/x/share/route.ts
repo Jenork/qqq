@@ -6,8 +6,12 @@ export const dynamic = 'force-dynamic'
 type UploadResponse = {
   data?: {
     id?: string
+    media_id?: string
+    media_id_string?: string
   }
   errors?: unknown[]
+  detail?: string
+  title?: string
 }
 
 type CreatePostResponse = {
@@ -16,6 +20,8 @@ type CreatePostResponse = {
     text?: string
   }
   errors?: unknown[]
+  detail?: string
+  title?: string
 }
 
 function isAllowedOrigin(request: NextRequest) {
@@ -28,8 +34,23 @@ function isAllowedOrigin(request: NextRequest) {
   return origin === new URL(request.url).origin || origin === 'https://based-doom.vercel.app'
 }
 
-function jsonError(error: string, status: number) {
-  return NextResponse.json({ error }, { status })
+function getXErrorDetail(payload: UploadResponse | CreatePostResponse) {
+  const firstError = Array.isArray(payload.errors) ? payload.errors[0] : null
+
+  if (firstError && typeof firstError === 'object') {
+    const errorRecord = firstError as Record<string, unknown>
+    const detail = errorRecord.detail ?? errorRecord.message ?? errorRecord.title
+
+    if (typeof detail === 'string') {
+      return detail
+    }
+  }
+
+  return payload.detail ?? payload.title
+}
+
+function jsonError(error: string, status: number, detail?: string, upstreamStatus?: number) {
+  return NextResponse.json({ error, detail, upstreamStatus }, { status })
 }
 
 export async function POST(request: NextRequest) {
@@ -63,31 +84,37 @@ export async function POST(request: NextRequest) {
     return jsonError('invalid_share_text', 400)
   }
 
-  const uploadData = new FormData()
-  uploadData.set('media', image)
-  uploadData.set('media_category', 'tweet_image')
-  uploadData.set('media_type', 'image/png')
+  const encodedImage = Buffer.from(await image.arrayBuffer()).toString('base64')
 
   const uploadResponse = await fetch('https://api.x.com/2/media/upload', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
     },
-    body: uploadData,
+    body: JSON.stringify({
+      media: encodedImage,
+      media_category: 'tweet_image',
+      media_type: 'image/png',
+    }),
   })
   const uploadJson = (await uploadResponse.json().catch(() => ({}))) as UploadResponse
-  const mediaId = uploadJson.data?.id
+  const mediaId = uploadJson.data?.id ?? uploadJson.data?.media_id_string ?? uploadJson.data?.media_id
 
   if (!uploadResponse.ok || !mediaId) {
-    console.error('Failed to upload X media.', uploadJson)
+    console.error('Failed to upload X media.', uploadResponse.status, uploadJson)
 
     if (uploadResponse.status === 401 || uploadResponse.status === 403) {
-      const response = jsonError('x_reconnect_required', 401)
+      const response = jsonError('x_reconnect_required', 401, getXErrorDetail(uploadJson), uploadResponse.status)
       clearAccessTokenCookie(response)
       return response
     }
 
-    return jsonError('x_media_upload_failed', 502)
+    if (uploadResponse.status === 429) {
+      return jsonError('x_rate_limited', 429, getXErrorDetail(uploadJson), uploadResponse.status)
+    }
+
+    return jsonError('x_media_upload_failed', 502, getXErrorDetail(uploadJson), uploadResponse.status)
   }
 
   const postResponse = await fetch('https://api.x.com/2/tweets', {
@@ -107,15 +134,19 @@ export async function POST(request: NextRequest) {
   const postId = postJson.data?.id
 
   if (!postResponse.ok || !postId) {
-    console.error('Failed to create X post.', postJson)
+    console.error('Failed to create X post.', postResponse.status, postJson)
 
     if (postResponse.status === 401 || postResponse.status === 403) {
-      const response = jsonError('x_reconnect_required', 401)
+      const response = jsonError('x_reconnect_required', 401, getXErrorDetail(postJson), postResponse.status)
       clearAccessTokenCookie(response)
       return response
     }
 
-    return jsonError('x_post_failed', 502)
+    if (postResponse.status === 429) {
+      return jsonError('x_rate_limited', 429, getXErrorDetail(postJson), postResponse.status)
+    }
+
+    return jsonError('x_post_failed', 502, getXErrorDetail(postJson), postResponse.status)
   }
 
   return NextResponse.json({

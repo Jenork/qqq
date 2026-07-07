@@ -18,7 +18,7 @@ import { useSeasonPlayerStats } from '@/hooks/useSeasonPlayerStats'
 import { cn } from '@/lib/cn'
 import { getDisplayErrorMessage } from '@/lib/missions'
 import { formatScore, isNewBestScore } from '@/lib/score'
-import { postScoreToX, savePendingXShare } from '@/lib/xShareClient'
+import { getXShareErrorMessage, postScoreToX, savePendingXShare } from '@/lib/xShareClient'
 
 type XStatus = {
   configured: boolean
@@ -124,7 +124,7 @@ export function GameOverModal() {
       }
 
       if (!response.ok) {
-        setShareStatus(result.error === 'x_oauth_not_configured' ? 'X API is not configured yet.' : 'Failed to post to X.')
+        setShareStatus(getXShareErrorMessage(result.error))
         return
       }
 
