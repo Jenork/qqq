@@ -22,7 +22,9 @@ export type XShareResponse = {
 export function getXShareErrorMessage(error?: string) {
   switch (error) {
     case 'x_reconnect_required':
-      return 'X needs permission refresh. Reconnecting...'
+      return 'X session expired. Press Share again to reconnect.'
+    case 'x_permission_denied':
+      return 'X denied posting. Enable tweet.write and media.write, then reconnect X.'
     case 'x_oauth_not_configured':
       return 'X API is not configured yet.'
     case 'x_media_upload_failed':

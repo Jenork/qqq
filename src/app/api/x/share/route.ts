@@ -104,10 +104,14 @@ export async function POST(request: NextRequest) {
   if (!uploadResponse.ok || !mediaId) {
     console.error('Failed to upload X media.', uploadResponse.status, uploadJson)
 
-    if (uploadResponse.status === 401 || uploadResponse.status === 403) {
+    if (uploadResponse.status === 401) {
       const response = jsonError('x_reconnect_required', 401, getXErrorDetail(uploadJson), uploadResponse.status)
       clearAccessTokenCookie(response)
       return response
+    }
+
+    if (uploadResponse.status === 403) {
+      return jsonError('x_permission_denied', 403, getXErrorDetail(uploadJson), uploadResponse.status)
     }
 
     if (uploadResponse.status === 429) {
@@ -136,10 +140,14 @@ export async function POST(request: NextRequest) {
   if (!postResponse.ok || !postId) {
     console.error('Failed to create X post.', postResponse.status, postJson)
 
-    if (postResponse.status === 401 || postResponse.status === 403) {
+    if (postResponse.status === 401) {
       const response = jsonError('x_reconnect_required', 401, getXErrorDetail(postJson), postResponse.status)
       clearAccessTokenCookie(response)
       return response
+    }
+
+    if (postResponse.status === 403) {
+      return jsonError('x_permission_denied', 403, getXErrorDetail(postJson), postResponse.status)
     }
 
     if (postResponse.status === 429) {

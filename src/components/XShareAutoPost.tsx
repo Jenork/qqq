@@ -46,12 +46,13 @@ export function XShareAutoPost() {
     void postScoreToX(pendingShare.score, pendingShare.savedOnchain)
       .then(({ response, result }) => {
         if (response.status === 401) {
-          setStatus('X permissions need refresh. Reconnecting...')
-          window.location.href = '/api/x/connect'
+          clearPendingXShare()
+          setStatus(getXShareErrorMessage(result.error))
           return
         }
 
         if (!response.ok) {
+          clearPendingXShare()
           setStatus(getXShareErrorMessage(result.error))
           return
         }
@@ -61,6 +62,7 @@ export function XShareAutoPost() {
         setStatus('Posted to X.')
       })
       .catch(() => {
+        clearPendingXShare()
         setStatus('X connected, but posting failed. Try Share again from Game Over.')
       })
   }, [])
