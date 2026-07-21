@@ -3,7 +3,7 @@
 import type { Address } from 'viem'
 import { usePublicClient } from 'wagmi'
 import { useQuery } from '@tanstack/react-query'
-import { HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
+import { HAS_DAILY_CHECKIN_CONTRACT_ADDRESS, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
 import { CURRENT_SEASON_START_BLOCK } from '@/config/season'
 import { BASE_CHAIN_ID } from '@/config/web3'
 import { readSeasonPlayerStats } from '@/lib/seasonProgress'
@@ -33,7 +33,7 @@ export function useSeasonPlayerStats(address?: string | null) {
 
   return useQuery({
     queryKey: ['season-player-stats', CURRENT_SEASON_START_BLOCK.toString(), address?.toLowerCase() ?? 'guest'],
-    enabled: Boolean(address) && HAS_GAME_PROGRESS_ADDRESS,
+    enabled: Boolean(address) && (HAS_GAME_PROGRESS_ADDRESS || HAS_DAILY_CHECKIN_CONTRACT_ADDRESS),
     staleTime: 15_000,
     refetchOnWindowFocus: true,
     queryFn: async () => {

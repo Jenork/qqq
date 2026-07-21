@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createPublicClient, http, isAddress, type Address } from 'viem'
-import { HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
+import { HAS_DAILY_CHECKIN_CONTRACT_ADDRESS, HAS_GAME_PROGRESS_ADDRESS } from '@/config/contracts'
 import { CURRENT_SEASON_START_BLOCK } from '@/config/season'
 import { BASE_CHAIN, BASE_RPC_URL } from '@/config/web3'
 import { readSeasonPlayerStats, type SeasonPlayerStats } from '@/lib/seasonProgress'
@@ -90,7 +90,7 @@ export async function GET(request: Request) {
     return NextResponse.json(EMPTY_STATS)
   }
 
-  if (!HAS_GAME_PROGRESS_ADDRESS) {
+  if (!HAS_GAME_PROGRESS_ADDRESS && !HAS_DAILY_CHECKIN_CONTRACT_ADDRESS) {
     return NextResponse.json(EMPTY_STATS)
   }
 
