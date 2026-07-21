@@ -1,5 +1,10 @@
 import type { Address } from 'viem'
-import { GAME_PROGRESS_ADDRESS, gameProgressAbi } from '@/config/contracts'
+import {
+  DAILY_CHECKIN_CONTRACT_ADDRESS,
+  GAME_PROGRESS_ADDRESS,
+  gameProgressAbi,
+  HAS_DAILY_CHECKIN_CONTRACT_ADDRESS,
+} from '@/config/contracts'
 import { CURRENT_SEASON_START_BLOCK } from '@/config/season'
 
 export type SeasonPlayerStats = {
@@ -55,6 +60,7 @@ function compareLeaderboardEntries(
 
 async function readEventLogs(
   client: SeasonEventClient,
+  contractAddress: Address,
   eventName: 'ScoreSubmitted' | 'DailyCheckedIn',
   eventArgs?: { player?: Address },
 ) {
@@ -73,7 +79,7 @@ async function readEventLogs(
   ) {
     const toBlock = fromBlock + LOG_CHUNK_SIZE - 1n
     const chunk = (await client.getContractEvents({
-      address: GAME_PROGRESS_ADDRESS,
+      address: contractAddress,
       abi: gameProgressAbi,
       eventName,
       args: eventArgs,
@@ -88,7 +94,7 @@ async function readEventLogs(
 }
 
 export async function readSeasonLeaderboard(client: SeasonEventClient) {
-  const logs = await readEventLogs(client, 'ScoreSubmitted')
+  const logs = await readEventLogs(client, GAME_PROGRESS_ADDRESS, 'ScoreSubmitted')
   const bestByPlayer = new Map<string, { address: string; bestScore: number }>()
 
   for (const log of logs) {
@@ -122,8 +128,10 @@ export async function readSeasonLeaderboard(client: SeasonEventClient) {
 export async function readSeasonPlayerStats(client: SeasonEventClient, playerAddress: Address) {
   const normalizedPlayer = normalizeAddress(playerAddress)
   const [scoreLogs, checkInLogs] = await Promise.all([
-    readEventLogs(client, 'ScoreSubmitted', { player: playerAddress }),
-    readEventLogs(client, 'DailyCheckedIn', { player: playerAddress }),
+    readEventLogs(client, GAME_PROGRESS_ADDRESS, 'ScoreSubmitted', { player: playerAddress }),
+    HAS_DAILY_CHECKIN_CONTRACT_ADDRESS
+      ? readEventLogs(client, DAILY_CHECKIN_CONTRACT_ADDRESS, 'DailyCheckedIn', { player: playerAddress })
+      : Promise.resolve([]),
   ])
 
   let bestScore = 0
