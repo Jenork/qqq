@@ -8,7 +8,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   armor: number = 0
   maxArmor: number = 0
   facing: number = 1
-  lastShotAt: number = 0
+  lastShotAt: number = -1000
   lastGrenadeAt: number = -PLAYER_CONFIG.grenadeCooldownMs
   lastAbilityAt: number = -PLAYER_CONFIG.abilityCooldownMs
   lastHealAt: number = -PLAYER_CONFIG.healCooldownMs
@@ -41,7 +41,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.armor = bonusArmorPoints
     this.maxArmor = bonusArmorPoints
     this.facing = 1
-    this.lastShotAt = 0
+    this.lastShotAt = -1000
     this.lastGrenadeAt = -PLAYER_CONFIG.grenadeCooldownMs
     this.lastAbilityAt = -PLAYER_CONFIG.abilityCooldownMs
     this.lastHealAt = -PLAYER_CONFIG.healCooldownMs

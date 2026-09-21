@@ -741,6 +741,10 @@ a:focus-visible,
 }
 
 .mobile-landscape-fallback-stage {
+  --safe-top: env(safe-area-inset-right, 0px);
+  --safe-right: env(safe-area-inset-bottom, 0px);
+  --safe-bottom: env(safe-area-inset-left, 0px);
+  --safe-left: env(safe-area-inset-top, 0px);
   position: absolute;
   left: 50%;
   top: 50%;
@@ -766,18 +770,6 @@ a:focus-visible,
   }
 }
 
-.mobile-landscape-fallback-stage .game-canvas,
-.mobile-landscape-fallback-stage .game-canvas canvas {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-}
-
-.mobile-landscape-fallback-stage .game-canvas canvas {
-  display: block;
-}
-
 @supports not (height: 100dvh) {
   .mobile-landscape-fallback-stage {
     width: var(--game-viewport-height, 100vh);
@@ -787,74 +779,117 @@ a:focus-visible,
   }
 }
 
-.mobile-controls-rotated-fallback .mobile-control-joystick {
-  left: calc(16px + var(--safe-left)) !important;
-  bottom: calc(18px + var(--safe-bottom)) !important;
-  z-index: 42;
-  height: 76px !important;
-  width: 76px !important;
-  opacity: 1;
+.gameplay-stage { container-type: size; }
+.gameplay-stage:not(.mobile-landscape-fallback-stage) { width: 100%; height: 100%; }
+.gameplay-stage .game-canvas { display: flex; align-items: center; justify-content: center; }
+.gameplay-stage .game-canvas canvas {
+  width: var(--arena-display-width) !important;
+  height: var(--arena-display-height) !important;
+  margin: 0 !important;
+  flex-shrink: 0;
 }
 
-.mobile-controls-rotated-fallback .mobile-joystick-idle-pad {
-  bottom: 6px !important;
-  left: 6px !important;
-  height: 64px !important;
-  width: 64px !important;
+.mobile-combat-controls {
+  --control-unit: clamp(44px, 13cqh, 52px);
+  --control-bottom: max(18px, calc(8px + var(--safe-bottom)));
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
-.mobile-controls-rotated-fallback .mobile-control-fire-zone {
-  right: calc(18px + var(--safe-right)) !important;
-  bottom: calc(18px + var(--safe-bottom)) !important;
-  left: auto !important;
-  z-index: 43;
-  height: 78px !important;
-  width: 78px !important;
+.mobile-control-joystick {
+  position: absolute;
+  left: max(18px, calc(8px + var(--safe-left)));
+  bottom: var(--control-bottom);
+  width: calc(var(--control-unit) * 1.8);
+  height: calc(var(--control-unit) * 1.8);
+  border-radius: 50%;
+  touch-action: none;
+  pointer-events: auto;
 }
 
-.mobile-controls-rotated-fallback .mobile-control-fire-zone .mobile-fire-button {
-  height: 68px !important;
-  width: 68px !important;
+.joystick-ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(161, 230, 255, 0.32);
+  border-radius: 50%;
+  background: rgba(3, 12, 21, 0.38);
+  box-shadow: inset 0 0 18px rgba(60, 201, 249, 0.1);
 }
 
-.mobile-controls-rotated-fallback .mobile-control-ability-cluster {
-  right: calc(92px + var(--safe-right)) !important;
-  bottom: calc(12px + var(--safe-bottom)) !important;
-  left: auto !important;
-  z-index: 44;
-  height: 136px !important;
-  width: 160px !important;
+.joystick-knob {
+  position: absolute;
+  inset: 33%;
+  border-radius: 50%;
+  background: rgba(174, 228, 242, 0.6);
+  border: 1px solid rgba(205, 243, 255, 0.48);
+  box-shadow: 0 0 14px rgba(78, 213, 240, 0.25);
+  transition: transform 150ms ease-out, background 100ms;
+  pointer-events: none;
 }
 
-.mobile-controls-rotated-fallback .mobile-control-grenade {
-  right: 4px !important;
-  top: 4px !important;
-  height: 38px !important;
-  width: 38px !important;
+.mobile-joystick-active .joystick-knob {
+  transition: background 100ms;
+  background: rgba(212, 249, 255, 0.9);
 }
 
-.mobile-controls-rotated-fallback .mobile-control-shotgun {
-  right: 4px !important;
-  top: auto !important;
-  bottom: 48px !important;
-  height: 38px !important;
-  width: 38px !important;
+.mobile-combat-cluster {
+  position: absolute;
+  right: max(18px, calc(8px + var(--safe-right)));
+  bottom: var(--control-bottom);
+  width: calc(var(--control-unit) * 4.05);
+  height: calc(var(--control-unit) * 3.65);
 }
 
-.mobile-controls-rotated-fallback .mobile-control-skill {
-  left: auto !important;
-  right: 54px !important;
-  top: 38px !important;
-  height: 38px !important;
-  width: 38px !important;
+.mobile-combat-cluster .mobile-control-fire-zone {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: calc(var(--control-unit) * 1.8);
+  height: calc(var(--control-unit) * 1.8);
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  color: #e9fbff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
-.mobile-controls-rotated-fallback .mobile-control-heal {
-  left: auto !important;
-  right: 54px !important;
-  bottom: 8px !important;
-  height: 38px !important;
-  width: 38px !important;
+.combat-action {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: var(--control-unit);
+  height: var(--control-unit);
+  padding: 0;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  background: rgba(3, 15, 26, 0.78);
+  color: #bfeeff;
+}
+
+/* One non-overlapping arc, measured in the gameplay root's logical coordinates. */
+.mobile-control-grenade { right: calc(var(--control-unit) * 0.12); bottom: calc(var(--control-unit) * 2.12); }
+.mobile-control-skill { right: calc(var(--control-unit) * 1.32); bottom: calc(var(--control-unit) * 2.58); }
+.mobile-control-shotgun { right: calc(var(--control-unit) * 2.46); bottom: calc(var(--control-unit) * 1.54); }
+.mobile-control-heal { right: calc(var(--control-unit) * 2.12); bottom: calc(var(--control-unit) * 0.18); }
+
+.combat-action-icon { width: 60%; height: 60%; object-fit: contain; pointer-events: none; }
+.combat-action-selected { color: #ffe48c; border-color: #efc86c; }
+.combat-cooldown { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke-width: 1.8; transform: rotate(-90deg); pointer-events: none; }
+.combat-cooldown-track { stroke: rgba(159, 222, 245, 0.13); }
+.combat-cooldown-progress { stroke: currentColor; stroke-dasharray: 100; stroke-linecap: round; transition: stroke-dashoffset 100ms linear; }
+.combat-action-count { position: absolute; right: -2px; bottom: -2px; min-width: 18px; height: 18px; padding: 0 3px; border-radius: 50%; background: #071722; border: 1px solid #497483; font-size: 10px; font-weight: 900; color: #effcff; }
+.combat-lock { position: absolute; right: 0; bottom: 1px; width: 12px; height: 10px; border: 2px solid #aab6c1; border-radius: 2px; background: #07121f; }
+.combat-lock::before { content: ''; position: absolute; left: 1px; top: -7px; width: 6px; height: 6px; border: 2px solid #aab6c1; border-bottom: 0; border-radius: 5px 5px 0 0; }
+.combat-ready-flash { position: absolute; inset: -2px; border: 2px solid #bceeff; border-radius: 50%; pointer-events: none; animation: combat-ready 450ms ease-out forwards; }
+@keyframes combat-ready { from { opacity: 1; transform: scale(0.95); } to { opacity: 0; transform: scale(1.3); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-combat-controls *, .mobile-low-hp-vignette, .mobile-hp-low { animation: none !important; }
+  .combat-ready-flash { display: none; }
 }
 
 .mobile-hud-glass {
@@ -879,9 +914,9 @@ a:focus-visible,
   z-index: 30;
   transform: translateX(-50%);
   color: #e9fbff;
-  font-size: clamp(2rem, 8vw, 4.4rem);
+  font-size: 32px;
   font-weight: 900;
-  letter-spacing: 0.16em;
+  letter-spacing: 0;
   text-shadow:
     0 0 12px rgba(117, 232, 255, 0.75),
     0 0 34px rgba(65, 196, 255, 0.42),
@@ -890,8 +925,8 @@ a:focus-visible,
 }
 
 .mobile-wave-toast small {
-  font-size: clamp(0.65rem, 2vw, 1rem);
-  letter-spacing: 0.2em;
+  font-size: 10px;
+  letter-spacing: 0;
   color: #bceeff;
   text-shadow:
     0 0 10px rgba(117, 232, 255, 0.62),

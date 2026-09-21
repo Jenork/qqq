@@ -10,30 +10,10 @@ type MobileViewportState = {
   isLandscape: boolean
 }
 
-type OrientationWithAngle = ScreenOrientation & {
-  angle?: number
-}
-
-function resolveLandscape(landscapeQuery: MediaQueryList) {
-  if (landscapeQuery.matches) {
-    return true
-  }
-
-  if (window.innerWidth > window.innerHeight) {
-    return true
-  }
-
-  if (window.visualViewport && window.visualViewport.width > window.visualViewport.height) {
-    return true
-  }
-
-  const orientation = screen.orientation as OrientationWithAngle | undefined
-  if (orientation?.type?.startsWith('landscape')) {
-    return true
-  }
-
-  const angle = typeof orientation?.angle === 'number' ? orientation.angle : typeof window.orientation === 'number' ? Number(window.orientation) : 0
-  return Math.abs(angle) === 90
+function resolveLandscape() {
+  // A host can keep its webview portrait even while the physical screen rotates.
+  const viewport = window.visualViewport
+  return (viewport?.width ?? window.innerWidth) > (viewport?.height ?? window.innerHeight)
 }
 
 export function useMobileViewport() {
@@ -49,7 +29,7 @@ export function useMobileViewport() {
     const sync = () =>
       setState({
         showTouchControls: touchUiQuery.matches,
-        isLandscape: resolveLandscape(landscapeQuery),
+        isLandscape: resolveLandscape(),
       })
 
     sync()

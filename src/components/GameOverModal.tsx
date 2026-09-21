@@ -25,7 +25,7 @@ type XStatus = {
   connected: boolean
 }
 
-export function GameOverModal() {
+export function GameOverModal({ onRestart }: { onRestart?: () => void }) {
   const queryClient = useQueryClient()
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
@@ -358,7 +358,7 @@ export function GameOverModal() {
             <button
               type="button"
               className="action-button rounded-2xl px-4 py-4 text-sm font-bold uppercase tracking-[0.14em]"
-              onClick={() => restartRun()}
+              onClick={() => onRestart ? onRestart() : restartRun()}
             >
               Restart Run
             </button>

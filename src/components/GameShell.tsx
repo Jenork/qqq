@@ -9,6 +9,8 @@ import { useGameStore } from '@/hooks/useGameStore'
 import { useLandscapeGameplay } from '@/hooks/useLandscapeGameplay'
 import { useMobileViewport } from '@/hooks/useMobileViewport'
 import { cn } from '@/lib/cn'
+import { ARENA_SIZE } from '@/config/game'
+import { AudioToggleButton } from '@/components/AudioToggleButton'
 
 export function GameShell({ isActive = true }: { isActive?: boolean }) {
   const shellRef = useRef<HTMLElement | null>(null)
@@ -17,6 +19,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
   const status = useGameStore((state) => state.status)
   const startRun = useGameStore((state) => state.startRun)
   const resumeRun = useGameStore((state) => state.resumeRun)
+  const returnToMenu = useGameStore((state) => state.returnToMenu)
   const gameApiReady = useGameStore((state) => Boolean(state.gameApi))
   const { showTouchControls, isMobileLandscape, isMobilePortrait } = useMobileViewport()
   const [desktopMode, setDesktopMode] = useState(false)
@@ -67,22 +70,31 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
   }, [])
 
   useEffect(() => {
-    const refreshTimers: number[] = []
+    let refreshTimer: number | undefined
+    let frame = 0
 
     const refreshLayout = () => {
       if (!gameRef.current) {
         return
       }
 
-      window.requestAnimationFrame(() => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
         gameRef.current?.scale.refresh()
+        const container = containerRef.current
+        if (container) {
+          // Phaser measures transformed bounds; CSS needs unrotated logical dimensions.
+          const scale = Math.min(container.clientWidth / ARENA_SIZE.width, container.clientHeight / ARENA_SIZE.height)
+          container.style.setProperty('--arena-display-width', `${ARENA_SIZE.width * scale}px`)
+          container.style.setProperty('--arena-display-height', `${ARENA_SIZE.height * scale}px`)
+        }
       })
     }
 
     const scheduleRefresh = () => {
       refreshLayout()
-      refreshTimers.push(window.setTimeout(refreshLayout, 80))
-      refreshTimers.push(window.setTimeout(refreshLayout, 220))
+      window.clearTimeout(refreshTimer)
+      refreshTimer = window.setTimeout(refreshLayout, 180)
     }
 
     const resizeObserver =
@@ -108,15 +120,31 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
       window.removeEventListener('orientationchange', scheduleRefresh)
       document.removeEventListener('fullscreenchange', scheduleRefresh)
       resizeObserver?.disconnect()
-      refreshTimers.forEach((timer) => window.clearTimeout(timer))
+      window.clearTimeout(refreshTimer)
+      window.cancelAnimationFrame(frame)
     }
   }, [immersiveActive, isActive, isMobileLandscape, isMobilePortrait, portraitLandscapeFallback, showTouchControls, status])
 
   const showMobileControlDeck = showTouchControls && status === 'playing'
-  const handleStartRun = async () => {
-    await enterImmersive()
+  const handleStartRun = () => {
+    if (showTouchControls) void enterImmersive()
     startRun()
   }
+
+  useEffect(() => {
+    const pause = () => {
+      const store = useGameStore.getState()
+      store.resetInputState()
+      if (store.status === 'playing') store.pauseRun()
+    }
+    const visibility = () => { if (document.hidden) pause() }
+    window.addEventListener('blur', pause)
+    document.addEventListener('visibilitychange', visibility)
+    return () => {
+      window.removeEventListener('blur', pause)
+      document.removeEventListener('visibilitychange', visibility)
+    }
+  }, [])
 
   return (
     <section
@@ -131,6 +159,7 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
       <div
         className={cn(
           'relative overflow-hidden bg-[#020713]',
+          mobileGameplayActive && 'gameplay-stage',
           portraitLandscapeFallback && 'mobile-landscape-fallback-stage',
           browserFallbackLayout && 'mobile-browser-fallback-stage',
         )}
@@ -173,8 +202,6 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
         ) : null}
         {showMobileControlDeck ? (
           <MobileGameControls
-            portraitMode={isMobilePortrait}
-            forceLandscapeLayout={portraitLandscapeFallback}
             rotatedFallbackMode={portraitLandscapeFallback}
           />
         ) : null}
@@ -185,20 +212,27 @@ export function GameShell({ isActive = true }: { isActive?: boolean }) {
             </div>
           </div>
         ) : null}
-        <GameOverModal />
+        <GameOverModal onRestart={() => {
+          if (showTouchControls) void enterImmersive()
+          useGameStore.getState().restartRun()
+        }} />
 
         {status === 'paused' ? (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 p-4">
-            <div className="inferno-frame w-full max-w-sm rounded-[2rem] p-6 text-center">
-              <p className="panel-title">Paused</p>
-              <h2 className="inferno-heading mt-2 text-4xl font-black">Pause</h2>
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/65 p-4" role="dialog" aria-modal="true" aria-label="Run paused">
+            <div className="inferno-frame w-full max-w-xs rounded-lg p-5 text-center">
+              <h2 className="inferno-heading text-2xl font-black">Paused</h2>
               <button
                 type="button"
                 onClick={() => resumeRun()}
-                className="action-button retro-button mt-5 px-6 py-4 text-sm font-black uppercase tracking-[0.18em]"
+                autoFocus
+                className="action-button retro-button mt-4 w-full px-6 py-3 text-sm font-black uppercase"
               >
                 Resume
               </button>
+              <div className="mt-3 flex gap-2">
+                <AudioToggleButton className="action-button flex-1 rounded-lg px-3 py-3 text-xs font-bold" />
+                <button type="button" className="action-button flex-1 rounded-lg px-3 py-3 text-xs font-bold" onClick={() => returnToMenu()}>Back to Menu</button>
+              </div>
             </div>
           </div>
         ) : null}

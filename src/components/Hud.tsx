@@ -72,6 +72,8 @@ export function Hud({
   const lowHp = status === 'playing' && hpPercent <= 35
 
   useEffect(() => {
+    setHpHit(false)
+    setHpHeal(false)
     if (hp < previousHpRef.current) {
       setHpHit(true)
       const timeout = window.setTimeout(() => setHpHit(false), 420)
@@ -90,6 +92,8 @@ export function Hud({
   }, [hp])
 
   useEffect(() => {
+    setArmorHit(false)
+    setArmorGain(false)
     if (armor < previousArmorRef.current) {
       setArmorHit(true)
       const timeout = window.setTimeout(() => setArmorHit(false), 420)
@@ -114,7 +118,11 @@ export function Hud({
       return
     }
 
-    if (status !== 'playing' || previousWaveRef.current === wave) {
+    if (status !== 'playing') {
+      setWaveToast(null)
+      return
+    }
+    if (previousWaveRef.current === wave) {
       return
     }
 
@@ -147,7 +155,7 @@ export function Hud({
         )}>
           <div className={cn(
             'mobile-hud-glass flex min-w-0 items-center gap-1.5 rounded-full px-2 py-1',
-            compactLandscapeHud && 'max-w-[54vw] gap-1 px-1.5 py-0.5',
+            compactLandscapeHud && 'max-w-[260px] gap-1 px-1.5 py-0.5',
           )}>
             <div className={cn(
               'relative z-[1] flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full border border-cyan-200/20 bg-cyan-300/10 shadow-[inset_0_0_12px_rgba(65,196,255,0.16)]',
@@ -160,17 +168,17 @@ export function Hud({
                 height={64}
                 className={cn(
                   'h-[20px] w-[20px] scale-[1.55] object-contain [image-rendering:auto]',
-                  compactLandscapeHud && 'h-[17px] w-[17px] scale-[1.35]',
+                  compactLandscapeHud && 'h-[20px] w-[20px] scale-[1.7]',
                 )}
               />
             </div>
 
             <div className="min-w-0 flex-1">
               <div className={cn('flex items-center justify-between gap-1.5', compactLandscapeHud && 'gap-1')}>
-                <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-rose-100', compactLandscapeHud && 'text-[6px]')}>
+                <span className="text-[8px] font-black uppercase text-rose-100">
                   HP
                 </span>
-                <span className={cn('text-[8px] font-black text-rose-50', compactLandscapeHud && 'text-[7px]')}>
+                <span className="text-[9px] font-black text-rose-50">
                   {Math.ceil(hp)}/{maxHp}
                 </span>
               </div>
@@ -182,10 +190,10 @@ export function Hud({
               </div>
 
               <div className={cn('mt-0.5 flex items-center justify-between gap-1.5', compactLandscapeHud && 'gap-1')}>
-                <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-cyan-100', compactLandscapeHud && 'text-[6px]')}>
+                <span className="text-[8px] font-black uppercase text-cyan-100">
                   Armor
                 </span>
-                <span className={cn('text-[8px] font-black text-cyan-50', compactLandscapeHud && 'text-[7px]')}>
+                <span className="text-[9px] font-black text-cyan-50">
                   {armor}/{maxArmor || 0}
                 </span>
               </div>
@@ -211,8 +219,7 @@ export function Hud({
             <button
               type="button"
               className={cn(
-                'mobile-hud-glass pointer-events-auto rounded-full px-2.5 py-2 text-[8px] font-black uppercase tracking-[0.1em] text-cyan-50 transition active:scale-95',
-                compactLandscapeHud && 'px-2 py-1.5 text-[7px]',
+                'mobile-hud-glass pointer-events-auto min-h-[44px] min-w-[44px] rounded-full px-2.5 py-2 text-[9px] font-black uppercase text-cyan-50 transition active:scale-95',
               )}
               disabled={status === 'ready' || status === 'gameover'}
               onClick={() => togglePause()}
@@ -230,7 +237,7 @@ export function Hud({
         ) : null}
 
         {bossVisible ? (
-          <div className={cn('inferno-frame pointer-events-none mx-auto w-[min(100%,260px)] px-2 py-1', compactLandscapeHud && 'w-[min(100%,220px)] px-1.5 py-0.5')}>
+          <div className="mobile-hud-glass pointer-events-none absolute left-1/2 top-[calc(54px+var(--safe-top))] w-[min(40%,220px)] -translate-x-1/2 rounded-lg px-2 py-1">
             <div className="relative z-[1] flex items-center justify-between gap-2">
               <span className={cn('text-[7px] font-black uppercase tracking-[0.1em] text-cyan-100', compactLandscapeHud && 'text-[6px]')}>Boss</span>
               <span className={cn('text-[9px] font-black text-cyan-50', compactLandscapeHud && 'text-[8px]')}>

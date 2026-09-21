@@ -39,6 +39,7 @@ type GameApi = {
   restartRun: () => void
   pauseRun: () => void
   resumeRun: () => void
+  returnToMenu: () => void
 }
 
 type GameStore = {
@@ -78,6 +79,7 @@ type GameStore = {
   pauseRun: () => void
   resumeRun: () => void
   togglePause: () => void
+  returnToMenu: () => void
   setAudioMuted: (muted: boolean) => void
   toggleAudioMuted: () => void
   setHudState: (
@@ -180,6 +182,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resumeRun: () => {
     get().gameApi?.resumeRun()
   },
+  returnToMenu: () => get().gameApi?.returnToMenu(),
   togglePause: () => {
     const status = get().status
 
@@ -203,11 +206,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
   setAudioMuted: (muted) => set({ audioMuted: muted }),
   toggleAudioMuted: () => set((state) => ({ audioMuted: !state.audioMuted })),
-  setHudState: (next) => set(next),
+  setHudState: (next) => set((state) =>
+    (Object.keys(next) as Array<keyof typeof next>).some((key) => state[key] !== next[key]) ? next : state,
+  ),
   setMessage: (message) => set({ activeMessage: message }),
   setRewardBonuses: (next) => set(next),
   setMobileControl: (key, value) =>
-    set((state) => ({
+    set((state) => state.mobileControls[key] === value ? state : ({
       mobileControls: {
         ...state.mobileControls,
         [key]: value,

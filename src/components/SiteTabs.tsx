@@ -98,7 +98,7 @@ export function SiteTabs() {
   }, [activeTab, pauseRun, status])
 
   const hideMobileChrome =
-    showTouchControls && (status === 'playing' || status === 'paused')
+    activeTab === 'game' && showTouchControls && (status === 'playing' || status === 'paused')
 
   return (
     <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-4">
@@ -183,7 +183,7 @@ export function SiteTabs() {
           hidden={activeTab !== 'leaderboard'}
           className={cn(activeTab === 'leaderboard' ? 'block' : 'hidden')}
         >
-          <LeaderboardPanel />
+          {activeTab === 'leaderboard' ? <LeaderboardPanel /> : null}
         </section>
 
         <section

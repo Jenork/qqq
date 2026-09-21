@@ -26,12 +26,13 @@ export class Grenade extends Phaser.Physics.Arcade.Image {
     damage: number,
     radius: number,
     variant: 'frag' | 'fire',
+    time: number,
   ) {
     this.damage = damage
     this.radius = radius
     this.variant = variant
     this.exploded = false
-    this.detonateAt = this.scene.time.now + 900
+    this.detonateAt = time + 900
     this.enableBody(true, x, y, true, true)
     this.setVisible(true)
     this.setVelocity(velocityX, velocityY)

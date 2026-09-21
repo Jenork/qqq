@@ -191,6 +191,18 @@ Status:
 * typecheck passes
 * browser verification still useful after art swaps or HUD tuning
 
+## Gameplay Runtime
+
+* Canvas, HUD and touch controls share one gameplay root. Portrait-only hosts rotate that root by 90 degrees.
+* Touch coordinates are converted to the root's logical coordinates in `src/lib/gameplayInput.ts`. Do not add independent button rotations or platform-specific positioning overrides.
+* Control sizes and spacing use the gameplay container height, with safe-area insets remapped during rotation. Phaser's logical resolution remains 1280x720.
+* Fullscreen is requested from Start Run / Restart Run on touch devices. Unsupported hosts keep the rotated viewport fallback; browser-owned chrome cannot be hidden by CSS.
+* Combat deadlines use elapsed playing time, not `scene.time.now`. Pause freezes cooldowns, enemy attacks, waves and grenade fuses.
+* Browser blur / backgrounding pauses an active run. Resume is explicit; Back to Menu clears the run and restores the application layout.
+* HUD cooldown snapshots are rounded up to 100 ms; ring transitions interpolate visually. Identical HUD/input writes do not notify store subscribers.
+* Damage number objects are reused (maximum 24), and combo notices replace the previous notice.
+* Regression checks: `node --test tests/gameplay.test.cjs`, `npm run typecheck`, `npm run build`. Browser checks must include native landscape, portrait rotation, multitouch, pause/resume and restart without recreating Phaser.
+
 ## Startup Workflow
 
 Before making changes:

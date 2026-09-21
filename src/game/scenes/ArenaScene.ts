@@ -53,6 +53,9 @@ export class ArenaScene extends Phaser.Scene {
   private cameraNudgeTween: Phaser.Tweens.Tween | null = null
   private comboKills = 0
   private comboWindowUntil = 0
+  private combatTime = 0
+  private damageNumbers: Phaser.GameObjects.Text[] = []
+  private comboText: Phaser.GameObjects.Text | null = null
 
   constructor() {
     super('arena')
@@ -146,7 +149,7 @@ export class ArenaScene extends Phaser.Scene {
     this.physics.add.overlap(this.enemies, this.player, (_enemyObj, playerObj) => {
       const enemy = _enemyObj as Enemy
       const player = playerObj as Player
-      const time = this.time.now
+      const time = this.combatTime
 
       if (enemy.enemyType === 'melee') {
         return
@@ -209,6 +212,7 @@ export class ArenaScene extends Phaser.Scene {
       restartRun: () => this.resetRun(true),
       pauseRun: () => this.pauseRun(),
       resumeRun: () => this.resumeRun(),
+      returnToMenu: () => this.resetRun(false),
     })
   }
 
@@ -220,7 +224,23 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     store.resetInputState()
+    this.input.keyboard?.resetKeys()
+    this.time.timeScale = 1
+    this.tweens.resumeAll()
+    this.physics.world.resume()
+    this.cameraNudgeTween?.stop()
+    this.cameraNudgeTween = null
+    for (const text of this.damageNumbers) {
+      this.tweens.killTweensOf(text)
+      text.setActive(false).setVisible(false)
+    }
+    if (this.comboText) {
+      this.tweens.killTweensOf(this.comboText)
+      this.comboText.setVisible(false)
+    }
     this.clearGroups()
+    this.combatTime = 0
+    this.jumpLatch = false
     this.running = startImmediately
     this.paused = false
     this.gameOver = false
@@ -231,9 +251,9 @@ export class ArenaScene extends Phaser.Scene {
     this.comboWindowUntil = 0
     this.resetCameraView()
     this.player.resetState(ARENA_BOUNDS.playerSpawnX, this.playerBaseY, rewards)
-    this.survivalTickAt = this.time.now + SCORE_CONFIG.survivalTickMs
+    this.survivalTickAt = this.combatTime + SCORE_CONFIG.survivalTickMs
 
-    useGameStore.setState(this.runDirector.reset(this.time.now, startImmediately, rewards))
+    useGameStore.setState(this.runDirector.reset(this.combatTime, startImmediately, rewards))
   }
 
   private clearGroups() {
@@ -245,7 +265,7 @@ export class ArenaScene extends Phaser.Scene {
     this.bossNameplate = null
   }
 
-  update(time: number) {
+  update(_time: number, delta: number) {
     if (!this.running || this.gameOver) {
       return
     }
@@ -263,6 +283,9 @@ export class ArenaScene extends Phaser.Scene {
       return
     }
 
+    // Clock.now keeps advancing during a pause; combat uses elapsed playing time.
+    this.combatTime += delta
+    const time = this.combatTime
     this.updateAmbientAnimation(time)
 
     this.handleMovement()
@@ -280,6 +303,9 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     this.paused = true
+    useGameStore.getState().resetInputState()
+    this.input.keyboard?.resetKeys()
+    this.input.mousePointer?.reset()
     this.physics.world.pause()
     this.tweens.pauseAll()
     this.time.timeScale = 0
@@ -292,6 +318,8 @@ export class ArenaScene extends Phaser.Scene {
     }
 
     this.paused = false
+    useGameStore.getState().resetInputState()
+    this.input.keyboard?.resetKeys()
     this.jumpLatch = false
     this.shootLatch = false
     this.time.timeScale = 1
@@ -302,15 +330,16 @@ export class ArenaScene extends Phaser.Scene {
 
   private syncHudCooldowns(time: number) {
     this.syncRewardArmorBonus()
+    const remaining = (deadline: number) => Math.ceil(Math.max(0, deadline - time) / 100) * 100
 
     useGameStore.getState().setHudState({
       hp: this.player.hp,
       armor: this.player.armor,
       maxArmor: this.player.maxArmor,
-      grenadeCooldownRemaining: Math.max(0, this.player.lastGrenadeAt + PLAYER_CONFIG.grenadeCooldownMs - time),
-      abilityCooldownRemaining: Math.max(0, this.player.lastAbilityAt + PLAYER_CONFIG.abilityCooldownMs - time),
-      healCooldownRemaining: Math.max(0, this.player.lastHealAt + PLAYER_CONFIG.healCooldownMs - time),
-      shieldRemaining: Math.max(0, this.player.shieldUntil - time),
+      grenadeCooldownRemaining: remaining(this.player.lastGrenadeAt + PLAYER_CONFIG.grenadeCooldownMs),
+      abilityCooldownRemaining: remaining(this.player.lastAbilityAt + PLAYER_CONFIG.abilityCooldownMs),
+      healCooldownRemaining: remaining(this.player.lastHealAt + PLAYER_CONFIG.healCooldownMs),
+      shieldRemaining: remaining(this.player.shieldUntil),
       healCharges: this.player.healCharges,
       ...this.getBossHudState(),
     })
@@ -409,7 +438,7 @@ export class ArenaScene extends Phaser.Scene {
       store.unlockedItemIds.includes('frag-grenade') || store.unlockedItemIds.includes('fire-grenade')
     this.handleWeaponHotkeys()
     const tuning = WEAPON_TUNING[store.equippedWeapon as keyof typeof WEAPON_TUNING]
-    const triggerHeld = this.input.activePointer.leftButtonDown() || store.mobileControls.shoot
+    const triggerHeld = Boolean(this.input.mousePointer?.leftButtonDown()) || store.mobileControls.shoot
     const triggerJustPressed = triggerHeld && !this.shootLatch
     const shouldShoot =
       tuning.triggerMode === 'tap'
@@ -548,6 +577,7 @@ export class ArenaScene extends Phaser.Scene {
       fireVariant ? PLAYER_CONFIG.grenadeDamage * 0.85 : PLAYER_CONFIG.grenadeDamage,
       fireVariant ? PLAYER_CONFIG.grenadeRadius + 36 : PLAYER_CONFIG.grenadeRadius,
       fireVariant ? 'fire' : 'frag',
+      time,
     )
     this.playSfx('grenade-throw')
     this.cameras.main.shake(80, 0.0018)
@@ -592,6 +622,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private useHeal(time: number) {
+    if (this.player.hp >= this.player.maxHp) return
     if (this.player.healCharges <= 0) {
       useGameStore.getState().setMessage('No healing charges left.')
       return
@@ -743,7 +774,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private fireEnemyProjectile(enemy: Enemy) {
-    enemy.lastAttackAt = this.time.now
+    enemy.lastAttackAt = this.combatTime
     const shot = buildEnemyProjectile({
       enemy,
       player: this.player,
@@ -892,8 +923,8 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private activateBossEntrance(enemy: Enemy) {
-    enemy.attackReadyAt = this.time.now + 1400
-    enemy.bossShockwaveReadyAt = this.time.now + 2600
+    enemy.attackReadyAt = this.combatTime + 1400
+    enemy.bossShockwaveReadyAt = this.combatTime + 2600
 
     this.bossNameplate?.destroy()
     this.bossNameplate = this.add
@@ -936,11 +967,12 @@ export class ArenaScene extends Phaser.Scene {
       return
     }
 
-    this.bossNameplate.setPosition(boss.x, boss.y - 210 + Math.sin(this.time.now / 130) * 4)
+    this.bossNameplate.setPosition(boss.x, boss.y - 210 + Math.sin(this.combatTime / 130) * 4)
   }
 
   private hitEnemy(enemy: Enemy, damage: number) {
-    const hp = enemy.takeDamage(this.time.now, damage)
+    if (!this.running || this.paused || this.gameOver || !enemy.active) return
+    const hp = enemy.takeDamage(this.combatTime, damage)
     const isBoss = enemy.enemyType === 'boss'
     const highDamage = damage >= 10 || hp <= 0
     this.playSfx(hp > 0 ? 'enemy-hit' : 'enemy-death')
@@ -1001,7 +1033,7 @@ export class ArenaScene extends Phaser.Scene {
       enemy.bossSummonedAt30 = true
     }
 
-    enemy.damageFlashUntil = this.time.now + 420
+    enemy.damageFlashUntil = this.combatTime + 420
     this.cameras.main.shake(120, 0.0022)
     this.addImpact(enemy.x, enemy.y - 120, 0x8fefff, 42)
     this.summonBossAdds(enemy)
@@ -1024,7 +1056,7 @@ export class ArenaScene extends Phaser.Scene {
       enemy.setX(x)
       enemy.setY(ARENA_BOUNDS.floorY + SPRITE_TUNING.enemies.melee.floorOffset)
       enemy.setBaseTint(0x9defff)
-      enemy.attackReadyAt = this.time.now + 700
+      enemy.attackReadyAt = this.combatTime + 700
       this.enemies.add(enemy)
     }
   }
@@ -1104,7 +1136,7 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private releaseBossShockwave(enemy: Enemy) {
-    enemy.lastAttackAt = this.time.now
+    enemy.lastAttackAt = this.combatTime
     this.playSfx('boss-shockwave')
     this.cameras.main.shake(170, 0.0034)
 
@@ -1134,19 +1166,22 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private damagePlayer(damage: number, sourceX: number) {
-    if (this.gameOver) {
+    if (!this.running || this.paused || this.gameOver) {
       return
     }
 
-    if (this.player.isShielded(this.time.now)) {
+    if (this.player.isShielded(this.combatTime)) {
       this.playSfx('shield-block')
-      useGameStore.getState().setHudState({ shieldRemaining: Math.max(0, this.player.shieldUntil - this.time.now) })
+      useGameStore.getState().setHudState({ shieldRemaining: Math.max(0, this.player.shieldUntil - this.combatTime) })
       return
     }
 
-    const result = this.player.takeDamage(this.time.now, Math.max(1, Math.round(damage)))
+    const previousHp = this.player.hp
+    const previousArmor = this.player.armor
+    const result = this.player.takeDamage(this.combatTime, Math.max(1, Math.round(damage)))
+    if (result.hp === previousHp && result.armor === previousArmor) return
     this.playSfx(result.hp > 0 ? 'player-hit' : 'player-death')
-    this.addImpact(this.player.x, this.player.y - 72, 0xff6273, 18)
+    this.addImpact(this.player.x, this.player.y - 72, result.hp < previousHp ? 0xff6273 : 0x70dfff, 18)
     this.player.setVelocityX((sourceX > this.player.x ? -1 : 1) * 132)
     this.cameras.main.shake(110, 0.003)
     this.nudgeCamera(sourceX > this.player.x ? -8 : 8, 0, 95)
@@ -1186,7 +1221,7 @@ export class ArenaScene extends Phaser.Scene {
     this.running = false
     this.paused = false
     this.time.timeScale = 1
-    this.physics.world.resume()
+    this.physics.world.pause()
     this.tweens.resumeAll()
     this.gameOver = true
     this.player.setTint(0x5a6377)
@@ -1209,8 +1244,15 @@ export class ArenaScene extends Phaser.Scene {
   }
 
   private addDamageNumber(x: number, y: number, damage: number, highDamage: boolean) {
-    const text = this.add
-      .text(x, y, String(damage), {
+    let text = this.damageNumbers.find((entry) => !entry.active)
+    if (!text) {
+      if (this.damageNumbers.length >= 24) return
+      text = this.add.text(0, 0, '')
+      this.damageNumbers.push(text)
+    }
+    text.setPosition(x + Phaser.Math.Between(-12, 12), y)
+      .setText(String(damage)).setAlpha(1).setScale(1).setActive(true).setVisible(true)
+      .setStyle({
         color: highDamage ? '#ffe66f' : '#f7fbff',
         fontFamily: 'Arial Black, Trebuchet MS, sans-serif',
         fontSize: highDamage ? '22px' : '16px',
@@ -1227,12 +1269,12 @@ export class ArenaScene extends Phaser.Scene {
       scale: highDamage ? 1.18 : 1.05,
       duration: highDamage ? 520 : 420,
       ease: 'Cubic.easeOut',
-      onComplete: () => text.destroy(),
+      onComplete: () => { text.setActive(false).setVisible(false) },
     })
   }
 
   private registerKillPresentation() {
-    const time = this.time.now
+    const time = this.combatTime
     this.comboKills = time <= this.comboWindowUntil ? this.comboKills + 1 : 1
     this.comboWindowUntil = time + 1600
 
@@ -1253,8 +1295,11 @@ export class ArenaScene extends Phaser.Scene {
       return
     }
 
-    const text = this.add
-      .text(90, 210, comboLabel, {
+    const text = this.comboText ?? this.add.text(0, 0, '')
+    this.comboText = text
+    this.tweens.killTweensOf(text)
+    text.setPosition(90, 210).setAlpha(1).setScale(1).setVisible(true)
+      .setText(comboLabel).setStyle({
         color: '#ffe66f',
         fontFamily: 'Arial Black, Trebuchet MS, sans-serif',
         fontSize: '24px',
@@ -1272,7 +1317,7 @@ export class ArenaScene extends Phaser.Scene {
       scale: 1.06,
       duration: 820,
       ease: 'Cubic.easeOut',
-      onComplete: () => text.destroy(),
+      onComplete: () => text.setVisible(false),
     })
   }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { type RefObject, useCallback, useEffect, useState } from 'react'
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react'
 
 type FullscreenHost = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void
@@ -43,6 +43,7 @@ export function useLandscapeGameplay({
   enabled: boolean
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const requestVersion = useRef(0)
 
   const getFullscreenElement = useCallback(() => {
     const fullscreenDocument = document as FullscreenDocument
@@ -82,6 +83,7 @@ export function useLandscapeGameplay({
   }, [])
 
   const exitImmersive = useCallback(async () => {
+    requestVersion.current += 1
     const fullscreenDocument = document as FullscreenDocument
 
     setImmersiveDomState(false)
@@ -122,6 +124,7 @@ export function useLandscapeGameplay({
   }, [getFullscreenElement])
 
   const enterImmersive = useCallback(async () => {
+    const version = ++requestVersion.current
     const shell = shellRef.current as FullscreenHost | null
 
     setImmersiveViewportVars()
@@ -130,19 +133,25 @@ export function useLandscapeGameplay({
 
     if (!getFullscreenElement()) {
       await requestFullscreen(shell)
-      await requestFullscreen(document.documentElement)
+    }
+
+    if (version !== requestVersion.current) {
+      void exitImmersive()
+      return
     }
 
     await lockOrientation()
     syncFullscreen()
-  }, [getFullscreenElement, lockOrientation, requestFullscreen, shellRef, syncFullscreen])
+  }, [exitImmersive, getFullscreenElement, lockOrientation, requestFullscreen, shellRef, syncFullscreen])
 
   useEffect(() => {
     syncFullscreen()
     document.addEventListener('fullscreenchange', syncFullscreen)
+    document.addEventListener('webkitfullscreenchange', syncFullscreen)
 
     return () => {
       document.removeEventListener('fullscreenchange', syncFullscreen)
+      document.removeEventListener('webkitfullscreenchange', syncFullscreen)
     }
   }, [syncFullscreen])
 
@@ -151,16 +160,11 @@ export function useLandscapeGameplay({
       setImmersiveViewportVars()
       setImmersiveDomState(true)
       window.scrollTo(0, 1)
-      if (!getFullscreenElement()) {
-        void requestFullscreen(shellRef.current)
-        void requestFullscreen(document.documentElement)
-      }
-      void lockOrientation()
       return
     }
 
     void exitImmersive()
-  }, [enabled, exitImmersive, getFullscreenElement, lockOrientation, requestFullscreen, shellRef])
+  }, [enabled, exitImmersive])
 
   useEffect(() => {
     if (!enabled) {
@@ -188,6 +192,7 @@ export function useLandscapeGameplay({
 
   useEffect(
     () => () => {
+      requestVersion.current += 1
       setImmersiveDomState(false)
       clearImmersiveViewportVars()
       unlockOrientation()
